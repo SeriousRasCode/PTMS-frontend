@@ -60,6 +60,14 @@ export const Tasks = () => {
     },
   ]);
 
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    project_id: "1",
+    due_date: "",
+    priority: "medium",
+  });
+
     const renderTaskCard = (task: any) => (
     <Card key={task.id} className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
