@@ -74,11 +74,11 @@ export const DashboardLayout = () => {
       <div className="flex pt-16">
         {/* Sidebar */}
         <div
-          className={`fixed left-0 top-16 bottom-0 bg-white shadow-lg transition-all duration-300 z-40 ${
-            sidebarOpen ? "w-64" : "w-0 -translate-x-full"
+          className={`fixed left-0 top-16 bottom-0 bg-white shadow-lg transition-all duration-300 z-40 overflow-hidden ${
+            sidebarOpen ? "w-64" : "w-0"
           }`}
         >
-          <nav className="p-4 space-y-2">
+          <nav className={`p-4 space-y-2 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"} transition-opacity duration-300`}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -86,7 +86,7 @@ export const DashboardLayout = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all whitespace-nowrap ${
                     active
                       ? "bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white shadow-md"
                       : "text-gray-700 hover:bg-gray-100"
