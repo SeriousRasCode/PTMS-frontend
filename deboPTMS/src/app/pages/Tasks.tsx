@@ -13,6 +13,53 @@ import { toast } from "sonner";
 
 export const Tasks = () => {
 
+    const [tasks, setTasks] = useState([
+    {
+      id: 1,
+      title: "Design homepage mockup",
+      description: "Create initial design for new homepage",
+      project: "Website Redesign",
+      status: "in_progress",
+      progress_percentage: 60,
+      due_date: "2026-02-20",
+      priority: "high",
+      assignee: "John Doe"
+    },
+    {
+      id: 2,
+      title: "Implement authentication flow",
+      description: "Set up user login and registration",
+      project: "Mobile App",
+      status: "in_progress",
+      progress_percentage: 30,
+      due_date: "2026-02-18",
+      priority: "high",
+      assignee: "Jane Smith"
+    },
+    {
+      id: 3,
+      title: "Write API documentation",
+      description: "Document all REST endpoints",
+      project: "API Integration",
+      status: "not_started",
+      progress_percentage: 0,
+      due_date: "2026-02-25",
+      priority: "medium",
+      assignee: "Mike Johnson"
+    },
+    {
+      id: 4,
+      title: "Code review",
+      description: "Review and provide feedback",
+      project: "Website Redesign",
+      status: "completed",
+      progress_percentage: 100,
+      due_date: "2026-02-12",
+      priority: "low",
+      assignee: "Sarah Williams"
+    },
+  ]);
+
     const renderTaskCard = (task: any) => (
     <Card key={task.id} className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
