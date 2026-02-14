@@ -38,3 +38,20 @@ export const Login = () => {
       setLoading(false);
     }
   };
+
+  return(
+
+    <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo/Header */}
+        <div className="text-center mb-8">
+          <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
+            <LogIn size={48} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-white/80">Sign in to your PTMS account</p>
+        </div>
+
+  );
+
+};
