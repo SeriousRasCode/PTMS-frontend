@@ -61,6 +61,14 @@ export const Projects = () => {
       return;
     }
 
+    const project = {
+      id: Date.now(),
+      ...newProject,
+      status: "planning",
+      progress: 0,
+      team_size: 0,
+    };
+
     return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
