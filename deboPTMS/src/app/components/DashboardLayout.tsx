@@ -72,9 +72,8 @@ export const DashboardLayout = () => {
         </div>
       </div>
 
-      <div className="flex pt-16"></div>
-
-      {/* Sidebar */}
+      <div className="flex pt-16">
+        {/* Sidebar */}
         <div
           className={`fixed left-0 top-16 bottom-0 bg-white shadow-lg transition-all duration-300 z-40 ${
             sidebarOpen ? "w-64" : "w-0 -translate-x-full"
