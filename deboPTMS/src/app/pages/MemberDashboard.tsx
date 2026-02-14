@@ -98,6 +98,15 @@ export const MemberDashboard = () => {
     });
   }, []);
 
+  const handleProgressUpdate = (taskId: number, newProgress: number) => {
+    setTasks(tasks.map(t => 
+      t.id === taskId 
+        ? { ...t, progress_percentage: newProgress, status: newProgress === 100 ? "completed" : "in_progress" }
+        : t
+    ));
+    toast.success("Progress updated successfully!");
+  };
+
 
   return(
 
