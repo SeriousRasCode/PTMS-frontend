@@ -12,3 +12,15 @@ import {
   Calendar,
   TrendingUp
 } from "lucide-react";
+
+
+interface Project {
+  id: number;
+  name: string;
+  status: string;
+  progress: number;
+  tasks: number;
+  completedTasks: number;
+  team_size: number;
+  deadline: string;
+}
