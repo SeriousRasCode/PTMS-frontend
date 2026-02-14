@@ -13,3 +13,28 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      toast.success("Login successful!");
+      
+      // Redirect based on role
+      setTimeout(() => {
+        const role = email.includes("admin") ? "Admin" : email.includes("manager") ? "Manager" : "Member";
+        const dashboardPath = role === "Admin" 
+          ? "/dashboard/admin" 
+          : role === "Manager" 
+          ? "/dashboard/manager" 
+          : "/dashboard/member";
+        navigate(dashboardPath);
+      }, 100);
+    } catch (error) {
+      toast.error("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
