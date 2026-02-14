@@ -89,6 +89,15 @@ export const MemberDashboard = () => {
       },
     ];
 
+    setTasks(mockTasks);
+    setStats({
+      myTasks: mockTasks.length,
+      inProgress: mockTasks.filter(t => t.status === "in_progress").length,
+      completed: mockTasks.filter(t => t.status === "completed").length,
+      overdue: mockTasks.filter(t => new Date(t.due_date) < new Date() && t.status !== "completed").length,
+    });
+  }, []);
+
 
   return(
 
