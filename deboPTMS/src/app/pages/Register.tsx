@@ -20,4 +20,16 @@ export const Register = () => {
 
   return();
 
+  <div className="min-h-screen bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+
+    {/* Logo/Header */}
+        <div className="text-center mb-8">
+          <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
+            <UserPlus size={48} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+          <p className="text-white/80">Join PTMS and start managing projects</p>
+        </div>
+      
 };
