@@ -104,3 +104,14 @@ export const ManagerDashboard = () => {
   const getStatusLabel = (status: string) => {
     return status.replace("_", " ").toUpperCase();
   };
+
+  return(
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#194f87] to-[#0f5841] rounded-xl p-6 text-white shadow-lg">
+        <h1 className="text-3xl font-bold mb-2">Manager Dashboard</h1>
+        <p className="text-white/90">Oversee projects, manage tasks, and track team performance</p>
+      </div>
+  );
+
+};
