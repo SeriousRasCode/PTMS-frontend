@@ -70,3 +70,17 @@ export const AdminDashboard = () => {
     user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  return(
+
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#0f5841] to-[#194f87] rounded-xl p-6 text-white shadow-lg">
+        <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+        <p className="text-white/90">Manage users, roles, and system overview</p>
+      </div>
+
+      
+  );
+
+};
