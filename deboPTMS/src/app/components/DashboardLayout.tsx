@@ -73,6 +73,34 @@ export const DashboardLayout = () => {
       </div>
 
       <div className="flex pt-16"></div>
+
+      {/* Sidebar */}
+        <div
+          className={`fixed left-0 top-16 bottom-0 bg-white shadow-lg transition-all duration-300 z-40 ${
+            sidebarOpen ? "w-64" : "w-0 -translate-x-full"
+          }`}
+        >
+          <nav className="p-4 space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                    active
+                      ? "bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white shadow-md"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
   );
 
 };
