@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTMS Backend Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #194f87 0%, #0f5841 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #194f87;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #194f87, #0f5841);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(25, 79, 135, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result.info {
+            background: #d1ecf1;
+            border: 2px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status-badge.online {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-badge.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-badge.testing {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .test-results {
+            margin-top: 20px;
+        }
+        
+        .test-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .test-item.pass {
+            border-left: 4px solid #28a745;
+        }
+        
+        .test-item.fail {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .test-item.pending {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .test-icon {
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #194f87;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 PTMS Backend Tester</h1>
+            <p>Test your backend API connection before running the frontend</p>
+        </div>
+
+        <div class="card">
+            <h2>Configuration</h2>
+            <div class="form-group">
+                <label for="apiUrl">Backend API URL</label>
+                <input type="text" id="apiUrl" value="http://localhost:3000" placeholder="http://localhost:3000">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="testConnection()">Test Connection</button>
+                <button class="btn-success" onclick="runAllTests()">Run All Tests</button>
+                <button class="btn-secondary" onclick="clearResults()">Clear Results</button>
+            </div>
+        </div>
+
+        <div class="card" id="statusCard" style="display: none;">
+            <h2>
+                Server Status
+                <span id="statusBadge" class="status-badge"></span>
+            </h2>
+            <div id="statusResult" class="result"></div>
+        </div>
+
+        <div class="card" id="testsCard" style="display: none;">
+            <h2>Test Results</h2>
+            <div id="testResults" class="test-results"></div>
+        </div>
+
+        <div class="card" id="detailsCard" style="display: none;">
+            <h2>Response Details</h2>
+            <div id="detailsResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let testData = {
+            email: `test${Date.now()}@example.com`,
+            password: 'Password123',
+            token: null,
+            userId: null
+        };
+
+        function getApiUrl() {
+            return document.getElementById('apiUrl').value.replace(/\/$/, '');
+        }
+
+        function showStatus(status, message, type = 'info') {
+            const card = document.getElementById('statusCard');
+            const badge = document.getElementById('statusBadge');
+            const result = document.getElementById('statusResult');
+            
+            card.style.display = 'block';
+            badge.className = `status-badge ${status}`;
+            badge.textContent = status.toUpperCase();
+            result.className = `result ${type}`;
+            result.textContent = message;
+        }
+
+        function addTestResult(name, status, message) {
+            const container = document.getElementById('testResults');
+            const card = document.getElementById('testsCard');
+            card.style.display = 'block';
+            
+            const icons = {
+                pass: '✅',
+                fail: '❌',
+                pending: '⏳'
+            };
+            
+            const item = document.createElement('div');
+            item.className = `test-item ${status}`;
+            item.innerHTML = `
+                <span class="test-icon">${icons[status]}</span>
+                <div style="flex: 1;">
+                    <strong>${name}</strong><br>
+                    <small>${message}</small>
+                </div>
+            `;
+            
+            container.appendChild(item);
+        }
+
+        function showDetails(title, data) {
+            const card = document.getElementById('detailsCard');
+            const result = document.getElementById('detailsResult');
+            
+            card.style.display = 'block';
+            result.className = 'result info';
+            result.textContent = `${title}\n\n${JSON.stringify(data, null, 2)}`;
+        }
+
+        function clearResults() {
+            document.getElementById('statusCard').style.display = 'none';
+            document.getElementById('testsCard').style.display = 'none';
+            document.getElementById('detailsCard').style.display = 'none';
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        async function testConnection() {
+            clearResults();
+            showStatus('testing', 'Testing connection...', 'info');
+            
+            try {
+                const response = await fetch(getApiUrl() + '/');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus('online', `✅ Backend is online!\n\nResponse: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    showStatus('offline', `❌ Backend returned error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showStatus('offline', `❌ Cannot connect to backend:\n${error.message}\n\nMake sure your backend is running at ${getApiUrl()}`, 'error');
+            }
+        }
+
+        async function runAllTests() {
+            clearResults();
+            document.getElementById('testResults').innerHTML = '<div class="loading"></div> Running tests...';
+            
+            const tests = [
+                { name: 'Server Health Check', fn: testHealth },
+                { name: 'User Registration', fn: testRegister },
+                { name: 'User Login', fn: testLogin },
+                { name: 'Get User Profile', fn: testGetProfile },
+            ];
+            
+            for (const test of tests) {
+                try {
+                    await test.fn();
+                } catch (error) {
+                    addTestResult(test.name, 'fail', error.message);
+                }
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(getApiUrl() + '/');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                addTestResult('Server Health Check', 'pass', 'Server is responding correctly');
+                return data;
+            } catch (error) {
+                addTestResult('Server Health Check', 'fail', error.message);
+                throw error;
+            }
+        }
+
+        async function testRegister() {
+            try {
+                const response = await fetch(getApiUrl() + '/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        full_name: 'Test User',
+                        email: testData.email,
+                        password: testData.password,
+                        role_id: 3
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || `HTTP ${response.status}`);
+                }
+                
+                if (data.token && data.user) {
+                    testData.token = data.token;
+                    testData.userId = data.user.id;
+                    addTestResult('User Registration', 'pass', `User created: ${data.user.email}`);
+                    showDetails('Registration Response', data);
+                } else {
+                    throw new Error('Invalid response format (missing token or user)');
+                }
+            } catch (error) {
+                addTestResult('User Registration', 'fail', error.message);
+                throw error;
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch(getApiUrl() + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: testData.email,
+                        password: testData.password
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || `HTTP ${response.status}`);
+                }
+                
+                if (data.token && data.user) {
+                    testData.token = data.token;
+                    addTestResult('User Login', 'pass', `Logged in as: ${data.user.email}`);
+                    showDetails('Login Response', data);
+                } else {
+                    throw new Error('Invalid response format (missing token or user)');
+                }
+            } catch (error) {
+                addTestResult('User Login', 'fail', error.message);
+                throw error;
+            }
+        }
+
+        async function testGetProfile() {
+            if (!testData.token) {
+                throw new Error('No token available (previous test may have failed)');
+            }
+            
+            try {
+                const response = await fetch(getApiUrl() + '/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${testData.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || `HTTP ${response.status}`);
+                }
+                
+                addTestResult('Get User Profile', 'pass', `Retrieved profile for: ${data.email || data.user?.email}`);
+                showDetails('Profile Response', data);
+            } catch (error) {
+                addTestResult('Get User Profile', 'fail', error.message);
+                throw error;
+            }
+        }
+
+        // Run initial connection test on load
+        window.onload = () => {
+            setTimeout(testConnection, 500);
+        };
+    </script>
+</body>
+</html>

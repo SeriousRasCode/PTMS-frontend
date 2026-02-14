@@ -35,28 +35,30 @@ export const Register = () => {
 
     try {
       await register(fullName, email, password, parseInt(roleId));
-      toast.success("Registration successful!");
+      toast.success("Registration successful! Please log in with your credentials.");
       
+      // Redirect to login page after successful registration
       setTimeout(() => {
-        // Get the updated user from localStorage (it's set in register)
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          const role = userData.role || userData.role_name;
-          
-          const dashboardPath = role === "Admin" 
-            ? "/dashboard/admin" 
-            : role === "Manager" 
-            ? "/dashboard/manager" 
-            : "/dashboard/member";
-          navigate(dashboardPath);
-        }
-      }, 100);
+        navigate("/login");
+      }, 1500);
     } catch (error: any) {
       const errorMessage = error?.message || "Registration failed. Please try again.";
       
+      // Check for duplicate email error
+      if (errorMessage.includes('Duplicate entry') || errorMessage.includes('email')) {
+        toast.error('Email already registered. Please use a different email or try logging in.', {
+          duration: 5000,
+        });
+      }
+      // If it's a database error, show specific help
+      else if (errorMessage.includes('Database Error') || errorMessage.includes('foreign key constraint')) {
+        toast.error('Database Setup Error: Roles table not properly configured', {
+          duration: 12000,
+          description: 'Your backend database needs the roles table with role entries. Check console for details.',
+        });
+      }
       // If it's a backend endpoint error, show additional help
-      if (errorMessage.includes('Backend endpoint not found')) {
+      else if (errorMessage.includes('Backend endpoint not found')) {
         toast.error('Backend endpoint /auth/register not found! Your backend needs to implement this endpoint.', {
           duration: 10000,
           action: {

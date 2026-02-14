@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { userAPI } from "../utils/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -9,8 +10,10 @@ import { User, Mail, Lock, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export const Profile = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [profileData, setProfileData] = useState({
     full_name: user?.full_name || "",
     email: user?.email || "",
@@ -21,18 +24,35 @@ export const Profile = () => {
     confirmPassword: "",
   });
 
-  const handleUpdateProfile = () => {
+  const handleUpdateProfile = async () => {
     if (!profileData.full_name || !profileData.email) {
       toast.error("Please fill in all fields");
       return;
     }
 
-    // Mock API call
-    toast.success("Profile updated successfully!");
-    setIsEditing(false);
+    setIsUpdating(true);
+    try {
+      // Backend returns: { message: 'Profile updated successfully' }
+      await userAPI.updateProfile({
+        full_name: profileData.full_name,
+        email: profileData.email,
+      });
+      
+      // Refresh user data from server
+      await refreshUser();
+      
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (error: any) {
+      const errorMessage = error?.message || "Failed to update profile";
+      toast.error(errorMessage);
+      console.error("Update profile error:", error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       toast.error("Please fill in all password fields");
       return;
@@ -43,14 +63,29 @@ export const Profile = () => {
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+    // Backend requires minimum 8 characters
+    if (passwordData.newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long");
       return;
     }
 
-    // Mock API call
-    toast.success("Password changed successfully!");
-    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    setIsChangingPassword(true);
+    try {
+      // Backend returns: { message: 'Password changed successfully' }
+      await userAPI.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      
+      toast.success("Password changed successfully!");
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error: any) {
+      const errorMessage = error?.message || "Failed to change password";
+      toast.error(errorMessage);
+      console.error("Change password error:", error);
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -147,13 +182,15 @@ export const Profile = () => {
               <div className="flex gap-3 pt-4">
                 <Button
                   onClick={handleUpdateProfile}
+                  disabled={isUpdating}
                   className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white"
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                  {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
                 <Button
                   variant="outline"
+                  disabled={isUpdating}
                   onClick={() => {
                     setIsEditing(false);
                     setProfileData({
@@ -215,9 +252,10 @@ export const Profile = () => {
 
             <Button
               onClick={handleChangePassword}
+              disabled={isChangingPassword}
               className="bg-gradient-to-r from-[#194f87] to-[#0f5841] text-white"
             >
-              Update Password
+              {isChangingPassword ? "Updating..." : "Update Password"}
             </Button>
           </div>
         </CardContent>

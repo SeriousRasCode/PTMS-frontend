@@ -1,9 +1,9 @@
 // API Utility Functions for PTMS
 // Backend API configuration
 
-const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/"
-).replace(/\/+$/, ""); // Remove trailing slashes
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:3000/api"; // Remove trailing slashes
 
 // Helper function to get auth token
 const getAuthToken = () => {
@@ -16,7 +16,7 @@ const apiRequest = async (
   options: RequestInit = {},
 ) => {
   const token = getAuthToken();
-  const headers: any = {
+  const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...options.headers,
   };
@@ -61,6 +61,40 @@ const apiRequest = async (
             `Backend endpoint not found: ${options.method || "GET"} ${endpoint}\n\nThe backend returned an HTML error page, which means this endpoint doesn't exist on your backend server.\n\nPlease verify:\n1. Your backend server is properly set up\n2. The endpoint ${endpoint} is defined in your backend routes\n3. Open test-backend-connection.html to diagnose endpoint issues`,
           );
         }
+
+        // Check if it's a database error
+        if (
+          text.includes("foreign key constraint fails") ||
+          text.includes("Cannot add or update a child row")
+        ) {
+          // Extract the database error details
+          const errorMatch = text.match(/<pre>(.*?)<\/pre>/s);
+          const dbError = errorMatch
+            ? errorMatch[1].trim()
+            : text.substring(0, 300);
+
+          throw new Error(
+            `Database Error: Foreign key constraint failed\n\n${dbError}\n\nThis usually means:\n1. The roles table doesn't have the role_id you're using\n2. Database tables aren't properly set up\n3. Missing seed data in your database\n\nPlease:\n1. Check your database has a 'roles' table\n2. Ensure roles table has entries (id: 1=Admin, 2=Manager, 3=Member)\n3. Run your database migrations and seeds\n4. Check your backend console for the full error`,
+          );
+        }
+
+        // Check for other common database errors
+        if (
+          text.includes("ECONNREFUSED") ||
+          text.includes("database") ||
+          text.includes("sql") ||
+          text.includes("SQL")
+        ) {
+          const errorMatch = text.match(/<pre>(.*?)<\/pre>/s);
+          const dbError = errorMatch
+            ? errorMatch[1].trim()
+            : text.substring(0, 300);
+
+          throw new Error(
+            `Database Connection Error\n\n${dbError}\n\nPlease verify:\n1. Database server is running\n2. Database connection settings are correct\n3. Database exists and is accessible\n4. Check your backend console for details`,
+          );
+        }
+
         throw new Error(
           `Server returned non-JSON response: ${text.substring(0, 200)}`,
         );
@@ -70,7 +104,9 @@ const apiRequest = async (
       if (
         parseError.message.includes(
           "Backend endpoint not found",
-        )
+        ) ||
+        parseError.message.includes("Database Error") ||
+        parseError.message.includes("Database Connection Error")
       ) {
         throw parseError;
       }
@@ -119,7 +155,12 @@ export const authAPI = {
   }) =>
     apiRequest("/auth/register", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        full_name: data.full_name,
+        email: data.email,
+        password: data.password,
+        role_id: data.role_id,
+      }),
     }),
 
   login: (data: { email: string; password: string }) =>

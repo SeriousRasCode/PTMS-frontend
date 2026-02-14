@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Users, Plus, Mail, UserPlus, UserMinus } from "lucide-react";
 import { toast } from "sonner";
@@ -72,8 +72,7 @@ export const Teams = () => {
     return colors[id % colors.length];
   };
 
-  return(
-
+  return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -90,6 +89,7 @@ export const Teams = () => {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Create New Team</DialogTitle>
+              <DialogDescription>Enter the team name to create a new team.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -179,5 +179,4 @@ export const Teams = () => {
       </div>
     </div>
   );
-
 };

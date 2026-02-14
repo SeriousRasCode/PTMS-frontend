@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { FolderKanban, Plus, Users, Calendar, Edit2 } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export const Projects = () => {
   const [projects, setProjects] = useState([
@@ -104,6 +104,7 @@ export const Projects = () => {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Create New Project</DialogTitle>
+              <DialogDescription>Enter project details to create a new project.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { ForgotPassword } from "./pages/ForgotPassword";
@@ -12,101 +12,83 @@ import { Reports } from "./pages/Reports";
 import { Profile } from "./pages/Profile";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
-import { Navigate } from "react-router";
+import { useMemo } from "react";
 
-// Component to redirect to role-based dashboard
-const DashboardRedirect = () => {
-  const storedUser = localStorage.getItem("user");
+// Export a component that uses the router
+export const AppRouter = () => {
+  // Create router inside component so it has access to AuthProvider context
+  const router = useMemo(() => createBrowserRouter([
+    {
+      path: "/",
+      element: <Navigate to="/login" replace />,
+    },
+    {
+      path: "/login",
+      element: <Login />,
+    },
+    {
+      path: "/register",
+      element: <Register />,
+    },
+    {
+      path: "/forgot-password",
+      element: <ForgotPassword />,
+    },
+    {
+      path: "/dashboard",
+      element: (
+        <ProtectedRoute>
+          <DashboardLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          path: "admin",
+          element: (
+            <ProtectedRoute requiredRole="Admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "manager",
+          element: (
+            <ProtectedRoute requiredRole="Manager">
+              <ManagerDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "member",
+          element: (
+            <ProtectedRoute requiredRole="Member">
+              <MemberDashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "projects",
+          element: <Projects />,
+        },
+        {
+          path: "tasks",
+          element: <Tasks />,
+        },
+        {
+          path: "teams",
+          element: <Teams />,
+        },
+        {
+          path: "reports",
+          element: <Reports />,
+        },
+        {
+          path: "profile",
+          element: <Profile />,
+        },
+      ],
+    },
+  ]), []);
   
-  if (storedUser) {
-    const userData = JSON.parse(storedUser);
-    const role = userData.role || userData.role_name;
-    
-    const dashboardPath = role === "Admin" 
-      ? "/dashboard/admin" 
-      : role === "Manager" 
-      ? "/dashboard/manager" 
-      : "/dashboard/member";
-    
-    return <Navigate to={dashboardPath} replace />;
-  }
-  
-  return <Navigate to="/login" replace />;
+  return <RouterProvider router={router} />;
 };
-
-export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Login />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-  {
-    path: "/forgot-password",
-    element: <ForgotPassword />,
-  },
-  {
-    path: "/dashboard",
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <DashboardRedirect />,
-      },
-      {
-        path: "admin",
-        element: (
-          <ProtectedRoute requiredRole="Admin">
-            <AdminDashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "manager",
-        element: (
-          <ProtectedRoute requiredRole="Manager">
-            <ManagerDashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "member",
-        element: (
-          <ProtectedRoute requiredRole="Member">
-            <MemberDashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "projects",
-        element: <Projects />,
-      },
-      {
-        path: "tasks",
-        element: <Tasks />,
-      },
-      {
-        path: "teams",
-        element: <Teams />,
-      },
-      {
-        path: "reports",
-        element: <Reports />,
-      },
-      {
-        path: "profile",
-        element: <Profile />,
-      },
-    ],
-  },
-]);
