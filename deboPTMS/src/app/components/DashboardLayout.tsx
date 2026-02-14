@@ -101,6 +101,19 @@ export const DashboardLayout = () => {
             })}
           </nav>
         </div>
+
+        {/* Main Content */}
+        <div
+          className={`flex-1 transition-all duration-300 ${
+            sidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
+          <div className="p-6">
+            <Outlet />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 
 };
