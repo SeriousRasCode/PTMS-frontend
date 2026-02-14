@@ -153,6 +153,70 @@ export const AdminDashboard = () => {
             </div>
           </div>
 
+            {/* Users Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 text-sm font-semibold text-gray-700">User</th>
+                  <th className="text-left p-3 text-sm font-semibold text-gray-700">Email</th>
+                  <th className="text-left p-3 text-sm font-semibold text-gray-700">Role</th>
+                  <th className="text-left p-3 text-sm font-semibold text-gray-700">Status</th>
+                  <th className="text-left p-3 text-sm font-semibold text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="border-b hover:bg-gray-50 transition-colors">
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0f5841] to-[#194f87] flex items-center justify-center text-white font-semibold">
+                          {user.full_name.charAt(0)}
+                        </div>
+                        <span className="font-medium text-gray-900">{user.full_name}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-gray-600">{user.email}</td>
+                    <td className="p-3">
+                      <Select
+                        value={user.role}
+                        onValueChange={(value) => handleRoleChange(user.id, value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Admin">Admin</SelectItem>
+                          <SelectItem value="Manager">Manager</SelectItem>
+                          <SelectItem value="Member">Member</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="p-3">
+                      <Badge
+                        variant={user.is_active ? "default" : "secondary"}
+                        className={user.is_active ? "bg-green-500" : ""}
+                      >
+                        {user.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatusToggle(user.id)}
+                      >
+                        {user.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
 
   );
 
