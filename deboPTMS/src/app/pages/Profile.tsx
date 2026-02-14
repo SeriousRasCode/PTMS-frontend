@@ -55,6 +55,10 @@ export const Profile = () => {
     setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
   };
 
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
     return(
 
         <div className="space-y-6 max-w-4xl">
