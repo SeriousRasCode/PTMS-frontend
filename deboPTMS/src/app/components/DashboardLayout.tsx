@@ -38,3 +38,7 @@ export const DashboardLayout = () => {
     { path: "/dashboard/reports", label: "Reports", icon: BarChart3 },
     { path: "/dashboard/profile", label: "Profile", icon: User },
   ];
+
+  const isActive = (path: string) => location.pathname === path;
+
+  
