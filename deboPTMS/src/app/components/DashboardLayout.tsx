@@ -23,3 +23,9 @@ export const DashboardLayout = () => {
     logout();
     navigate("/login");
   };
+
+  const getDashboardPath = () => {
+    if (user?.role === "Admin") return "/dashboard/admin";
+    if (user?.role === "Manager") return "/dashboard/manager";
+    return "/dashboard/member";
+  };
