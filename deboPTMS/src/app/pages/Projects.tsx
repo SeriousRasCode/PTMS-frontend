@@ -55,6 +55,12 @@ export const Projects = () => {
     team_id: "1",
   });
 
+  const handleCreateProject = () => {
+    if (!newProject.name || !newProject.description) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
     return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
