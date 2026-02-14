@@ -22,25 +22,31 @@ export const Login = () => {
       await login(email, password);
       toast.success("Login successful!");
       
-      // Redirect based on role
+      // Wait briefly for auth context to update, then redirect based on actual user role
       setTimeout(() => {
-        const role = email.includes("admin") ? "Admin" : email.includes("manager") ? "Manager" : "Member";
-        const dashboardPath = role === "Admin" 
-          ? "/dashboard/admin" 
-          : role === "Manager" 
-          ? "/dashboard/manager" 
-          : "/dashboard/member";
-        navigate(dashboardPath);
+        // Get the updated user from localStorage (it's set in login)
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          const role = userData.role || userData.role_name;
+          
+          const dashboardPath = role === "Admin" 
+            ? "/dashboard/admin" 
+            : role === "Manager" 
+            ? "/dashboard/manager" 
+            : "/dashboard/member";
+          navigate(dashboardPath);
+        }
       }, 100);
-    } catch (error) {
-      toast.error("Login failed. Please try again.");
+    } catch (error: any) {
+      const errorMessage = error?.message || "Login failed. Please check your credentials.";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  return(
-
+  return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
@@ -127,7 +133,5 @@ export const Login = () => {
         </div>
       </div>
     </div>
-
   );
-
 };
