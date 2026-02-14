@@ -70,7 +70,36 @@ export const Reports = () => {
         <TabsContent value="overview" className="space-y-6 mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
 
-          
+          {/* Task Status Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-[#0f5841]" />
+                  Task Status Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={taskStatusData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${entry.name}: ${entry.value}`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {taskStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
     );
 
 };
