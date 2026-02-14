@@ -74,6 +74,21 @@ export const Projects = () => {
     setNewProject({ name: "", description: "", start_date: "", end_date: "", team_id: "1" });
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-500";
+      case "active":
+        return "bg-blue-500";
+      case "planning":
+        return "bg-yellow-500";
+      case "on_hold":
+        return "bg-orange-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
     return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
