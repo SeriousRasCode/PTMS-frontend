@@ -114,6 +114,11 @@ export const Tasks = () => {
     }
   };
 
+  const filterTasks = (status: string) => {
+    if (status === "all") return tasks;
+    return tasks.filter(task => task.status === status);
+  };
+
     const renderTaskCard = (task: any) => (
     <Card key={task.id} className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
