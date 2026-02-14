@@ -34,6 +34,61 @@ export const MemberDashboard = () => {
     overdue: 0,
   });
 
+  useEffect(() => {
+    // Mock data
+    const mockTasks: Task[] = [
+      {
+        id: 1,
+        title: "Design homepage mockup",
+        description: "Create initial design for new homepage",
+        project: "Website Redesign",
+        status: "in_progress",
+        progress_percentage: 60,
+        due_date: "2026-02-20",
+        priority: "high"
+      },
+      {
+        id: 2,
+        title: "Implement authentication flow",
+        description: "Set up user login and registration",
+        project: "Mobile App Development",
+        status: "in_progress",
+        progress_percentage: 30,
+        due_date: "2026-02-18",
+        priority: "high"
+      },
+      {
+        id: 3,
+        title: "Write API documentation",
+        description: "Document all REST endpoints",
+        project: "API Integration",
+        status: "not_started",
+        progress_percentage: 0,
+        due_date: "2026-02-25",
+        priority: "medium"
+      },
+      {
+        id: 4,
+        title: "Code review for pull request",
+        description: "Review and provide feedback on PR #234",
+        project: "Website Redesign",
+        status: "not_started",
+        progress_percentage: 0,
+        due_date: "2026-02-16",
+        priority: "low"
+      },
+      {
+        id: 5,
+        title: "Fix responsive layout issues",
+        description: "Address mobile layout problems",
+        project: "Website Redesign",
+        status: "completed",
+        progress_percentage: 100,
+        due_date: "2026-02-12",
+        priority: "medium"
+      },
+    ];
+
 
   return(
 
