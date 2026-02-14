@@ -69,6 +69,11 @@ export const Projects = () => {
       team_size: 0,
     };
 
+    setProjects([...projects, project]);
+    toast.success("Project created successfully!");
+    setNewProject({ name: "", description: "", start_date: "", end_date: "", team_id: "1" });
+  };
+
     return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
