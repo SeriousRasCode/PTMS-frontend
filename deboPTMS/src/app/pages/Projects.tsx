@@ -13,6 +13,40 @@ import { toast } from "sonner";
 
 export const Projects = () => {
 
+
+    const [projects, setProjects] = useState([
+    {
+      id: 1,
+      name: "Website Redesign",
+      description: "Complete overhaul of company website",
+      status: "active",
+      progress: 65,
+      team_size: 5,
+      start_date: "2026-01-15",
+      end_date: "2026-03-15",
+    },
+    {
+      id: 2,
+      name: "Mobile App Development",
+      description: "iOS and Android application",
+      status: "active",
+      progress: 40,
+      team_size: 7,
+      start_date: "2026-02-01",
+      end_date: "2026-04-20",
+    },
+    {
+      id: 3,
+      name: "API Integration",
+      description: "Third-party API integration",
+      status: "planning",
+      progress: 15,
+      team_size: 3,
+      start_date: "2026-02-10",
+      end_date: "2026-03-30",
+    },
+  ]);
+  
     return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
