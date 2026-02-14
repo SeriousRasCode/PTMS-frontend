@@ -83,6 +83,11 @@ export const Tasks = () => {
       assignee: "Unassigned",
     };
 
+    setTasks([...tasks, task]);
+    toast.success("Task created successfully!");
+    setNewTask({ title: "", description: "", project_id: "1", due_date: "", priority: "medium" });
+  };
+
     const renderTaskCard = (task: any) => (
     <Card key={task.id} className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
