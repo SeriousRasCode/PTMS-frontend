@@ -29,3 +29,12 @@ export const DashboardLayout = () => {
     if (user?.role === "Manager") return "/dashboard/manager";
     return "/dashboard/member";
   };
+
+  const navItems = [
+    { path: getDashboardPath(), label: "Dashboard", icon: LayoutDashboard },
+    { path: "/dashboard/projects", label: "Projects", icon: FolderKanban },
+    { path: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
+    { path: "/dashboard/teams", label: "Teams", icon: Users },
+    { path: "/dashboard/reports", label: "Reports", icon: BarChart3 },
+    { path: "/dashboard/profile", label: "Profile", icon: User },
+  ];
