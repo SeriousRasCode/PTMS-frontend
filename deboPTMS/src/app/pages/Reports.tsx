@@ -123,6 +123,95 @@ export const Reports = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Project Progress */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={projectProgressData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="progress" fill="url(#colorGradient)" />
+                  <defs>
+                    <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#0f5841" />
+                      <stop offset="100%" stopColor="#194f87" />
+                    </linearGradient>
+                  </defs>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="overdue" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                Overdue Tasks
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {overdueTasksData.map((task) => (
+                  <div
+                    key={task.id}
+                    className="p-4 border border-red-200 rounded-lg bg-red-50/50 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-1">{task.title}</h3>
+                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <BarChart3 size={14} />
+                            {task.project}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users size={14} />
+                            {task.assignee}
+                          </span>
+                        </div>
+                      </div>
+                      <Badge variant="destructive" className="bg-red-500">
+                        {task.daysOverdue} {task.daysOverdue === 1 ? 'day' : 'days'} overdue
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="workload" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Team Workload Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={workloadData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="tasks" fill="#194f87" name="Total Tasks" />
+                  <Bar dataKey="completed" fill="#0f5841" name="Completed" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
     );
 
 };
