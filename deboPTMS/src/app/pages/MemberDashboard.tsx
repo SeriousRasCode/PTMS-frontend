@@ -107,6 +107,19 @@ export const MemberDashboard = () => {
     toast.success("Progress updated successfully!");
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-500";
+      case "in_progress":
+        return "bg-blue-500";
+      case "not_started":
+        return "bg-gray-400";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
 
   return(
 
