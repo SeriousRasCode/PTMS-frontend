@@ -13,6 +13,52 @@ import { toast } from "sonner";
 
 export const Tasks = () => {
 
+    const renderTaskCard = (task: any) => (
+    <Card key={task.id} className="hover:shadow-md transition-shadow">
+      <CardContent className="pt-6">
+        <div className="space-y-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-semibold text-gray-900">{task.title}</h3>
+                <Badge className={getStatusColor(task.status)}>
+                  {task.status.replace("_", " ").toUpperCase()}
+                </Badge>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">{task.description}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-sm">
+            <Badge variant="outline" className={getPriorityColor(task.priority)}>
+              <AlertCircle size={14} className="mr-1" />
+              {task.priority.toUpperCase()}
+            </Badge>
+            <Badge variant="outline" className="text-gray-600">
+              <CheckSquare size={14} className="mr-1" />
+              {task.project}
+            </Badge>
+            <Badge variant="outline" className="text-gray-600">
+              <User size={14} className="mr-1" />
+              {task.assignee}
+            </Badge>
+            <Badge variant="outline" className="text-gray-600">
+              <Calendar size={14} className="mr-1" />
+              {new Date(task.due_date).toLocaleDateString()}
+            </Badge>
+          </div>
+
+          <div className="pt-3 border-t flex items-center justify-between">
+            <span className="text-sm text-gray-600">Progress: {task.progress_percentage}%</span>
+            <Button variant="outline" size="sm">
+              View Details
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
     return(
         <div className="space-y-6">
       <div className="flex items-center justify-between">
