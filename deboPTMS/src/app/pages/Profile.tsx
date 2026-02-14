@@ -10,6 +10,13 @@ import { toast } from "sonner";
 
 export const Profile = () => {
 
+    const { user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({
+    full_name: user?.full_name || "",
+    email: user?.email || "",
+  });
+
     return(
 
         <div className="space-y-6 max-w-4xl">
