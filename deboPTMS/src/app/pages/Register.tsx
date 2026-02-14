@@ -18,7 +18,7 @@ export const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  return();
+  return(
 
   <div className="min-h-screen bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -140,4 +140,5 @@ export const Register = () => {
         </div>
       </div>
     </div>
+  );
 };
