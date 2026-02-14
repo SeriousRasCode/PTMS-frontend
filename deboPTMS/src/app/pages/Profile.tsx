@@ -17,6 +17,44 @@ export const Profile = () => {
     email: user?.email || "",
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const handleUpdateProfile = () => {
+    if (!profileData.full_name || !profileData.email) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    // Mock API call
+    toast.success("Profile updated successfully!");
+    setIsEditing(false);
+  };
+
+  const handleChangePassword = () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      toast.error("Please fill in all password fields");
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Mock API call
+    toast.success("Password changed successfully!");
+    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  };
+
     return(
 
         <div className="space-y-6 max-w-4xl">
