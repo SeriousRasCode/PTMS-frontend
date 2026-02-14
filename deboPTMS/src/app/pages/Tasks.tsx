@@ -74,6 +74,15 @@ export const Tasks = () => {
       return;
     }
 
+    const task = {
+      id: Date.now(),
+      ...newTask,
+      project: "Website Redesign",
+      status: "not_started",
+      progress_percentage: 0,
+      assignee: "Unassigned",
+    };
+
     const renderTaskCard = (task: any) => (
     <Card key={task.id} className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
