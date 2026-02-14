@@ -117,20 +117,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           console.log("User from login:", backendUser);
           
-          // Extract role name from roles array
-          let roleName = "Member"; // default
+          // Extract role name from roles array. Backend may return an array of strings
+          // (e.g. ["Admin"]) or an array of objects (e.g. [{ name: "Admin" }]).
+          let roleName = "Member"; // default fallback
           if (backendUser.roles && backendUser.roles.length > 0) {
-            // roles is an array of role objects, get the first one's name
-            roleName = backendUser.roles[0].name || backendUser.roles[0].role_name || "Member";
+            const firstRole = backendUser.roles[0];
+            if (typeof firstRole === "string") {
+              roleName = firstRole;
+            } else if (typeof firstRole === "object" && firstRole !== null) {
+              roleName =
+                firstRole.name || firstRole.role_name || "Member";
+            }
           }
-          
+
           // Construct user object with all necessary fields
           const userData: User = {
             id: backendUser.id,
             full_name: backendUser.fullName || backendUser.full_name || "User",
             email: backendUser.email || email,
             role: roleName,
-            is_active: backendUser.is_active !== undefined ? backendUser.is_active : true,
+            is_active:
+              backendUser.is_active !== undefined ? backendUser.is_active : true,
           };
           
           console.log("User data constructed:", userData);
@@ -150,12 +157,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log("User profile extracted:", userProfile);
             
             // Construct user object with all necessary fields
+            let roleName = "Member";
+            if (userProfile.role) {
+              roleName = userProfile.role;
+            } else if (userProfile.roles && userProfile.roles.length > 0) {
+              const firstRole = userProfile.roles[0];
+              if (typeof firstRole === "string") {
+                roleName = firstRole;
+              } else if (typeof firstRole === "object" && firstRole !== null) {
+                roleName =
+                  firstRole.name || firstRole.role_name || "Member";
+              }
+            } else if (userProfile.role_id !== undefined) {
+              roleName = getRoleName(userProfile.role_id);
+            }
+
             const userData: User = {
               id: userProfile.id,
-              full_name: userProfile.full_name || userProfile.fullName || "User",
+              full_name:
+                userProfile.full_name || userProfile.fullName || "User",
               email: userProfile.email || email,
-              role: userProfile.role || getRoleName(userProfile.role_id),
-              is_active: userProfile.is_active !== undefined ? userProfile.is_active : true,
+              role: roleName,
+              is_active:
+                userProfile.is_active !== undefined ? userProfile.is_active : true,
             };
             
             console.log("User data constructed:", userData);
