@@ -6,6 +6,44 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 export const Reports = () => {
 
+    const overdueTasksData = [
+    { id: 1, title: "Update database schema", project: "API Integration", assignee: "John Doe", daysOverdue: 3 },
+    { id: 2, title: "Fix mobile responsiveness", project: "Website Redesign", assignee: "Jane Smith", daysOverdue: 1 },
+    { id: 3, title: "Write unit tests", project: "Mobile App", assignee: "Mike Johnson", daysOverdue: 5 },
+  ];
+
+  const workloadData = [
+    { name: "John Doe", tasks: 8, completed: 5 },
+    { name: "Jane Smith", tasks: 6, completed: 4 },
+    { name: "Mike Johnson", tasks: 10, completed: 6 },
+    { name: "Sarah Williams", tasks: 7, completed: 7 },
+    { name: "Tom Brown", tasks: 5, completed: 3 },
+  ];
+
+  const projectProgressData = [
+    { name: "Website Redesign", progress: 65 },
+    { name: "Mobile App", progress: 40 },
+    { name: "API Integration", progress: 15 },
+    { name: "Database Migration", progress: 100 },
+  ];
+
+  const taskStatusData = [
+    { name: "Completed", value: 32, color: "#10b981" },
+    { name: "In Progress", value: 18, color: "#3b82f6" },
+    { name: "Not Started", value: 12, color: "#9ca3af" },
+    { name: "Overdue", value: 3, color: "#ef4444" },
+  ];
+
+  const weeklyProductivityData = [
+    { day: "Mon", completed: 8 },
+    { day: "Tue", completed: 12 },
+    { day: "Wed", completed: 10 },
+    { day: "Thu", completed: 15 },
+    { day: "Fri", completed: 11 },
+    { day: "Sat", completed: 3 },
+    { day: "Sun", completed: 2 },
+  ];
+
     return(
     <div className="space-y-6">
       <div>
