@@ -18,6 +18,41 @@ export const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await register(fullName, email, password, parseInt(roleId));
+      toast.success("Registration successful!");
+      
+      setTimeout(() => {
+        const role = parseInt(roleId) === 1 ? "Admin" : parseInt(roleId) === 2 ? "Manager" : "Member";
+        const dashboardPath = role === "Admin" 
+          ? "/dashboard/admin" 
+          : role === "Manager" 
+          ? "/dashboard/manager" 
+          : "/dashboard/member";
+        navigate(dashboardPath);
+      }, 100);
+    } catch (error) {
+      toast.error("Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return(
 
   <div className="min-h-screen bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87] flex items-center justify-center p-4">
