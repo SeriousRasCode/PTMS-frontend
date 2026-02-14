@@ -58,3 +58,10 @@ export const AdminDashboard = () => {
     toast.success(`Role updated to ${newRole}`);
     setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
   };
+
+  const handleStatusToggle = async (userId: number) => {
+    // Mock API call
+    const user = users.find(u => u.id === userId);
+    toast.success(`User ${user?.is_active ? 'deactivated' : 'activated'}`);
+    setUsers(users.map(u => u.id === userId ? { ...u, is_active: !u.is_active } : u));
+  };
