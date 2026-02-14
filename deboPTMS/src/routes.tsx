@@ -1,0 +1,14 @@
+import { createBrowserRouter } from "react-router";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { AdminDashboard } from "./pages/AdminDashboard";
+import { ManagerDashboard } from "./pages/ManagerDashboard";
+import { MemberDashboard } from "./pages/MemberDashboard";
+import { Projects } from "./pages/Projects";
+import { Tasks } from "./pages/Tasks";
+import { Teams } from "./pages/Teams";
+import { Reports } from "./pages/Reports";
+import { Profile } from "./pages/Profile";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DashboardLayout } from "./components/DashboardLayout";
