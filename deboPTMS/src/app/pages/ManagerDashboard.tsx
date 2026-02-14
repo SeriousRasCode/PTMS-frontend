@@ -87,3 +87,20 @@ export const ManagerDashboard = () => {
       completionRate: 72,
     });
   }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-500";
+      case "in_progress":
+        return "bg-blue-500";
+      case "planning":
+        return "bg-yellow-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status.replace("_", " ").toUpperCase();
+  };
