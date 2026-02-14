@@ -121,6 +121,13 @@ export const Login = () => {
           </div>
         </div>
 
+        {/* Footer Info */}
+        <div className="mt-6 text-center text-white/60 text-sm">
+          <p>Project Task Management System</p>
+        </div>
+      </div>
+    </div>
+
   );
 
 };
