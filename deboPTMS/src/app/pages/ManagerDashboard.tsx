@@ -218,6 +218,46 @@ export const ManagerDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-[#0f5841]/5 to-white">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-[#0f5841] to-[#194f87] rounded-full">
+                <CheckSquare className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900">Create Task</h3>
+              <p className="text-sm text-gray-600">Assign new tasks to team members</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-[#194f87]/5 to-white">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-[#194f87] to-[#0f5841] rounded-full">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900">Manage Team</h3>
+              <p className="text-sm text-gray-600">Add or remove team members</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-[#0f5841]/5 to-white">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-[#0f5841] to-[#194f87] rounded-full">
+                <Clock className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900">View Reports</h3>
+              <p className="text-sm text-gray-600">Check team performance metrics</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 
 };
