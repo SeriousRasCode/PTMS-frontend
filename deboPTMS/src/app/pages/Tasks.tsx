@@ -88,6 +88,19 @@ export const Tasks = () => {
     setNewTask({ title: "", description: "", project_id: "1", due_date: "", priority: "medium" });
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-500";
+      case "in_progress":
+        return "bg-blue-500";
+      case "not_started":
+        return "bg-gray-400";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
     const renderTaskCard = (task: any) => (
     <Card key={task.id} className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
