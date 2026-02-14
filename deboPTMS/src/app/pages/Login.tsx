@@ -40,7 +40,19 @@ export const Login = () => {
       }, 100);
     } catch (error: any) {
       const errorMessage = error?.message || "Login failed. Please check your credentials.";
-      toast.error(errorMessage);
+      
+      // If it's a backend endpoint error, show additional help
+      if (errorMessage.includes('Backend endpoint not found') || errorMessage.includes('Unable to connect to server')) {
+        toast.error('Backend connection error! Please check your backend server.', {
+          duration: 10000,
+          action: {
+            label: 'Diagnose',
+            onClick: () => window.open('/test-backend-connection.html', '_blank')
+          }
+        });
+      } else {
+        toast.error(errorMessage, { duration: 5000 });
+      }
     } finally {
       setLoading(false);
     }

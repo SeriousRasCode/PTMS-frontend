@@ -13,7 +13,6 @@ import {
   TrendingUp
 } from "lucide-react";
 
-
 interface Project {
   id: number;
   name: string;
@@ -105,7 +104,7 @@ export const ManagerDashboard = () => {
     return status.replace("_", " ").toUpperCase();
   };
 
-  return(
+  return (
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#194f87] to-[#0f5841] rounded-xl p-6 text-white shadow-lg">
@@ -259,5 +258,4 @@ export const ManagerDashboard = () => {
       </div>
     </div>
   );
-
 };

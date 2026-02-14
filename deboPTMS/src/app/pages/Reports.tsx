@@ -5,8 +5,7 @@ import { BarChart3, TrendingUp, AlertCircle, Users, Clock, CheckCircle2 } from "
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 
 export const Reports = () => {
-
-    const overdueTasksData = [
+  const overdueTasksData = [
     { id: 1, title: "Update database schema", project: "API Integration", assignee: "John Doe", daysOverdue: 3 },
     { id: 2, title: "Fix mobile responsiveness", project: "Website Redesign", assignee: "Jane Smith", daysOverdue: 1 },
     { id: 3, title: "Write unit tests", project: "Mobile App", assignee: "Mike Johnson", daysOverdue: 5 },
@@ -44,7 +43,7 @@ export const Reports = () => {
     { day: "Sun", completed: 2 },
   ];
 
-    return(
+  return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
@@ -249,6 +248,5 @@ export const Reports = () => {
         </TabsContent>
       </Tabs>
     </div>
-    );
-
+  );
 };

@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Mail, ArrowLeft, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { authAPI } from "../utils/api";
 
 export const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -16,27 +17,18 @@ export const ForgotPassword = () => {
     setLoading(true);
 
     try {
-
-         await fetch('{{baseUrl}}/auth/forgot-password', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ email })
-       });
-      
-      setTimeout(() => {
-        setSubmitted(true);
-        toast.success("Password reset link sent to your email!");
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      toast.error("Failed to send reset link. Please try again.");
+      await authAPI.forgotPassword({ email });
+      setSubmitted(true);
+      toast.success("Password reset link sent to your email!");
+    } catch (error: any) {
+      const errorMessage = error?.message || "Failed to send reset link. Please try again.";
+      toast.error(errorMessage);
+    } finally {
       setLoading(false);
     }
   };
 
-
-  return(
-
+  return (
     <div className="min-h-screen bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -98,7 +90,5 @@ export const ForgotPassword = () => {
         </div>
       </div>
     </div>
-
   );
-
 };

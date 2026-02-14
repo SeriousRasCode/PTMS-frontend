@@ -9,14 +9,12 @@ import { User, Mail, Lock, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export const Profile = () => {
-
-    const { user } = useAuth();
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     full_name: user?.full_name || "",
     email: user?.email || "",
   });
-
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -59,9 +57,8 @@ export const Profile = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-    return(
-
-        <div className="space-y-6 max-w-4xl">
+  return (
+    <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
         <p className="text-gray-600 mt-1">Manage your account settings and preferences</p>
@@ -173,7 +170,7 @@ export const Profile = () => {
         </CardContent>
       </Card>
 
-       {/* Change Password */}
+      {/* Change Password */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -226,6 +223,5 @@ export const Profile = () => {
         </CardContent>
       </Card>
     </div>
-    );
-
+  );
 };

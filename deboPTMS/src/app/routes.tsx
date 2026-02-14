@@ -12,6 +12,27 @@ import { Reports } from "./pages/Reports";
 import { Profile } from "./pages/Profile";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
+import { Navigate } from "react-router";
+
+// Component to redirect to role-based dashboard
+const DashboardRedirect = () => {
+  const storedUser = localStorage.getItem("user");
+  
+  if (storedUser) {
+    const userData = JSON.parse(storedUser);
+    const role = userData.role || userData.role_name;
+    
+    const dashboardPath = role === "Admin" 
+      ? "/dashboard/admin" 
+      : role === "Manager" 
+      ? "/dashboard/manager" 
+      : "/dashboard/member";
+    
+    return <Navigate to={dashboardPath} replace />;
+  }
+  
+  return <Navigate to="/login" replace />;
+};
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +59,10 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      {
+        index: true,
+        element: <DashboardRedirect />,
+      },
       {
         path: "admin",
         element: (

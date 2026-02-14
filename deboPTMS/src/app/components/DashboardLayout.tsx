@@ -41,8 +41,7 @@ export const DashboardLayout = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  return(
-
+  return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Top Navigation Bar */}
       <div className="fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-[#0f5841] to-[#194f87] shadow-lg z-50">
@@ -114,5 +113,4 @@ export const DashboardLayout = () => {
       </div>
     </div>
   );
-
 };

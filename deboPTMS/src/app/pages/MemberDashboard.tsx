@@ -141,12 +141,9 @@ export const MemberDashboard = () => {
     return new Date(dueDate) < new Date() && status !== "completed";
   };
 
-
-  return(
-
+  return (
     <div className="space-y-6">
-
-        {/* Header */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-[#0f5841] via-[#194f87] to-[#0f5841] rounded-xl p-6 text-white shadow-lg">
         <h1 className="text-3xl font-bold mb-2">My Dashboard</h1>
         <p className="text-white/90">Track your tasks and update your progress</p>
@@ -276,7 +273,5 @@ export const MemberDashboard = () => {
         </CardContent>
       </Card>
     </div>
-
   );
-
 };

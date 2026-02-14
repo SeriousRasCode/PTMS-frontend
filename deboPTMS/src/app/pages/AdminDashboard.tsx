@@ -52,7 +52,6 @@ export const AdminDashboard = () => {
     });
   }, []);
 
-
   const handleRoleChange = async (userId: number, newRole: string) => {
     // Mock API call
     toast.success(`Role updated to ${newRole}`);
@@ -71,8 +70,7 @@ export const AdminDashboard = () => {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return(
-
+  return (
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#0f5841] to-[#194f87] rounded-xl p-6 text-white shadow-lg">
@@ -139,8 +137,7 @@ export const AdminDashboard = () => {
           </div>
         </CardHeader>
         <CardContent>
-
-            {/* Search */}
+          {/* Search */}
           <div className="mb-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -153,7 +150,7 @@ export const AdminDashboard = () => {
             </div>
           </div>
 
-            {/* Users Table */}
+          {/* Users Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -217,7 +214,5 @@ export const AdminDashboard = () => {
         </CardContent>
       </Card>
     </div>
-
   );
-
 };

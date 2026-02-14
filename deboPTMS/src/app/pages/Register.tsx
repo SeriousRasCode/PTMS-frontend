@@ -38,27 +38,49 @@ export const Register = () => {
       toast.success("Registration successful!");
       
       setTimeout(() => {
-        const role = parseInt(roleId) === 1 ? "Admin" : parseInt(roleId) === 2 ? "Manager" : "Member";
-        const dashboardPath = role === "Admin" 
-          ? "/dashboard/admin" 
-          : role === "Manager" 
-          ? "/dashboard/manager" 
-          : "/dashboard/member";
-        navigate(dashboardPath);
+        // Get the updated user from localStorage (it's set in register)
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          const role = userData.role || userData.role_name;
+          
+          const dashboardPath = role === "Admin" 
+            ? "/dashboard/admin" 
+            : role === "Manager" 
+            ? "/dashboard/manager" 
+            : "/dashboard/member";
+          navigate(dashboardPath);
+        }
       }, 100);
-    } catch (error) {
-      toast.error("Registration failed. Please try again.");
+    } catch (error: any) {
+      const errorMessage = error?.message || "Registration failed. Please try again.";
+      
+      // If it's a backend endpoint error, show additional help
+      if (errorMessage.includes('Backend endpoint not found')) {
+        toast.error('Backend endpoint /auth/register not found! Your backend needs to implement this endpoint.', {
+          duration: 10000,
+          action: {
+            label: 'How to Fix',
+            onClick: () => window.open('/BACKEND_ENDPOINT_ERROR.md', '_blank')
+          }
+        });
+        
+        // Also open the testing tool automatically
+        setTimeout(() => {
+          window.open('/test-backend-connection.html', '_blank');
+        }, 1000);
+      } else {
+        toast.error(errorMessage, { duration: 5000 });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  return(
-
-  <div className="min-h-screen bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87] flex items-center justify-center p-4">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-
-    {/* Logo/Header */}
+        {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
             <UserPlus size={48} className="text-white" />
@@ -66,7 +88,8 @@ export const Register = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
           <p className="text-white/80">Join PTMS and start managing projects</p>
         </div>
-      {/* Register Form */}
+
+        {/* Register Form */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">

@@ -12,8 +12,7 @@ import { CheckSquare, Plus, Calendar, User, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Tasks = () => {
-
-    const [tasks, setTasks] = useState([
+  const [tasks, setTasks] = useState([
     {
       id: 1,
       title: "Design homepage mockup",
@@ -119,7 +118,7 @@ export const Tasks = () => {
     return tasks.filter(task => task.status === status);
   };
 
-    const renderTaskCard = (task: any) => (
+  const renderTaskCard = (task: any) => (
     <Card key={task.id} className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
         <div className="space-y-3">
@@ -165,8 +164,8 @@ export const Tasks = () => {
     </Card>
   );
 
-    return(
-        <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
@@ -280,6 +279,5 @@ export const Tasks = () => {
         </TabsContent>
       </Tabs>
     </div>
-    );
-
+  );
 };
