@@ -80,7 +80,52 @@ export const AdminDashboard = () => {
         <p className="text-white/90">Manage users, roles, and system overview</p>
       </div>
 
-      
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-l-4 border-l-[#0f5841]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
+            <Users className="h-5 w-5 text-[#0f5841]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">{stats.totalUsers}</div>
+            <p className="text-xs text-gray-500 mt-1">{stats.activeUsers} active</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-[#194f87]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Projects</CardTitle>
+            <FolderKanban className="h-5 w-5 text-[#194f87]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">{stats.totalProjects}</div>
+            <p className="text-xs text-gray-500 mt-1">8 active</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-[#0f5841]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Tasks</CardTitle>
+            <CheckSquare className="h-5 w-5 text-[#0f5841]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">{stats.totalTasks}</div>
+            <p className="text-xs text-gray-500 mt-1">32 completed</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-[#194f87]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Productivity</CardTitle>
+            <TrendingUp className="h-5 w-5 text-[#194f87]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">87%</div>
+            <p className="text-xs text-gray-500 mt-1">+5% from last week</p>
+          </CardContent>
+        </Card>
+      </div>
   );
 
 };
