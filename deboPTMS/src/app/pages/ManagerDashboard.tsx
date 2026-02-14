@@ -24,3 +24,12 @@ interface Project {
   team_size: number;
   deadline: string;
 }
+
+export const ManagerDashboard = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    activeTasks: 0,
+    teamMembers: 0,
+    completionRate: 0,
+  });
