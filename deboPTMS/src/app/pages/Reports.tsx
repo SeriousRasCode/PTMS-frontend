@@ -13,7 +13,7 @@ export const Reports = () => {
         <p className="text-gray-600 mt-1">Track performance and productivity metrics</p>
       </div>
 
-        {/* Key Metrics */}
+      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -68,9 +68,8 @@ export const Reports = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
-
-          {/* Task Status Distribution */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Task Status Distribution */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
