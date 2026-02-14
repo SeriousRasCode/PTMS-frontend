@@ -65,3 +65,8 @@ export const AdminDashboard = () => {
     toast.success(`User ${user?.is_active ? 'deactivated' : 'activated'}`);
     setUsers(users.map(u => u.id === userId ? { ...u, is_active: !u.is_active } : u));
   };
+
+  const filteredUsers = users.filter(user =>
+    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
