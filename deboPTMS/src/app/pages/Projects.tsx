@@ -46,7 +46,15 @@ export const Projects = () => {
       end_date: "2026-03-30",
     },
   ]);
-  
+
+  const [newProject, setNewProject] = useState({
+    name: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    team_id: "1",
+  });
+
     return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
