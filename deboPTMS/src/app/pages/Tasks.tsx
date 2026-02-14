@@ -68,6 +68,12 @@ export const Tasks = () => {
     priority: "medium",
   });
 
+  const handleCreateTask = () => {
+    if (!newTask.title || !newTask.description) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
     const renderTaskCard = (task: any) => (
     <Card key={task.id} className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
