@@ -159,6 +159,65 @@ export const ManagerDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Projects Overview */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">Project Overview</CardTitle>
+            <Button className="bg-gradient-to-r from-[#194f87] to-[#0f5841] text-white">
+              <Plus className="mr-2 h-4 w-4" />
+              New Project
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-lg text-gray-900">{project.name}</h3>
+                      <Badge className={getStatusColor(project.status)}>
+                        {getStatusLabel(project.status)}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span className="flex items-center gap-1">
+                        <CheckSquare size={16} />
+                        {project.completedTasks}/{project.tasks} tasks
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users size={16} />
+                        {project.team_size} members
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={16} />
+                        Due: {new Date(project.deadline).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    View Details
+                  </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Progress</span>
+                    <span className="font-semibold text-gray-900">{project.progress}%</span>
+                  </div>
+                  <Progress value={project.progress} className="h-2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
   );
 
 };
