@@ -51,3 +51,10 @@ export const AdminDashboard = () => {
       activeUsers: mockUsers.filter(u => u.is_active).length,
     });
   }, []);
+
+
+  const handleRoleChange = async (userId: number, newRole: string) => {
+    // Mock API call
+    toast.success(`Role updated to ${newRole}`);
+    setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+  };
