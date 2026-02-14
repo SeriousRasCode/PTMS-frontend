@@ -92,6 +92,84 @@ export const MemberDashboard = () => {
         </Card>
       </div>
 
+      {/* My Tasks */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">My Tasks</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {tasks.map((task) => (
+              <div
+                key={task.id}
+                className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${
+                  isOverdue(task.due_date, task.status) ? "border-red-300 bg-red-50/30" : "bg-white"
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-lg text-gray-900">{task.title}</h3>
+                      <Badge className={getStatusColor(task.status)}>
+                        {getStatusLabel(task.status)}
+                      </Badge>
+                      <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                        {task.priority.toUpperCase()}
+                      </Badge>
+                      {isOverdue(task.due_date, task.status) && (
+                        <Badge variant="destructive" className="bg-red-500">
+                          OVERDUE
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span className="flex items-center gap-1">
+                        <Play size={16} />
+                        {task.project}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={16} />
+                        Due: {new Date(task.due_date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {task.status !== "completed" && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Progress</span>
+                      <span className="font-semibold text-gray-900">{task.progress_percentage}%</span>
+                    </div>
+                    <Progress value={task.progress_percentage} className="h-2" />
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Slider
+                          value={[task.progress_percentage]}
+                          onValueChange={(value) => handleProgressUpdate(task.id, value[0])}
+                          max={100}
+                          step={5}
+                          className="cursor-pointer"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleProgressUpdate(task.id, 100)}
+                        className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white"
+                      >
+                        Mark Complete
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
   );
 
 };
