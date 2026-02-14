@@ -137,6 +137,10 @@ export const MemberDashboard = () => {
     }
   };
 
+  const isOverdue = (dueDate: string, status: string) => {
+    return new Date(dueDate) < new Date() && status !== "completed";
+  };
+
 
   return(
 
