@@ -73,44 +73,47 @@ export const Projects = () => {
 
   // --- CREATE PROJECT ---
   const handleCreateProject = async () => {
-    // Validation
-    if (!newProject.name || !newProject.description || !newProject.start_date || !newProject.end_date) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
+  // Validation
+  if (!newProject.name || !newProject.description || !newProject.start_date || !newProject.end_date) {
+    toast.error("Please fill in all required fields");
+    return;
+  }
 
-    try {
-      const response = await fetch("/api/create-projects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`
-        },
-        body: JSON.stringify(newProject),
+  try {
+    const response = await fetch("/api/create-projects", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}` // Ensure this key matches your login storage
+      },
+      body: JSON.stringify(newProject),
+    });
+
+    const result = await response.json();
+
+    // FIX: Check for response.ok (status 200-299) because your backend 
+    // sends 201 but doesn't include a "success: true" boolean.
+    if (response.ok) {
+      toast.success(result.message || "Project created successfully!");
+      setIsDialogOpen(false); 
+      fetchProjects(); // Refresh the list
+      
+      setNewProject({ 
+        name: "", 
+        description: "", 
+        start_date: "", 
+        end_date: "", 
+        team_id: "1",
+        manager_id: "1"
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success("Project created successfully!");
-        setIsDialogOpen(false); 
-        fetchProjects(); // Refresh the list
-        // Reset form
-        setNewProject({ 
-          name: "", 
-          description: "", 
-          start_date: "", 
-          end_date: "", 
-          team_id: "1", 
-          manager_id: "1" 
-        });
-      } else {
-        toast.error(result.message || "Failed to create project");
-      }
-    } catch (err) {
-      toast.error("Failed to create project");
+    } else {
+      toast.error(result.message || "Failed to create project");
     }
-  };
+  } catch (err) {
+    console.error("Create Project Error:", err);
+    toast.error("Failed to create project");
+  }
+};
 
   const getStatusColor = (status: string) => {
     switch (status) {
