@@ -43,7 +43,7 @@ export const AdminDashboard = () => {
       return;
     }
 
-    const res = await fetch("http://localhost:3000/api/admin/all-users", {
+    const res = await fetch("/api/admin/all-users", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -83,7 +83,7 @@ try {
 
   const handleRoleChange = async (userId: number, newRole: string) => {
   try {
-    const res = await fetch(`/api/admin/users/${userId}/role`, {
+    const res = await fetch(`/api/admin/all-users/${userId}/role`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -115,7 +115,7 @@ try {
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
-    const res = await fetch(`/api/admin/users/${userId}/status`, {
+    const res = await fetch(`/api/admin/all-users/${userId}/status`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
