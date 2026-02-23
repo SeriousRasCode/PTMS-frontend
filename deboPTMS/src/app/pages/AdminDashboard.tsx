@@ -100,11 +100,36 @@ export const AdminDashboard = () => {
 };
 
   const handleStatusToggle = async (userId: number) => {
-    // Mock API call
+  try {
     const user = users.find(u => u.id === userId);
-    toast.success(`User ${user?.is_active ? 'deactivated' : 'activated'}`);
-    setUsers(users.map(u => u.id === userId ? { ...u, is_active: !u.is_active } : u));
-  };
+    if (!user) return;
+
+    const res = await fetch(`/api/admin/users/${userId}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ is_active: !user.is_active }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to update status");
+    }
+
+    toast.success(data.message);
+
+    setUsers(prev =>
+      prev.map(u =>
+        u.id === userId ? { ...u, is_active: !u.is_active } : u
+      )
+    );
+
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+};
 
   const filteredUsers = users.filter(user =>
     user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
