@@ -136,7 +136,7 @@ try {
     const res = await fetch(
       `/api/admin/users/${userId}/change-status`, 
       {
-        method: "PATCH", // ⚠️ must match backend
+        method: "PATCH", 
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
