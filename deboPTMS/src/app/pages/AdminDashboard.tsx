@@ -34,36 +34,125 @@ export const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    // Mock data - replace with actual API calls
-    const mockUsers: User[] = [
-      { id: 1, full_name: "John Admin", email: "admin@example.com", role: "Admin", is_active: true },
-      { id: 2, full_name: "Sarah Manager", email: "manager@example.com", role: "Manager", is_active: true },
-      { id: 3, full_name: "Mike Developer", email: "member@example.com", role: "Member", is_active: true },
-      { id: 4, full_name: "Lisa Designer", email: "lisa@example.com", role: "Member", is_active: true },
-      { id: 5, full_name: "Tom Analyst", email: "tom@example.com", role: "Member", is_active: false },
-    ];
+  const fetchUsers = async () => {
+  try {
+    const token = localStorage.getItem("authToken");
 
-    setUsers(mockUsers);
-    setStats({
-      totalUsers: mockUsers.length,
-      totalProjects: 12,
-      totalTasks: 48,
-      activeUsers: mockUsers.filter(u => u.is_active).length,
+    if (!token) {
+      toast.error("No auth token found");
+      return;
+    }
+
+    const res = await fetch("/api/admin/all-users", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
-  }, []);
+
+    const text = await res.text();
+console.log("RAW RESPONSE:", text);
+
+let data;
+try {
+  data = JSON.parse(text);
+} catch {
+  throw new Error(text || "Invalid server response");
+}
+
+    if (!res.ok) {
+      throw new Error(data.message || "Unauthorized");
+    }
+
+    const formattedUsers: User[] = data.data.map((u: any) => ({
+      id: u.id,
+      full_name: u.full_name,
+      email: u.email,
+      role: u.roles || "No Role", // backend untouched
+      is_active: Boolean(u.is_active),
+    }));
+
+    setUsers(formattedUsers);
+
+  } catch (err: any) {
+    toast.error(err.message);
+  }
+};
+
+  fetchUsers();
+}, []);
 
   const handleRoleChange = async (userId: number, newRole: string) => {
-    // Mock API call
-    toast.success(`Role updated to ${newRole}`);
-    setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-  };
+  try {
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      toast.error("No auth token found");
+      return;
+    }
+
+    const res = await fetch(
+      `/api/admin/users/${userId}/change-roles`,
+      {
+        method: "POST", // ✅ MUST be POST
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ roleName: newRole }),
+      }
+    );
+
+    const text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(text || "Failed to update role");
+    }
+
+    toast.success("Role updated successfully");
+
+    // Optimistic UI update
+    setUsers(prev =>
+      prev.map(u =>
+        u.id === userId ? { ...u, role: newRole } : u
+      )
+    );
+
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+};
 
   const handleStatusToggle = async (userId: number) => {
-    // Mock API call
+  try {
     const user = users.find(u => u.id === userId);
-    toast.success(`User ${user?.is_active ? 'deactivated' : 'activated'}`);
-    setUsers(users.map(u => u.id === userId ? { ...u, is_active: !u.is_active } : u));
-  };
+    if (!user) return;
+
+    const res = await fetch(`/api/admin/all-users/${userId}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ is_active: !user.is_active }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to update status");
+    }
+
+    toast.success(data.message);
+
+    setUsers(prev =>
+      prev.map(u =>
+        u.id === userId ? { ...u, is_active: !u.is_active } : u
+      )
+    );
+
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+};
 
   const filteredUsers = users.filter(user =>
     user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
