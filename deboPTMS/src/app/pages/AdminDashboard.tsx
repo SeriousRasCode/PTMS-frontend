@@ -34,23 +34,41 @@ export const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    // Mock data - replace with actual API calls
-    const mockUsers: User[] = [
-      { id: 1, full_name: "John Admin", email: "admin@example.com", role: "Admin", is_active: true },
-      { id: 2, full_name: "Sarah Manager", email: "manager@example.com", role: "Manager", is_active: true },
-      { id: 3, full_name: "Mike Developer", email: "member@example.com", role: "Member", is_active: true },
-      { id: 4, full_name: "Lisa Designer", email: "lisa@example.com", role: "Member", is_active: true },
-      { id: 5, full_name: "Tom Analyst", email: "tom@example.com", role: "Member", is_active: false },
-    ];
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/admin/users");
+      const data = await res.json();
 
-    setUsers(mockUsers);
-    setStats({
-      totalUsers: mockUsers.length,
-      totalProjects: 12,
-      totalTasks: 48,
-      activeUsers: mockUsers.filter(u => u.is_active).length,
-    });
-  }, []);
+      if (!data.success) {
+        throw new Error("Failed to fetch users");
+      }
+
+      // Map backend "roles" to frontend "role"
+      const formattedUsers: User[] = data.data.map((u: any) => ({
+        id: u.id,
+        full_name: u.full_name,
+        email: u.email,
+        role: u.roles || "No Role",
+        is_active: !!u.is_active,
+      }));
+
+      setUsers(formattedUsers);
+
+      setStats({
+        totalUsers: formattedUsers.length,
+        totalProjects: 0, // Replace when you connect project API
+        totalTasks: 0,    // Replace when you connect task API
+        activeUsers: formattedUsers.filter(u => u.is_active).length,
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load users");
+    }
+  };
+
+  fetchUsers();
+}, []);
 
   const handleRoleChange = async (userId: number, newRole: string) => {
     // Mock API call
