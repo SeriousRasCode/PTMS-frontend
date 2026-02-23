@@ -71,10 +71,33 @@ export const AdminDashboard = () => {
 }, []);
 
   const handleRoleChange = async (userId: number, newRole: string) => {
-    // Mock API call
-    toast.success(`Role updated to ${newRole}`);
-    setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-  };
+  try {
+    const res = await fetch(`/api/admin/users/${userId}/role`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ roleName: newRole }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to update role");
+    }
+
+    toast.success("Role updated successfully");
+
+    setUsers(prev =>
+      prev.map(u =>
+        u.id === userId ? { ...u, role: newRole } : u
+      )
+    );
+
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+};
 
   const handleStatusToggle = async (userId: number) => {
     // Mock API call
