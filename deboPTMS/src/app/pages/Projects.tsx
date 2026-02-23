@@ -9,41 +9,26 @@ import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { FolderKanban, Plus, Users, Calendar, Edit2 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface Project {
+  id: number;
+  name: string;
+  description: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  team_name: string;    // From SQL Alias
+  manager_name: string; // From SQL Alias
+  progress?: number;    // Optional until you add it to SQL
+  team_size?: number;   // Optional until you add it to SQL
+}
 
 export const Projects = () => {
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: "Website Redesign",
-      description: "Complete overhaul of company website",
-      status: "active",
-      progress: 65,
-      team_size: 5,
-      start_date: "2026-01-15",
-      end_date: "2026-03-15",
-    },
-    {
-      id: 2,
-      name: "Mobile App Development",
-      description: "iOS and Android application",
-      status: "active",
-      progress: 40,
-      team_size: 7,
-      start_date: "2026-02-01",
-      end_date: "2026-04-20",
-    },
-    {
-      id: 3,
-      name: "API Integration",
-      description: "Third-party API integration",
-      status: "planning",
-      progress: 15,
-      team_size: 3,
-      start_date: "2026-02-10",
-      end_date: "2026-03-30",
-    },
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [newProject, setNewProject] = useState({
     name: "",
@@ -51,39 +36,89 @@ export const Projects = () => {
     start_date: "",
     end_date: "",
     team_id: "1",
+    manager_id: "1" 
   });
 
-  const handleCreateProject = () => {
-    if (!newProject.name || !newProject.description) {
+  // --- GET ALL PROJECTS ---
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      // Make sure this URL matches your backend route exactly
+      const response = await fetch("/api/all-projects", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+        },
+      });
+      
+      const result = await response.json();
+
+      if (result.success) {
+        setProjects(result.data);
+      } else {
+        toast.error(result.message || "Failed to fetch projects");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Server connection failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  // --- CREATE PROJECT ---
+  const handleCreateProject = async () => {
+    // Validation
+    if (!newProject.name || !newProject.description || !newProject.start_date || !newProject.end_date) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    const project = {
-      id: Date.now(),
-      ...newProject,
-      status: "planning",
-      progress: 0,
-      team_size: 0,
-    };
+    try {
+      const response = await fetch("/api/create-projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+        },
+        body: JSON.stringify(newProject),
+      });
 
-    setProjects([...projects, project]);
-    toast.success("Project created successfully!");
-    setNewProject({ name: "", description: "", start_date: "", end_date: "", team_id: "1" });
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Project created successfully!");
+        setIsDialogOpen(false); 
+        fetchProjects(); // Refresh the list
+        // Reset form
+        setNewProject({ 
+          name: "", 
+          description: "", 
+          start_date: "", 
+          end_date: "", 
+          team_id: "1", 
+          manager_id: "1" 
+        });
+      } else {
+        toast.error(result.message || "Failed to create project");
+      }
+    } catch (err) {
+      toast.error("Failed to create project");
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
-        return "bg-green-500";
-      case "active":
-        return "bg-blue-500";
-      case "planning":
-        return "bg-yellow-500";
-      case "on_hold":
-        return "bg-orange-500";
-      default:
-        return "bg-gray-500";
+      case "completed": return "bg-green-500";
+      case "active":    return "bg-blue-500";
+      case "planning":  return "bg-yellow-500";
+      case "on_hold":   return "bg-orange-500";
+      default:          return "bg-gray-500";
     }
   };
 
