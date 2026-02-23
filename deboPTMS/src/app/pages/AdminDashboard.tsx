@@ -35,37 +35,43 @@ export const AdminDashboard = () => {
 
   useEffect(() => {
   const fetchUsers = async () => {
-    try {
-      const res = await fetch("/api/admin/all-users");
-      const data = await res.json();
+  try {
+    const token = localStorage.getItem("token"); // or however you store it
 
-      if (!data.success) {
-        throw new Error("Failed to fetch users");
-      }
+    const res = await fetch("/api/admin/all-users", {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
 
-      // Map backend "roles" to frontend "role"
-      const formattedUsers: User[] = data.data.map((u: any) => ({
-        id: u.id,
-        full_name: u.full_name,
-        email: u.email,
-        role: u.roles || "No Role",
-        is_active: !!u.is_active,
-      }));
+    const data = await res.json();
 
-      setUsers(formattedUsers);
-
-      setStats({
-        totalUsers: formattedUsers.length,
-        totalProjects: 0, // Replace when you connect project API
-        totalTasks: 0,    // Replace when you connect task API
-        activeUsers: formattedUsers.filter(u => u.is_active).length,
-      });
-
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load users");
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to fetch users");
     }
-  };
+
+    const formattedUsers: User[] = data.data.map((u: any) => ({
+      id: u.id,
+      full_name: u.full_name,
+      email: u.email,
+      role: u.role || "No Role",
+      is_active: !!u.is_active,
+    }));
+
+    setUsers(formattedUsers);
+
+    setStats({
+      totalUsers: formattedUsers.length,
+      totalProjects: 0,
+      totalTasks: 0,
+      activeUsers: formattedUsers.filter(u => u.is_active).length,
+    });
+
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.message || "Failed to load users");
+  }
+};
 
   fetchUsers();
 }, []);
