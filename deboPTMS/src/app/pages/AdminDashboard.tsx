@@ -36,40 +36,45 @@ export const AdminDashboard = () => {
   useEffect(() => {
   const fetchUsers = async () => {
   try {
-    const token = localStorage.getItem("token"); // or however you store it
+    const token = localStorage.getItem("authToken");
 
-    const res = await fetch("/api/admin/all-users", {
+    if (!token) {
+      toast.error("No auth token found");
+      return;
+    }
+
+    const res = await fetch("http://localhost:3000/api/admin/all-users", {
       headers: {
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
-    const data = await res.json();
+    const text = await res.text();
+console.log("RAW RESPONSE:", text);
 
-    if (!res.ok || !data.success) {
-      throw new Error(data.message || "Failed to fetch users");
+let data;
+try {
+  data = JSON.parse(text);
+} catch {
+  throw new Error(text || "Invalid server response");
+}
+
+    if (!res.ok) {
+      throw new Error(data.message || "Unauthorized");
     }
 
     const formattedUsers: User[] = data.data.map((u: any) => ({
       id: u.id,
       full_name: u.full_name,
       email: u.email,
-      role: u.role || "No Role",
-      is_active: !!u.is_active,
+      role: u.roles || "No Role", // backend untouched
+      is_active: Boolean(u.is_active),
     }));
 
     setUsers(formattedUsers);
 
-    setStats({
-      totalUsers: formattedUsers.length,
-      totalProjects: 0,
-      totalTasks: 0,
-      activeUsers: formattedUsers.filter(u => u.is_active).length,
-    });
-
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.message || "Failed to load users");
+  } catch (err: any) {
+    toast.error(err.message);
   }
 };
 
