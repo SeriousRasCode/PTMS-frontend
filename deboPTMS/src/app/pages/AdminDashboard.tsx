@@ -36,7 +36,7 @@ export const AdminDashboard = () => {
   useEffect(() => {
   const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/admin/users");
+      const res = await fetch("/api/admin/all-users");
       const data = await res.json();
 
       if (!data.success) {
