@@ -83,22 +83,34 @@ try {
 
   const handleRoleChange = async (userId: number, newRole: string) => {
   try {
-    const res = await fetch(`/api/admin/all-users/${userId}/role`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ roleName: newRole }),
-    });
+    const token = localStorage.getItem("authToken");
 
-    const data = await res.json();
+    if (!token) {
+      toast.error("No auth token found");
+      return;
+    }
+
+    const res = await fetch(
+      `/api/admin/users/${userId}/change-roles`,
+      {
+        method: "POST", // ✅ MUST be POST
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ roleName: newRole }),
+      }
+    );
+
+    const text = await res.text();
 
     if (!res.ok) {
-      throw new Error(data.message || "Failed to update role");
+      throw new Error(text || "Failed to update role");
     }
 
     toast.success("Role updated successfully");
 
+    // Optimistic UI update
     setUsers(prev =>
       prev.map(u =>
         u.id === userId ? { ...u, role: newRole } : u
