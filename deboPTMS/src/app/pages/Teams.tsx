@@ -92,6 +92,22 @@ export const Teams = () => {
     }
   };
 
+  // --- UTILS ---
+  const getInitials = (name: string = "User") => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const getAvatarColor = (id: number) => {
+    const colors = [
+      "from-[#0f5841] to-[#194f87]",
+      "from-[#194f87] to-[#0f5841]",
+      "from-purple-500 to-pink-500",
+      "from-orange-500 to-red-500",
+      "from-green-500 to-teal-500",
+    ];
+    return colors[id % colors.length];
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
