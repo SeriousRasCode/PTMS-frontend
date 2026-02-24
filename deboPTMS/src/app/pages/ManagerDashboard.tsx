@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
+
+import { toast } from "sonner";
 import { 
   FolderKanban, 
   CheckSquare, 
@@ -26,66 +28,61 @@ interface Project {
 
 export const ManagerDashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalProjects: 0,
     activeTasks: 0,
     teamMembers: 0,
     completionRate: 0,
+    overdueTasks: 0, // Added this since your model returns it
   });
 
-  useEffect(() => {
-    // Mock data
-    const mockProjects: Project[] = [
-      {
-        id: 1,
-        name: "Website Redesign",
-        status: "in_progress",
-        progress: 65,
-        tasks: 12,
-        completedTasks: 8,
-        team_size: 5,
-        deadline: "2026-03-15"
-      },
-      {
-        id: 2,
-        name: "Mobile App Development",
-        status: "in_progress",
-        progress: 40,
-        tasks: 20,
-        completedTasks: 8,
-        team_size: 7,
-        deadline: "2026-04-20"
-      },
-      {
-        id: 3,
-        name: "API Integration",
-        status: "planning",
-        progress: 15,
-        tasks: 8,
-        completedTasks: 1,
-        team_size: 3,
-        deadline: "2026-03-30"
-      },
-      {
-        id: 4,
-        name: "Database Migration",
-        status: "completed",
-        progress: 100,
-        tasks: 6,
-        completedTasks: 6,
-        team_size: 4,
-        deadline: "2026-02-10"
-      },
-    ];
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+      };
 
-    setProjects(mockProjects);
-    setStats({
-      totalProjects: mockProjects.length,
-      activeTasks: mockProjects.reduce((sum, p) => sum + (p.tasks - p.completedTasks), 0),
-      teamMembers: 12,
-      completionRate: 72,
-    });
+      // 1. Fetch Summary Stats from /api/dashboard/manager
+      const statsRes = await fetch("/api/dashboard/manager", { headers });
+      const statsResult = await statsRes.json();
+
+      // 2. Fetch Project List from your existing projects route
+      const projectsRes = await fetch("/api/all-projects", { headers });
+      const projectsResult = await projectsRes.json();
+
+      if (statsResult.success) {
+        const s = statsResult.data;
+        const total = Number(s.total_tasks) || 0;
+        const completed = Number(s.completed_tasks) || 0;
+
+        setStats({
+          totalProjects: Number(s.total_projects) || 0,
+          activeTasks: total - completed,
+          overdueTasks: Number(s.overdue_tasks) || 0,
+          teamMembers: 0, // currently our model doesn't have this yet
+          completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+        });
+      }
+
+      if (projectsResult.success) {
+        setProjects(projectsResult.data);
+      }
+    } catch (err) {
+      console.error("Dashboard Fetch Error:", err);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
   }, []);
+
+ 
 
   const getStatusColor = (status: string) => {
     switch (status) {
