@@ -29,6 +29,7 @@ export const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [availableTeams, setAvailableTeams] = useState<{id: number, name: string}[]>([]);
 
   const [newProject, setNewProject] = useState({
     name: "",
@@ -67,8 +68,36 @@ export const Projects = () => {
     }
   };
 
+  // --- FETCH AVAILABLE TEAMS ---
+const fetchAvailableTeams = async () => {
+  try {
+    const response = await fetch("/api/my-teams", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+      },
+    });
+    const result = await response.json();
+    
+    // We check response.ok because your backend structure varies
+    if (response.ok) {
+      const teamData = result.data || result; 
+      setAvailableTeams(teamData);
+      
+      // Optional: Set default selection to the first team if it exists
+      if (teamData.length > 0) {
+        setNewProject(prev => ({ ...prev, team_id: teamData[0].id.toString() }));
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching teams for dropdown:", err);
+  }
+};
+
   useEffect(() => {
     fetchProjects();
+    fetchAvailableTeams();
   }, []);
 
   // --- CREATE PROJECT ---
