@@ -71,7 +71,7 @@ export const Projects = () => {
   // --- FETCH AVAILABLE TEAMS ---
 const fetchAvailableTeams = async () => {
   try {
-    const response = await fetch("/api/my-teams", {
+    const response = await fetch("/api/teams/my-teams", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
