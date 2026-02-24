@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -8,56 +8,99 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Users, Plus, Mail, UserPlus, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 
-export const Teams = () => {
-  const [teams, setTeams] = useState([
-    {
-      id: 1,
-      name: "Development Team",
-      members: [
-        { id: 1, name: "John Doe", email: "john@example.com", role: "Manager" },
-        { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Developer" },
-        { id: 3, name: "Mike Johnson", email: "mike@example.com", role: "Developer" },
-      ]
-    },
-    {
-      id: 2,
-      name: "Design Team",
-      members: [
-        { id: 4, name: "Sarah Williams", email: "sarah@example.com", role: "Lead Designer" },
-        { id: 5, name: "Tom Brown", email: "tom@example.com", role: "UI Designer" },
-      ]
-    },
-    {
-      id: 3,
-      name: "Marketing Team",
-      members: [
-        { id: 6, name: "Lisa Davis", email: "lisa@example.com", role: "Marketing Manager" },
-        { id: 7, name: "Chris Wilson", email: "chris@example.com", role: "Content Writer" },
-        { id: 8, name: "Emma Taylor", email: "emma@example.com", role: "Social Media Manager" },
-      ]
-    },
-  ]);
+// Define the shape of our data
+interface Member {
+  id: number;
+  full_name: string; // Adjusted to match typical DB naming
+  email: string;
+  role: string;
+}
 
+interface Team {
+  id: number;
+  name: string;
+  members: Member[];
+}
+
+export const Teams = () => {
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTeam, setNewTeam] = useState({ name: "" });
 
-  const handleCreateTeam = () => {
+  // --- FETCH TEAMS ---
+
+ const fetchTeams = async () => {
+  try {
+    setLoading(true);
+    // Adjusted URL: Ensure this matches your router.get path exactly
+    const response = await fetch("/api/my-teams", { 
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+      },
+    });
+
+    const result = await response.json();
+
+    // Check response.ok in case result.success is missing
+    if (response.ok && (result.success || result.data)) { 
+      const rawData = result.data || result; // Handle different JSON structures
+      
+      const teamsWithMembers = rawData.map((t: any) => ({
+        ...t,
+        // Since backend findTeamsByUserId doesn't return members yet, 
+        // we provide a mock empty array so the UI doesn't crash on .map()
+        members: t.members || [] 
+      }));
+      
+      setTeams(teamsWithMembers);
+    } else {
+      toast.error(result.message || "Failed to load teams");
+    }
+  } catch (err) {
+    console.error("Fetch teams error:", err);
+    toast.error("Server connection failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // --- CREATE TEAM ---
+  const handleCreateTeam = async () => {
     if (!newTeam.name) {
       toast.error("Please enter a team name");
       return;
     }
 
-    const team = {
-      id: Date.now(),
-      name: newTeam.name,
-      members: [],
-    };
+    try {
+      const response = await fetch("/api/teams/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+        },
+        body: JSON.stringify(newTeam),
+      });
 
-    setTeams([...teams, team]);
-    toast.success("Team created successfully!");
-    setNewTeam({ name: "" });
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Team created successfully!");
+        setIsDialogOpen(false);
+        setNewTeam({ name: "" });
+        fetchTeams(); // Refresh list
+      } else {
+        toast.error(result.message || "Failed to create team");
+      }
+    } catch (err) {
+      toast.error("Server error");
+    }
   };
 
-  const getInitials = (name: string) => {
+  // --- UTILS ---
+  const getInitials = (name: string = "User") => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
@@ -150,11 +193,11 @@ export const Teams = () => {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(member.id)} text-white font-semibold`}>
-                            {getInitials(member.name)}
+                            {getInitials(member.full_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium text-gray-900">{member.name}</div>
+                          <div className="font-medium text-gray-900">{member.full_name}</div>
                           <div className="text-sm text-gray-600 flex items-center gap-1">
                             <Mail size={12} />
                             {member.email}

@@ -127,21 +127,31 @@ try {
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
-    const res = await fetch(`/api/admin/all-users/${userId}/status`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ is_active: !user.is_active }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to update status");
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast.error("No auth token found");
+      return;
     }
 
-    toast.success(data.message);
+    const res = await fetch(
+      `/api/admin/users/${userId}/change-status`, 
+      {
+        method: "PATCH", 
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ is_active: !user.is_active }),
+      }
+    );
+
+    const text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(text || "Failed to update status");
+    }
+
+    toast.success("Status updated successfully");
 
     setUsers(prev =>
       prev.map(u =>
