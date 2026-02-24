@@ -60,6 +60,38 @@ export const Teams = () => {
     fetchTeams();
   }, []);
 
+  // --- CREATE TEAM ---
+  const handleCreateTeam = async () => {
+    if (!newTeam.name) {
+      toast.error("Please enter a team name");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/create-team", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+        },
+        body: JSON.stringify(newTeam),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Team created successfully!");
+        setIsDialogOpen(false);
+        setNewTeam({ name: "" });
+        fetchTeams(); // Refresh list
+      } else {
+        toast.error(result.message || "Failed to create team");
+      }
+    } catch (err) {
+      toast.error("Server error");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
