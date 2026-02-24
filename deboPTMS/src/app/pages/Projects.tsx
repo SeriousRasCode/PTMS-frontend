@@ -29,6 +29,7 @@ export const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [availableTeams, setAvailableTeams] = useState<{id: number, name: string}[]>([]);
 
   const [newProject, setNewProject] = useState({
     name: "",
@@ -67,8 +68,36 @@ export const Projects = () => {
     }
   };
 
+  // --- FETCH AVAILABLE TEAMS ---
+const fetchAvailableTeams = async () => {
+  try {
+    const response = await fetch("/api/teams/my-teams", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+      },
+    });
+    const result = await response.json();
+    
+    // We check response.ok because your backend structure varies
+    if (response.ok) {
+      const teamData = result.data || result; 
+      setAvailableTeams(teamData);
+      
+      // Optional: Set default selection to the first team if it exists
+      if (teamData.length > 0) {
+        setNewProject(prev => ({ ...prev, team_id: teamData[0].id.toString() }));
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching teams for dropdown:", err);
+  }
+};
+
   useEffect(() => {
     fetchProjects();
+    fetchAvailableTeams();
   }, []);
 
   // --- CREATE PROJECT ---
@@ -185,18 +214,34 @@ export const Projects = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="team_id">Team</Label>
-                <Select value={newProject.team_id} onValueChange={(value) => setNewProject({ ...newProject, team_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Development Team</SelectItem>
-                    <SelectItem value="2">Design Team</SelectItem>
-                    <SelectItem value="3">Marketing Team</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+  <Label htmlFor="team_id">Team</Label>
+  <Select 
+    value={newProject.team_id} 
+    onValueChange={(value) => setNewProject({ ...newProject, team_id: value })}
+  >
+    <SelectTrigger id="team_id">
+      <SelectValue placeholder={availableTeams.length > 0 ? "Select team" : "No teams available"} />
+    </SelectTrigger>
+    <SelectContent>
+      {availableTeams.length > 0 ? (
+        availableTeams.map((team) => (
+          <SelectItem key={team.id} value={team.id.toString()}>
+            {team.name}
+          </SelectItem>
+        ))
+      ) : (
+        <SelectItem value="none" disabled>
+          You aren't in any teams yet
+        </SelectItem>
+      )}
+    </SelectContent>
+  </Select>
+  {availableTeams.length === 0 && (
+    <p className="text-xs text-muted-foreground mt-1">
+      Note: You must be part of a team to create a project.
+    </p>
+  )}
+</div>
               <Button
                 onClick={handleCreateProject}
                 className="w-full bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white"
