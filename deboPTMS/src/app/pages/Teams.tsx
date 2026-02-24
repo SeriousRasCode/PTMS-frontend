@@ -8,6 +8,20 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Users, Plus, Mail, UserPlus, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 
+// Define the shape of our data
+interface Member {
+  id: number;
+  full_name: string; // Adjusted to match typical DB naming
+  email: string;
+  role: string;
+}
+
+interface Team {
+  id: number;
+  name: string;
+  members: Member[];
+}
+
 export const Teams = () => {
   const [teams, setTeams] = useState([
     {
