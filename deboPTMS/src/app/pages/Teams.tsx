@@ -29,36 +29,43 @@ export const Teams = () => {
   const [newTeam, setNewTeam] = useState({ name: "" });
 
   // --- FETCH TEAMS ---
-  const fetchTeams = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/my-teams", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`
-        },
-      });
-      const result = await response.json();
 
-      if (result.success) { 
-        // We'll initialize an empty array for members for now.
-        const teamsWithMembers = result.data.map((t: any) => ({
-          ...t,
-          members: t.members || [] 
-        }));
-        setTeams(teamsWithMembers);
-      }
-    } catch (err) {
-      toast.error("Failed to load teams");
-    } finally {
-      setLoading(false);
+ const fetchTeams = async () => {
+  try {
+    setLoading(true);
+    // Adjusted URL: Ensure this matches your router.get path exactly
+    const response = await fetch("/api/my-teams", { 
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+      },
+    });
+
+    const result = await response.json();
+
+    // Check response.ok in case result.success is missing
+    if (response.ok && (result.success || result.data)) { 
+      const rawData = result.data || result; // Handle different JSON structures
+      
+      const teamsWithMembers = rawData.map((t: any) => ({
+        ...t,
+        // Since backend findTeamsByUserId doesn't return members yet, 
+        // we provide a mock empty array so the UI doesn't crash on .map()
+        members: t.members || [] 
+      }));
+      
+      setTeams(teamsWithMembers);
+    } else {
+      toast.error(result.message || "Failed to load teams");
     }
-  };
-
-  useEffect(() => {
-    fetchTeams();
-  }, []);
+  } catch (err) {
+    console.error("Fetch teams error:", err);
+    toast.error("Server connection failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // --- CREATE TEAM ---
   const handleCreateTeam = async () => {
@@ -68,7 +75,7 @@ export const Teams = () => {
     }
 
     try {
-      const response = await fetch("/api/create-team", {
+      const response = await fetch("/api/teams/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
