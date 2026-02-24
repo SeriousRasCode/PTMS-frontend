@@ -186,11 +186,11 @@ export const Teams = () => {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(member.id)} text-white font-semibold`}>
-                            {getInitials(member.name)}
+                            {getInitials(member.full_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium text-gray-900">{member.name}</div>
+                          <div className="font-medium text-gray-900">{member.full_name}</div>
                           <div className="text-sm text-gray-600 flex items-center gap-1">
                             <Mail size={12} />
                             {member.email}
