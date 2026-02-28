@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock, LogIn, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface ValidationErrors {
@@ -17,6 +17,7 @@ export const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const { login, user, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -29,8 +30,65 @@ export const Login = () => {
     );
   }
 
+  // Validation functions
+  const validateEmail = (value: string): string | undefined => {
+    if (!value.trim()) return "Email is required";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) return "Please enter a valid email address";
+    return undefined;
+  };
+
+  const validatePassword = (value: string): string | undefined => {
+    if (!value) return "Password is required";
+    if (value.length < 6) return "Password must be at least 6 characters";
+    return undefined;
+  };
+
+  // Real-time validation on blur
+  const handleBlur = (field: string) => {
+    setTouched({ ...touched, [field]: true });
+    
+    const newErrors = { ...errors };
+    
+    switch (field) {
+      case "email":
+        const emailError = validateEmail(email);
+        if (emailError) newErrors.email = emailError;
+        else delete newErrors.email;
+        break;
+      case "password":
+        const passError = validatePassword(password);
+        if (passError) newErrors.password = passError;
+        else delete newErrors.password;
+        break;
+    }
+    
+    setErrors(newErrors);
+  };
+
+  const validate = (): boolean => {
+    const newErrors: ValidationErrors = {};
+    
+    const emailError = validateEmail(email);
+    if (emailError) newErrors.email = emailError;
+    
+    const passError = validatePassword(password);
+    if (passError) newErrors.password = passError;
+    
+    setErrors(newErrors);
+    setTouched({ email: true, password: true });
+    
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validate()) {
+      toast.error("Please fix the errors before submitting");
+      return;
+    }
+
     setLoading(true);
 
     console.log("Starting login with:", { email, password: "***" });
@@ -104,7 +162,7 @@ export const Login = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Mail className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="email"
                   type="email"
@@ -113,14 +171,24 @@ export const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
                   required
+                  onBlur={() => handleBlur("email")}
                 />
               </div>
+              {touched.email && errors.email && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{errors.email}</span>
+                </p>
+              )}
+              <p className="text-xs text-gray-500">
+                Try: admin@example.com, manager@example.com, or member@example.com
+              </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="password"
                   type="password"
@@ -129,8 +197,15 @@ export const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
                   required
+                  onBlur={() => handleBlur("password")}
                 />
               </div>
+              {touched.password && errors.password && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{errors.password}</span>
+                </p>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
