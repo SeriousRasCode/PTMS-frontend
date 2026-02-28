@@ -15,8 +15,17 @@ export const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [roleId, setRoleId] = useState("3"); // Default to Member
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  // If still loading auth state, show nothing (or a loader)
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
