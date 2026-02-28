@@ -109,9 +109,6 @@ export const Login = () => {
                   required
                 />
               </div>
-              <p className="text-xs text-gray-500">
-                Try: admin@example.com, manager@example.com, or member@example.com
-              </p>
             </div>
 
             <div className="space-y-2">
