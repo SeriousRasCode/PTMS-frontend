@@ -8,6 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { User, Mail, Lock, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
+interface ValidationErrors {
+  fullName?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
 export const Register = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
