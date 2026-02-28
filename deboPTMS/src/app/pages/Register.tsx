@@ -101,6 +101,27 @@ export const Register = () => {
     setErrors(newErrors);
   };
 
+    const validate = (): boolean => {
+    const newErrors: ValidationErrors = {};
+    
+    const nameError = validateFullName(fullName);
+    if (nameError) newErrors.fullName = nameError;
+    
+    const emailError = validateEmail(email);
+    if (emailError) newErrors.email = emailError;
+    
+    const passError = validatePassword(password);
+    if (passError) newErrors.password = passError;
+    
+    const confirmError = validateConfirmPassword(confirmPassword);
+    if (confirmError) newErrors.confirmPassword = confirmError;
+    
+    setErrors(newErrors);
+    setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
+    
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
