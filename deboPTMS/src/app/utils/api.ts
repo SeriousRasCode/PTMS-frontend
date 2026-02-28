@@ -3,7 +3,7 @@
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:3000/api"; // Backend runs on port 3333 - NO trailing slash
+  "http://localhost:3000/api"; 
 
 // Helper function for API requests
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
