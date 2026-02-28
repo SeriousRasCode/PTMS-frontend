@@ -3,7 +3,7 @@
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:3000/api"; 
+  "http://localhost:3000/api"; // Backend runs on port 3333 - NO trailing slash
 
 // Helper function for API requests
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
@@ -79,7 +79,6 @@ export const authAPI = {
     full_name: string;
     email: string;
     password: string;
-    role_id: number;
   }) =>
     apiRequest("/auth/register", {
       method: "POST",
@@ -87,7 +86,7 @@ export const authAPI = {
         full_name: data.full_name,
         email: data.email,
         password: data.password,
-        role_id: data.role_id,
+        role_id: 3, // Always register as Member (role_id: 3)
       }),
     }),
 
