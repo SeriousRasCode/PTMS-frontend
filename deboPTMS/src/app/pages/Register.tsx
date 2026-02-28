@@ -63,6 +63,44 @@ export const Register = () => {
     return undefined;
   };
 
+    // Real-time validation on blur
+  const handleBlur = (field: string) => {
+    setTouched({ ...touched, [field]: true });
+    
+    const newErrors = { ...errors };
+    
+    switch (field) {
+      case "fullName":
+        const nameError = validateFullName(fullName);
+        if (nameError) newErrors.fullName = nameError;
+        else delete newErrors.fullName;
+        break;
+      case "email":
+        const emailError = validateEmail(email);
+        if (emailError) newErrors.email = emailError;
+        else delete newErrors.email;
+        break;
+      case "password":
+        const passError = validatePassword(password);
+        if (passError) newErrors.password = passError;
+        else delete newErrors.password;
+        // Also revalidate confirm password if it's been touched
+        if (touched.confirmPassword) {
+          const confirmError = validateConfirmPassword(confirmPassword);
+          if (confirmError) newErrors.confirmPassword = confirmError;
+          else delete newErrors.confirmPassword;
+        }
+        break;
+      case "confirmPassword":
+        const confirmError = validateConfirmPassword(confirmPassword);
+        if (confirmError) newErrors.confirmPassword = confirmError;
+        else delete newErrors.confirmPassword;
+        break;
+    }
+    
+    setErrors(newErrors);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
