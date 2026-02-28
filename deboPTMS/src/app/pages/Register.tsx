@@ -219,7 +219,7 @@ export const Register = () => {
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <User className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="fullName"
                   type="text"
@@ -228,14 +228,21 @@ export const Register = () => {
                   onChange={(e) => setFullName(e.target.value)}
                   className="pl-10"
                   required
+                  onBlur={() => handleBlur("fullName")}
                 />
               </div>
+              {touched.fullName && errors.fullName && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{errors.fullName}</span>
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Mail className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="email"
                   type="email"
@@ -244,14 +251,21 @@ export const Register = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
                   required
+                  onBlur={() => handleBlur("email")}
                 />
               </div>
+              {touched.email && errors.email && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{errors.email}</span>
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="password"
                   type="password"
@@ -260,14 +274,32 @@ export const Register = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
                   required
+                  onBlur={() => handleBlur("password")}
                 />
               </div>
+              {touched.password && errors.password && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{errors.password}</span>
+                </p>
+              )}
+              {password && (
+                <div className="mt-2">
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.color}`}
+                      style={{ width: `${passwordStrength.strength}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">Strength: {passwordStrength.label}</p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -276,8 +308,15 @@ export const Register = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10"
                   required
+                  onBlur={() => handleBlur("confirmPassword")}
                 />
               </div>
+              {touched.confirmPassword && errors.confirmPassword && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{errors.confirmPassword}</span>
+                </p>
+              )}
             </div>
 
             <Button
