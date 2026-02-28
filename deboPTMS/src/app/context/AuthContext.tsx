@@ -27,7 +27,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (full_name: string, email: string, password: string, role_id: number) => Promise<void>;
+  register: (full_name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Verify token is still valid (optional - can refresh user data later if needed)
-      
+      // Note: /users/me doesn't return roles, so we keep the role from localStorage
       userAPI.getMe()
         .then((response) => {
           console.log("Profile refresh response:", response);
@@ -125,6 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log("User from login:", backendUser);
           
           // Extract role name from roles array. Backend may return an array of strings
+          // (e.g. ["Admin"]) or an array of objects (e.g. [{ name: "Admin" }]).
           let roleName = "Member"; // default fallback
           if (backendUser.roles && backendUser.roles.length > 0) {
             const firstRole = backendUser.roles[0];
@@ -206,11 +207,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (full_name: string, email: string, password: string, role_id: number) => {
+  const register = async (full_name: string, email: string, password: string) => {
     try {
       // Backend returns: { message: 'User registered successfully' }
-      await authAPI.register({ full_name, email, password, role_id });
+      // NOTE: Backend does NOT return a token on registration
+      await authAPI.register({ full_name, email, password });
       
+      // Registration successful - user needs to login
+      // Don't set token or user data, just return successfully
+      // The calling component (Register.tsx) should handle the redirect to login
     } catch (error) {
       console.error("Register error:", error);
       throw error;
