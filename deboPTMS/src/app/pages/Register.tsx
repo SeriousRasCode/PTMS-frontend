@@ -203,7 +203,11 @@ export const Register = () => {
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
-            <UserPlus size={48} className="text-white" />
+            <img
+              src="/assets/debo-logo.jpg"
+              alt="Debo Engineering Logo"
+              className="h-12 w-auto object-contain brightness-110"
+            />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
           <p className="text-white/80">Join PTMS and start managing projects</p>
