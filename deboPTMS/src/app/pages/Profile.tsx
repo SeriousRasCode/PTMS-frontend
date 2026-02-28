@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { User, Mail, Lock, Save } from "lucide-react";
+import { User, Mail, Lock, Save, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface PasswordValidationErrors {
@@ -29,6 +29,99 @@ export const Profile = () => {
     newPassword: "",
     confirmPassword: "",
   });
+  const [passwordErrors, setPasswordErrors] = useState<PasswordValidationErrors>({});
+  const [passwordTouched, setPasswordTouched] = useState<{ [key: string]: boolean }>({});
+
+  // Password validation functions
+  const validateCurrentPassword = (value: string): string | undefined => {
+    if (!value) return "Current password is required";
+    return undefined;
+  };
+
+  const validateNewPassword = (value: string): string | undefined => {
+    if (!value) return "New password is required";
+    if (value.length < 6) return "Password must be at least 6 characters";
+    if (value.length > 100) return "Password is too long";
+    if (!/[A-Za-z]/.test(value)) return "Password must contain at least one letter";
+    if (!/[0-9]/.test(value)) return "Password must contain at least one number";
+    if (value === passwordData.currentPassword) return "New password must be different from current password";
+    return undefined;
+  };
+
+  const validateConfirmPassword = (value: string): string | undefined => {
+    if (!value) return "Please confirm your new password";
+    if (value !== passwordData.newPassword) return "Passwords do not match";
+    return undefined;
+  };
+
+  // Password strength indicator
+  const getPasswordStrength = (pass: string): { strength: number; label: string; color: string } => {
+    if (!pass) return { strength: 0, label: "", color: "" };
+    
+    let strength = 0;
+    if (pass.length >= 6) strength++;
+    if (pass.length >= 8) strength++;
+    if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) strength++;
+    if (/[0-9]/.test(pass)) strength++;
+    if (/[^A-Za-z0-9]/.test(pass)) strength++;
+    
+    if (strength <= 2) return { strength: 33, label: "Weak", color: "bg-red-500" };
+    if (strength === 3) return { strength: 66, label: "Medium", color: "bg-yellow-500" };
+    return { strength: 100, label: "Strong", color: "bg-green-500" };
+  };
+
+  const newPasswordStrength = getPasswordStrength(passwordData.newPassword);
+
+  // Real-time validation on blur for password fields
+  const handlePasswordBlur = (field: string) => {
+    setPasswordTouched({ ...passwordTouched, [field]: true });
+    
+    const newErrors = { ...passwordErrors };
+    
+    switch (field) {
+      case "currentPassword":
+        const currentError = validateCurrentPassword(passwordData.currentPassword);
+        if (currentError) newErrors.currentPassword = currentError;
+        else delete newErrors.currentPassword;
+        break;
+      case "newPassword":
+        const newError = validateNewPassword(passwordData.newPassword);
+        if (newError) newErrors.newPassword = newError;
+        else delete newErrors.newPassword;
+        // Also revalidate confirm password if it's been touched
+        if (passwordTouched.confirmPassword) {
+          const confirmError = validateConfirmPassword(passwordData.confirmPassword);
+          if (confirmError) newErrors.confirmPassword = confirmError;
+          else delete newErrors.confirmPassword;
+        }
+        break;
+      case "confirmPassword":
+        const confirmError = validateConfirmPassword(passwordData.confirmPassword);
+        if (confirmError) newErrors.confirmPassword = confirmError;
+        else delete newErrors.confirmPassword;
+        break;
+    }
+    
+    setPasswordErrors(newErrors);
+  };
+
+  const validatePasswordForm = (): boolean => {
+    const newErrors: PasswordValidationErrors = {};
+    
+    const currentError = validateCurrentPassword(passwordData.currentPassword);
+    if (currentError) newErrors.currentPassword = currentError;
+    
+    const newError = validateNewPassword(passwordData.newPassword);
+    if (newError) newErrors.newPassword = newError;
+    
+    const confirmError = validateConfirmPassword(passwordData.confirmPassword);
+    if (confirmError) newErrors.confirmPassword = confirmError;
+    
+    setPasswordErrors(newErrors);
+    setPasswordTouched({ currentPassword: true, newPassword: true, confirmPassword: true });
+    
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleUpdateProfile = async () => {
     if (!profileData.full_name || !profileData.email) {
@@ -59,19 +152,7 @@ export const Profile = () => {
   };
 
   const handleChangePassword = async () => {
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      toast.error("Please fill in all password fields");
-      return;
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("New passwords do not match");
-      return;
-    }
-
-    // Backend requires minimum 8 characters
-    if (passwordData.newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters long");
+    if (!validatePasswordForm()) {
       return;
     }
 
@@ -85,6 +166,8 @@ export const Profile = () => {
       
       toast.success("Password changed successfully!");
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordErrors({});
+      setPasswordTouched({});
     } catch (error: any) {
       const errorMessage = error?.message || "Failed to change password";
       toast.error(errorMessage);
@@ -225,35 +308,79 @@ export const Profile = () => {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="currentPassword">Current Password</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                placeholder="Enter current password"
-                value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  placeholder="Enter current password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  onBlur={() => handlePasswordBlur("currentPassword")}
+                  className={`pl-10 ${passwordTouched.currentPassword && passwordErrors.currentPassword ? "border-red-500" : ""}`}
+                />
+              </div>
+              {passwordTouched.currentPassword && passwordErrors.currentPassword && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{passwordErrors.currentPassword}</span>
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                placeholder="Enter new password"
-                value={passwordData.newPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+                <Input
+                  id="newPassword"
+                  type="password"
+                  placeholder="Enter new password (min 6 characters)"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  onBlur={() => handlePasswordBlur("newPassword")}
+                  className={`pl-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""}`}
+                />
+              </div>
+              {passwordTouched.newPassword && passwordErrors.newPassword && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{passwordErrors.newPassword}</span>
+                </p>
+              )}
+              {passwordData.newPassword && (
+                <div className="mt-2">
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${newPasswordStrength.color}`}
+                      style={{ width: `${newPasswordStrength.strength}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">Strength: {newPasswordStrength.label}</p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm new password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Re-enter new password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  onBlur={() => handlePasswordBlur("confirmPassword")}
+                  className={`pl-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""}`}
+                />
+              </div>
+              {passwordTouched.confirmPassword && passwordErrors.confirmPassword && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={14} className="flex-shrink-0" />
+                  <span>{passwordErrors.confirmPassword}</span>
+                </p>
+              )}
             </div>
 
             <Button
