@@ -14,10 +14,19 @@ import {
 import { useState } from "react";
 
 export const DashboardLayout = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Show loading state while auth is initializing
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841]">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     logout();
@@ -39,7 +48,16 @@ export const DashboardLayout = () => {
     { path: "/dashboard/profile", label: "Profile", icon: User },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    // Handle the dynamic dashboard path
+    if (path === getDashboardPath() && 
+        (location.pathname === "/dashboard/admin" || 
+         location.pathname === "/dashboard/manager" || 
+         location.pathname === "/dashboard/member")) {
+      return true;
+    }
+    return location.pathname === path;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">

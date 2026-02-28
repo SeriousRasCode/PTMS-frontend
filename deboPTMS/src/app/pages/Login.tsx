@@ -11,24 +11,40 @@ export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, user } = useAuth();
+  const { login, user, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  // If still loading auth state, show nothing (or a loader)
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    console.log("Starting login with:", { email, password: "***" });
+
     try {
       await login(email, password);
+      console.log("Login successful, navigating...");
       toast.success("Login successful!");
       
       // Wait briefly for auth context to update, then redirect based on actual user role
       setTimeout(() => {
         // Get the updated user from localStorage (it's set in login)
         const storedUser = localStorage.getItem("user");
+        console.log("Stored user after login:", storedUser);
+        
         if (storedUser) {
           const userData = JSON.parse(storedUser);
           const role = userData.role || userData.role_name;
+          
+          console.log("Redirecting to dashboard for role:", role);
           
           const dashboardPath = role === "Admin" 
             ? "/dashboard/admin" 
@@ -36,9 +52,15 @@ export const Login = () => {
             ? "/dashboard/manager" 
             : "/dashboard/member";
           navigate(dashboardPath);
+        } else {
+          console.error("No user data found in localStorage after login!");
+          toast.error("Login failed: User data not found");
+          setLoading(false);
         }
       }, 100);
     } catch (error: any) {
+      console.error("Login error caught:", error);
+      
       const errorMessage = error?.message || "Login failed. Please check your credentials.";
       
       // If it's a backend endpoint error, show additional help
@@ -53,7 +75,7 @@ export const Login = () => {
       } else {
         toast.error(errorMessage, { duration: 5000 });
       }
-    } finally {
+      
       setLoading(false);
     }
   };

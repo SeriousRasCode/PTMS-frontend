@@ -13,10 +13,18 @@ export const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [roleId, setRoleId] = useState("3"); // Default to Member
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  // If still loading auth state, show nothing (or a loader)
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +42,7 @@ export const Register = () => {
     setLoading(true);
 
     try {
-      await register(fullName, email, password, parseInt(roleId));
+      await register(fullName, email, password);
       toast.success("Registration successful! Please log in with your credentials.");
       
       // Redirect to login page after successful registration
@@ -124,20 +132,6 @@ export const Register = () => {
                   required
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={roleId} onValueChange={setRoleId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Admin</SelectItem>
-                  <SelectItem value="2">Manager</SelectItem>
-                  <SelectItem value="3">Member</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">

@@ -27,10 +27,11 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (full_name: string, email: string, password: string, role_id: number) => Promise<void>;
+  register: (full_name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +39,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const logout = () => {
     setUser(null);
@@ -64,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (e) {
         console.error("Failed to parse stored user:", e);
         logout();
+        setIsLoading(false);
         return;
       }
       
@@ -89,12 +92,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           setUser(userData);
           localStorage.setItem("user", JSON.stringify(userData));
+          setIsLoading(false);
         })
         .catch((error) => {
           console.error("Token verification failed:", error);
           // Token is invalid, clear auth state
           logout();
+          setIsLoading(false);
         });
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
@@ -200,11 +207,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (full_name: string, email: string, password: string, role_id: number) => {
+  const register = async (full_name: string, email: string, password: string) => {
     try {
       // Backend returns: { message: 'User registered successfully' }
       // NOTE: Backend does NOT return a token on registration
-      await authAPI.register({ full_name, email, password, role_id });
+      await authAPI.register({ full_name, email, password });
       
       // Registration successful - user needs to login
       // Don't set token or user data, just return successfully
@@ -259,6 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         refreshUser,
         isAuthenticated: !!token,
+        isLoading,
       }}
     >
       {children}

@@ -14,160 +14,103 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { toast } from "sonner";
+import { adminAPI, dashboardAPI } from "../utils/api";
 
 interface User {
   id: number;
   full_name: string;
   email: string;
-  role: string;
+  roles: string;
   is_active: boolean;
 }
 
 export const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalProjects: 0,
-    totalTasks: 0,
-    activeUsers: 0,
+    total_users: 0,
+    total_projects: 0,
+    active_projects: 0,
+    completed_projects: 0,
+    on_hold_projects: 0,
   });
 
   useEffect(() => {
-  const fetchUsers = async () => {
-  try {
-    const token = localStorage.getItem("authToken");
+    fetchDashboardData();
+  }, []);
 
-    if (!token) {
-      toast.error("No auth token found");
-      return;
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch admin summary stats
+      const summaryResponse = await dashboardAPI.getAdminSummary();
+      console.log("Admin summary response:", summaryResponse);
+      
+      if (summaryResponse.success && summaryResponse.data) {
+        setStats(summaryResponse.data);
+      }
+
+      // Fetch all users
+      const usersResponse = await adminAPI.getAllUsers();
+      console.log("Users response:", usersResponse);
+      
+      if (usersResponse.success && usersResponse.data) {
+        setUsers(usersResponse.data);
+      }
+      
+    } catch (error: any) {
+      console.error("Failed to fetch dashboard data:", error);
+      toast.error(error.message || "Failed to load dashboard data");
+    } finally {
+      setLoading(false);
     }
-
-    const res = await fetch("/api/admin/all-users", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const text = await res.text();
-console.log("RAW RESPONSE:", text);
-
-let data;
-try {
-  data = JSON.parse(text);
-} catch {
-  throw new Error(text || "Invalid server response");
-}
-
-    if (!res.ok) {
-      throw new Error(data.message || "Unauthorized");
-    }
-
-    const formattedUsers: User[] = data.data.map((u: any) => ({
-      id: u.id,
-      full_name: u.full_name,
-      email: u.email,
-      role: u.roles || "No Role", // backend untouched
-      is_active: Boolean(u.is_active),
-    }));
-
-    setUsers(formattedUsers);
-
-  } catch (err: any) {
-    toast.error(err.message);
-  }
-};
-
-  fetchUsers();
-}, []);
+  };
 
   const handleRoleChange = async (userId: number, newRole: string) => {
-  try {
-    const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      toast.error("No auth token found");
-      return;
+    try {
+      await adminAPI.assignRole(userId, newRole);
+      toast.success(`Role updated to ${newRole}`);
+      
+      // Update local state
+      setUsers(users.map(u => u.id === userId ? { ...u, roles: newRole } : u));
+    } catch (error: any) {
+      console.error("Failed to update role:", error);
+      toast.error(error.message || "Failed to update role");
     }
-
-    const res = await fetch(
-      `/api/admin/users/${userId}/change-roles`,
-      {
-        method: "POST", // ✅ MUST be POST
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ roleName: newRole }),
-      }
-    );
-
-    const text = await res.text();
-
-    if (!res.ok) {
-      throw new Error(text || "Failed to update role");
-    }
-
-    toast.success("Role updated successfully");
-
-    // Optimistic UI update
-    setUsers(prev =>
-      prev.map(u =>
-        u.id === userId ? { ...u, role: newRole } : u
-      )
-    );
-
-  } catch (error: any) {
-    toast.error(error.message);
-  }
-};
+  };
 
   const handleStatusToggle = async (userId: number) => {
-  try {
-    const user = users.find(u => u.id === userId);
-    if (!user) return;
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      toast.error("No auth token found");
-      return;
+    try {
+      const user = users.find(u => u.id === userId);
+      const newStatus = !user?.is_active;
+      
+      await adminAPI.updateUserStatus(userId, newStatus);
+      toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      
+      // Update local state
+      setUsers(users.map(u => u.id === userId ? { ...u, is_active: newStatus } : u));
+    } catch (error: any) {
+      console.error("Failed to update user status:", error);
+      toast.error(error.message || "Failed to update user status");
     }
-
-    const res = await fetch(
-      `/api/admin/users/${userId}/change-status`, 
-      {
-        method: "PATCH", 
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ is_active: !user.is_active }),
-      }
-    );
-
-    const text = await res.text();
-
-    if (!res.ok) {
-      throw new Error(text || "Failed to update status");
-    }
-
-    toast.success("Status updated successfully");
-
-    setUsers(prev =>
-      prev.map(u =>
-        u.id === userId ? { ...u, is_active: !u.is_active } : u
-      )
-    );
-
-  } catch (error: any) {
-    toast.error(error.message);
-  }
-};
+  };
 
   const filteredUsers = users.filter(user =>
     user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const activeUsers = users.filter(u => u.is_active).length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-600">Loading dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -185,8 +128,8 @@ try {
             <Users className="h-5 w-5 text-[#0f5841]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalUsers}</div>
-            <p className="text-xs text-gray-500 mt-1">{stats.activeUsers} active</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.total_users}</div>
+            <p className="text-xs text-gray-500 mt-1">{activeUsers} active</p>
           </CardContent>
         </Card>
 
@@ -196,30 +139,30 @@ try {
             <FolderKanban className="h-5 w-5 text-[#194f87]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalProjects}</div>
-            <p className="text-xs text-gray-500 mt-1">8 active</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.total_projects}</div>
+            <p className="text-xs text-gray-500 mt-1">{stats.active_projects} active</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-[#0f5841]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Tasks</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Completed Projects</CardTitle>
             <CheckSquare className="h-5 w-5 text-[#0f5841]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalTasks}</div>
-            <p className="text-xs text-gray-500 mt-1">32 completed</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.completed_projects}</div>
+            <p className="text-xs text-gray-500 mt-1">+5% from last week</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-[#194f87]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Productivity</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">On Hold Projects</CardTitle>
             <TrendingUp className="h-5 w-5 text-[#194f87]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">87%</div>
-            <p className="text-xs text-gray-500 mt-1">+5% from last week</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.on_hold_projects}</div>
+            <p className="text-xs text-gray-500 mt-1">Paused projects</p>
           </CardContent>
         </Card>
       </div>
@@ -275,7 +218,7 @@ try {
                     <td className="p-3 text-gray-600">{user.email}</td>
                     <td className="p-3">
                       <Select
-                        value={user.role}
+                        value={user.roles}
                         onValueChange={(value) => handleRoleChange(user.id, value)}
                       >
                         <SelectTrigger className="w-32">
