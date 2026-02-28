@@ -7,10 +7,16 @@ import { Label } from "../components/ui/label";
 import { Mail, Lock, LogIn } from "lucide-react";
 import { toast } from "sonner";
 
+interface ValidationErrors {
+  email?: string;
+  password?: string;
+}
+
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const { login, user, isLoading } = useAuth();
   const navigate = useNavigate();
 
