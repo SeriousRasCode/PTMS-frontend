@@ -48,6 +48,15 @@ export const Register = () => {
     return undefined;
   };
 
+    const validatePassword = (value: string): string | undefined => {
+    if (!value) return "Password is required";
+    if (value.length < 6) return "Password must be at least 6 characters";
+    if (value.length > 100) return "Password is too long";
+    if (!/[A-Za-z]/.test(value)) return "Password must contain at least one letter";
+    if (!/[0-9]/.test(value)) return "Password must contain at least one number";
+    return undefined;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
