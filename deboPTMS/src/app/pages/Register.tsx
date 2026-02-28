@@ -21,6 +21,7 @@ export const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const { register, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -32,6 +33,13 @@ export const Register = () => {
       </div>
     );
   }
+
+  const validateFullName = (value: string): string | undefined => {
+    if (!value.trim()) return "Full name is required";
+    if (value.trim().length < 2) return "Full name must be at least 2 characters";
+    if (value.trim().length > 100) return "Full name is too long";
+    return undefined;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
