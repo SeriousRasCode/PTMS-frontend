@@ -47,9 +47,9 @@ export const Login = () => {
   // Real-time validation on blur
   const handleBlur = (field: string) => {
     setTouched({ ...touched, [field]: true });
-    
+
     const newErrors = { ...errors };
-    
+
     switch (field) {
       case "email":
         const emailError = validateEmail(email);
@@ -62,22 +62,22 @@ export const Login = () => {
         else delete newErrors.password;
         break;
     }
-    
+
     setErrors(newErrors);
   };
 
   const validate = (): boolean => {
     const newErrors: ValidationErrors = {};
-    
+
     const emailError = validateEmail(email);
     if (emailError) newErrors.email = emailError;
-    
+
     const passError = validatePassword(password);
     if (passError) newErrors.password = passError;
-    
+
     setErrors(newErrors);
     setTouched({ email: true, password: true });
-    
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -97,24 +97,24 @@ export const Login = () => {
       await login(email, password);
       console.log("Login successful, navigating...");
       toast.success("Login successful!");
-      
+
       // Wait briefly for auth context to update, then redirect based on actual user role
       setTimeout(() => {
         // Get the updated user from localStorage (it's set in login)
         const storedUser = localStorage.getItem("user");
         console.log("Stored user after login:", storedUser);
-        
+
         if (storedUser) {
           const userData = JSON.parse(storedUser);
           const role = userData.role || userData.role_name;
-          
+
           console.log("Redirecting to dashboard for role:", role);
-          
-          const dashboardPath = role === "Admin" 
-            ? "/dashboard/admin" 
-            : role === "Manager" 
-            ? "/dashboard/manager" 
-            : "/dashboard/member";
+
+          const dashboardPath = role === "Admin"
+            ? "/dashboard/admin"
+            : role === "Manager"
+              ? "/dashboard/manager"
+              : "/dashboard/member";
           navigate(dashboardPath);
         } else {
           console.error("No user data found in localStorage after login!");
@@ -124,9 +124,9 @@ export const Login = () => {
       }, 100);
     } catch (error: any) {
       console.error("Login error caught:", error);
-      
+
       const errorMessage = error?.message || "Login failed. Please check your credentials.";
-      
+
       // If it's a backend endpoint error, show additional help
       if (errorMessage.includes('Backend endpoint not found') || errorMessage.includes('Unable to connect to server')) {
         toast.error('Backend connection error! Please check your backend server.', {
@@ -139,7 +139,7 @@ export const Login = () => {
       } else {
         toast.error(errorMessage, { duration: 5000 });
       }
-      
+
       setLoading(false);
     }
   };
@@ -149,9 +149,15 @@ export const Login = () => {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          {/* <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
-            <LogIn size={48} className="text-white" />
-          </div> */}
+          <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
+            
+              <img
+                src="/assets/debo-logo.jpg"
+                alt="Debo Engineering Logo"
+                className="h-12 w-auto object-contain"
+              />
+           
+          </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-white/80">Sign in to your PTMS account</p>
         </div>
@@ -180,7 +186,7 @@ export const Login = () => {
                   <span>{errors.email}</span>
                 </p>
               )}
-              
+
             </div>
 
             <div className="space-y-2">
