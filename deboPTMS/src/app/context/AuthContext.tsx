@@ -31,6 +31,7 @@ interface AuthContextType {
   logout: () => void;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +39,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const logout = () => {
     setUser(null);
@@ -64,11 +66,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (e) {
         console.error("Failed to parse stored user:", e);
         logout();
+        setIsLoading(false);
         return;
       }
       
       // Verify token is still valid (optional - can refresh user data later if needed)
-      // Note: /users/me doesn't return roles, so we keep the role from localStorage
+      
       userAPI.getMe()
         .then((response) => {
           console.log("Profile refresh response:", response);
@@ -89,12 +92,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           setUser(userData);
           localStorage.setItem("user", JSON.stringify(userData));
+          setIsLoading(false);
         })
         .catch((error) => {
           console.error("Token verification failed:", error);
           // Token is invalid, clear auth state
           logout();
+          setIsLoading(false);
         });
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
@@ -118,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log("User from login:", backendUser);
           
           // Extract role name from roles array. Backend may return an array of strings
-          // (e.g. ["Admin"]) or an array of objects (e.g. [{ name: "Admin" }]).
           let roleName = "Member"; // default fallback
           if (backendUser.roles && backendUser.roles.length > 0) {
             const firstRole = backendUser.roles[0];
@@ -203,12 +209,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (full_name: string, email: string, password: string, role_id: number) => {
     try {
       // Backend returns: { message: 'User registered successfully' }
-      // NOTE: Backend does NOT return a token on registration
       await authAPI.register({ full_name, email, password, role_id });
       
-      // Registration successful - user needs to login
-      // Don't set token or user data, just return successfully
-      // The calling component (Register.tsx) should handle the redirect to login
     } catch (error) {
       console.error("Register error:", error);
       throw error;
@@ -259,6 +261,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         refreshUser,
         isAuthenticated: !!token,
+        isLoading,
       }}
     >
       {children}
