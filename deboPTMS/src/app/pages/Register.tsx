@@ -122,6 +122,22 @@ export const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+    // Password strength indicator
+  const getPasswordStrength = (pass: string): { strength: number; label: string; color: string } => {
+    if (!pass) return { strength: 0, label: "", color: "" };
+    
+    let strength = 0;
+    if (pass.length >= 6) strength++;
+    if (pass.length >= 8) strength++;
+    if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) strength++;
+    if (/[0-9]/.test(pass)) strength++;
+    if (/[^A-Za-z0-9]/.test(pass)) strength++;
+    
+    if (strength <= 2) return { strength: 33, label: "Weak", color: "bg-red-500" };
+    if (strength === 3) return { strength: 66, label: "Medium", color: "bg-yellow-500" };
+    return { strength: 100, label: "Strong", color: "bg-green-500" };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
