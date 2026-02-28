@@ -138,6 +138,8 @@ export const Register = () => {
     return { strength: 100, label: "Strong", color: "bg-green-500" };
   };
 
+  const passwordStrength = getPasswordStrength(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
