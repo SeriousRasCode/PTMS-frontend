@@ -13,7 +13,6 @@ export const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [roleId, setRoleId] = useState("3"); // Default to Member
   const [loading, setLoading] = useState(false);
   const { register, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -43,7 +42,7 @@ export const Register = () => {
     setLoading(true);
 
     try {
-      await register(fullName, email, password, parseInt(roleId));
+      await register(fullName, email, password);
       toast.success("Registration successful! Please log in with your credentials.");
       
       // Redirect to login page after successful registration
@@ -133,20 +132,6 @@ export const Register = () => {
                   required
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={roleId} onValueChange={setRoleId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Admin</SelectItem>
-                  <SelectItem value="2">Manager</SelectItem>
-                  <SelectItem value="3">Member</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
