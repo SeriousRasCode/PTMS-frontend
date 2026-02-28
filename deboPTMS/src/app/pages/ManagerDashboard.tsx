@@ -12,97 +12,62 @@ import {
   Calendar,
   TrendingUp
 } from "lucide-react";
+import { dashboardAPI } from "../utils/api";
+import { toast } from "sonner";
 
-interface Project {
-  id: number;
-  name: string;
-  status: string;
-  progress: number;
-  tasks: number;
-  completedTasks: number;
-  team_size: number;
-  deadline: string;
+interface ManagerStats {
+  total_projects: number;
+  active_projects: number;
+  total_tasks: number;
+  completed_tasks: number;
+  overdue_tasks: number;
 }
 
 export const ManagerDashboard = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [stats, setStats] = useState({
-    totalProjects: 0,
-    activeTasks: 0,
-    teamMembers: 0,
-    completionRate: 0,
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<ManagerStats>({
+    total_projects: 0,
+    active_projects: 0,
+    total_tasks: 0,
+    completed_tasks: 0,
+    overdue_tasks: 0,
   });
 
   useEffect(() => {
-    // Mock data
-    const mockProjects: Project[] = [
-      {
-        id: 1,
-        name: "Website Redesign",
-        status: "in_progress",
-        progress: 65,
-        tasks: 12,
-        completedTasks: 8,
-        team_size: 5,
-        deadline: "2026-03-15"
-      },
-      {
-        id: 2,
-        name: "Mobile App Development",
-        status: "in_progress",
-        progress: 40,
-        tasks: 20,
-        completedTasks: 8,
-        team_size: 7,
-        deadline: "2026-04-20"
-      },
-      {
-        id: 3,
-        name: "API Integration",
-        status: "planning",
-        progress: 15,
-        tasks: 8,
-        completedTasks: 1,
-        team_size: 3,
-        deadline: "2026-03-30"
-      },
-      {
-        id: 4,
-        name: "Database Migration",
-        status: "completed",
-        progress: 100,
-        tasks: 6,
-        completedTasks: 6,
-        team_size: 4,
-        deadline: "2026-02-10"
-      },
-    ];
-
-    setProjects(mockProjects);
-    setStats({
-      totalProjects: mockProjects.length,
-      activeTasks: mockProjects.reduce((sum, p) => sum + (p.tasks - p.completedTasks), 0),
-      teamMembers: 12,
-      completionRate: 72,
-    });
+    fetchDashboardData();
   }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-500";
-      case "in_progress":
-        return "bg-blue-500";
-      case "planning":
-        return "bg-yellow-500";
-      default:
-        return "bg-gray-500";
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await dashboardAPI.getManagerDashboard();
+      console.log("Manager dashboard response:", response);
+      
+      if (response.success && response.data) {
+        setStats(response.data);
+      }
+      
+    } catch (error: any) {
+      console.error("Failed to fetch manager dashboard:", error);
+      toast.error(error.message || "Failed to load dashboard data");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    return status.replace("_", " ").toUpperCase();
-  };
+  const activeTasks = stats.total_tasks - stats.completed_tasks;
+  const completionRate = stats.total_tasks > 0 
+    ? Math.round((stats.completed_tasks / stats.total_tasks) * 100) 
+    : 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-600">Loading dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -120,8 +85,8 @@ export const ManagerDashboard = () => {
             <FolderKanban className="h-5 w-5 text-[#194f87]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalProjects}</div>
-            <p className="text-xs text-gray-500 mt-1">3 in progress</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.total_projects}</div>
+            <p className="text-xs text-gray-500 mt-1">{stats.active_projects} in progress</p>
           </CardContent>
         </Card>
 
@@ -131,19 +96,19 @@ export const ManagerDashboard = () => {
             <CheckSquare className="h-5 w-5 text-[#0f5841]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.activeTasks}</div>
-            <p className="text-xs text-gray-500 mt-1">23 completed this week</p>
+            <div className="text-3xl font-bold text-gray-900">{activeTasks}</div>
+            <p className="text-xs text-gray-500 mt-1">{stats.completed_tasks} completed</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-[#194f87]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Team Members</CardTitle>
-            <Users className="h-5 w-5 text-[#194f87]" />
+            <CardTitle className="text-sm font-medium text-gray-600">Overdue Tasks</CardTitle>
+            <Clock className="h-5 w-5 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.teamMembers}</div>
-            <p className="text-xs text-gray-500 mt-1">Across all projects</p>
+            <div className="text-3xl font-bold text-gray-900">{stats.overdue_tasks}</div>
+            <p className="text-xs text-gray-500 mt-1">Requires attention</p>
           </CardContent>
         </Card>
 
@@ -153,70 +118,11 @@ export const ManagerDashboard = () => {
             <TrendingUp className="h-5 w-5 text-[#0f5841]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.completionRate}%</div>
-            <p className="text-xs text-gray-500 mt-1">+8% from last month</p>
+            <div className="text-3xl font-bold text-gray-900">{completionRate}%</div>
+            <p className="text-xs text-gray-500 mt-1">Task completion rate</p>
           </CardContent>
         </Card>
       </div>
-
-      {/* Projects Overview */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">Project Overview</CardTitle>
-            <Button className="bg-gradient-to-r from-[#194f87] to-[#0f5841] text-white">
-              <Plus className="mr-2 h-4 w-4" />
-              New Project
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg text-gray-900">{project.name}</h3>
-                      <Badge className={getStatusColor(project.status)}>
-                        {getStatusLabel(project.status)}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <CheckSquare size={16} />
-                        {project.completedTasks}/{project.tasks} tasks
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users size={16} />
-                        {project.team_size} members
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar size={16} />
-                        Due: {new Date(project.deadline).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Progress</span>
-                    <span className="font-semibold text-gray-900">{project.progress}%</span>
-                  </div>
-                  <Progress value={project.progress} className="h-2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

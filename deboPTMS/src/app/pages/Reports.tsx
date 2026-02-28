@@ -1,47 +1,181 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
-import { BarChart3, TrendingUp, AlertCircle, Users, Clock, CheckCircle2 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { BarChart3, TrendingUp, AlertCircle, Users, Clock, CheckCircle2, CheckSquare } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { reportAPI, taskAPI, projectAPI } from "../utils/api";
+import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
+
+interface OverdueTask {
+  id: number;
+  title: string;
+  status: string;
+  due_date: string;
+  progress_percentage: number;
+  project_name: string;
+}
+
+interface Workload {
+  user_id: number;
+  full_name: string;
+  task_count: number;
+}
 
 export const Reports = () => {
-  const overdueTasksData = [
-    { id: 1, title: "Update database schema", project: "API Integration", assignee: "John Doe", daysOverdue: 3 },
-    { id: 2, title: "Fix mobile responsiveness", project: "Website Redesign", assignee: "Jane Smith", daysOverdue: 1 },
-    { id: 3, title: "Write unit tests", project: "Mobile App", assignee: "Mike Johnson", daysOverdue: 5 },
-  ];
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [overdueTasks, setOverdueTasks] = useState<OverdueTask[]>([]);
+  const [workload, setWorkload] = useState<Workload[]>([]);
+  const [permissionError, setPermissionError] = useState(false);
 
-  const workloadData = [
-    { name: "John Doe", tasks: 8, completed: 5 },
-    { name: "Jane Smith", tasks: 6, completed: 4 },
-    { name: "Mike Johnson", tasks: 10, completed: 6 },
-    { name: "Sarah Williams", tasks: 7, completed: 7 },
-    { name: "Tom Brown", tasks: 5, completed: 3 },
-  ];
+  useEffect(() => {
+    fetchReportData();
+  }, []);
 
-  const projectProgressData = [
-    { name: "Website Redesign", progress: 65 },
-    { name: "Mobile App", progress: 40 },
-    { name: "API Integration", progress: 15 },
-    { name: "Database Migration", progress: 100 },
-  ];
+  const fetchReportData = async () => {
+    try {
+      setLoading(true);
+      setPermissionError(false);
+      
+      // Check if user has permission (Admin or Manager only)
+      if (user?.role === "Member") {
+        console.log("Member role detected - generating personal reports instead");
+        // For members, generate reports from their own tasks
+        await fetchMemberReports();
+        return;
+      }
+      
+      // For Admin/Manager - use backend report endpoints
+      try {
+        // Fetch overdue tasks
+        const overdueResponse = await reportAPI.getOverdueTasks();
+        console.log("Overdue tasks response:", overdueResponse);
+        
+        if (overdueResponse.success && overdueResponse.data) {
+          setOverdueTasks(overdueResponse.data);
+        } else if (Array.isArray(overdueResponse)) {
+          setOverdueTasks(overdueResponse);
+        }
 
-  const taskStatusData = [
-    { name: "Completed", value: 32, color: "#10b981" },
-    { name: "In Progress", value: 18, color: "#3b82f6" },
-    { name: "Not Started", value: 12, color: "#9ca3af" },
-    { name: "Overdue", value: 3, color: "#ef4444" },
-  ];
+        // Fetch workload data
+        const workloadResponse = await reportAPI.getWorkload();
+        console.log("Workload response:", workloadResponse);
+        
+        if (workloadResponse.success && workloadResponse.data) {
+          setWorkload(workloadResponse.data);
+        } else if (Array.isArray(workloadResponse)) {
+          setWorkload(workloadResponse);
+        }
+      } catch (error: any) {
+        // If forbidden, fall back to member reports
+        if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
+          console.log("Permission denied - falling back to member reports");
+          await fetchMemberReports();
+        } else {
+          throw error;
+        }
+      }
+      
+    } catch (error: any) {
+      console.error("Failed to fetch reports:", error);
+      if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
+        setPermissionError(true);
+      } else {
+        toast.error(error.message || "Failed to load report data");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const fetchMemberReports = async () => {
+    try {
+      console.log("Fetching member personal reports...");
+      
+      // Get all projects
+      const projectsResponse = await projectAPI.getMyProjects();
+      
+      let projectsList = [];
+      if (projectsResponse && projectsResponse.success && projectsResponse.data) {
+        projectsList = projectsResponse.data;
+      } else if (Array.isArray(projectsResponse)) {
+        projectsList = projectsResponse;
+      }
+      
+      // Fetch tasks for each project
+      const allTasksPromises = projectsList.map(async (project: any) => {
+        try {
+          const response = await taskAPI.getTasksByProject(project.id);
+          
+          let projectTasks = [];
+          if (Array.isArray(response)) {
+            projectTasks = response;
+          } else if (response.data && Array.isArray(response.data)) {
+            projectTasks = response.data;
+          }
+          
+          return projectTasks.map((task: any) => ({
+            ...task,
+            project_name: project.name,
+            project_id: project.id
+          }));
+        } catch (error) {
+          console.error(`Failed to fetch tasks for project ${project.id}:`, error);
+          return [];
+        }
+      });
+      
+      const allTasksArrays = await Promise.all(allTasksPromises);
+      const allTasks = allTasksArrays.flat();
+      
+      console.log("Total tasks for member reports:", allTasks.length);
+      
+      // Filter overdue tasks
+      const today = new Date();
+      const overdue = allTasks.filter((task: any) => {
+        const dueDate = new Date(task.due_date);
+        return dueDate < today && task.status !== "completed";
+      });
+      
+      setOverdueTasks(overdue);
+      
+      // Create workload data (just for current user)
+      if (allTasks.length > 0) {
+        setWorkload([{
+          user_id: user?.id || 0,
+          full_name: user?.full_name || "Me",
+          task_count: allTasks.length
+        }]);
+      }
+      
+    } catch (error: any) {
+      console.error("Failed to fetch member reports:", error);
+      toast.error("Failed to load your reports");
+    }
+  };
 
-  const weeklyProductivityData = [
-    { day: "Mon", completed: 8 },
-    { day: "Tue", completed: 12 },
-    { day: "Wed", completed: 10 },
-    { day: "Thu", completed: 15 },
-    { day: "Fri", completed: 11 },
-    { day: "Sat", completed: 3 },
-    { day: "Sun", completed: 2 },
-  ];
+  const getDaysOverdue = (dueDate: string) => {
+    const due = new Date(dueDate);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - due.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const workloadChartData = workload.map(w => ({
+    name: w.full_name,
+    tasks: w.task_count
+  }));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-600">Loading reports...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -54,195 +188,165 @@ export const Reports = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Tasks Completed</CardTitle>
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <CardTitle className="text-sm font-medium text-gray-600">Overdue Tasks</CardTitle>
+            <AlertCircle className="h-5 w-5 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">32</div>
-            <p className="text-xs text-gray-500 mt-1">This week</p>
+            <div className="text-3xl font-bold text-gray-900">{overdueTasks.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Requires attention</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">In Progress</CardTitle>
-            <Clock className="h-5 w-5 text-blue-500" />
+            <CardTitle className="text-sm font-medium text-gray-600">Active Members</CardTitle>
+            <Users className="h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">18</div>
-            <p className="text-xs text-gray-500 mt-1">Active tasks</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Overdue Tasks</CardTitle>
-            <AlertCircle className="h-5 w-5 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">3</div>
-            <p className="text-xs text-gray-500 mt-1">Needs attention</p>
+            <div className="text-3xl font-bold text-gray-900">{workload.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Working on tasks</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-[#0f5841]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Team Members</CardTitle>
-            <Users className="h-5 w-5 text-[#0f5841]" />
+            <CardTitle className="text-sm font-medium text-gray-600">Total Workload</CardTitle>
+            <CheckSquare className="h-5 w-5 text-[#0f5841]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">12</div>
-            <p className="text-xs text-gray-500 mt-1">Active contributors</p>
+            <div className="text-3xl font-bold text-gray-900">
+              {workload.reduce((sum, w) => sum + w.task_count, 0)}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Active tasks assigned</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-[#194f87]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Team Members</CardTitle>
+            <Users className="h-5 w-5 text-[#194f87]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">{workload.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Total team members</p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+      {/* Reports Tabs */}
+      <Tabs defaultValue="overdue" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="overdue">Overdue Tasks</TabsTrigger>
           <TabsTrigger value="workload">Team Workload</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Task Status Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-[#0f5841]" />
-                  Task Status Distribution
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={taskStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => `${entry.name}: ${entry.value}`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {taskStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Weekly Productivity */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-[#194f87]" />
-                  Weekly Productivity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={weeklyProductivityData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="completed" stroke="#0f5841" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Project Progress */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={projectProgressData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="progress" fill="url(#colorGradient)" />
-                  <defs>
-                    <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0f5841" />
-                      <stop offset="100%" stopColor="#194f87" />
-                    </linearGradient>
-                  </defs>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="overdue" className="mt-6">
+        <TabsContent value="overdue" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-red-500" />
-                Overdue Tasks
+                Overdue Tasks Report
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {overdueTasksData.map((task) => (
-                  <div
-                    key={task.id}
-                    className="p-4 border border-red-200 rounded-lg bg-red-50/50 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">{task.title}</h3>
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <BarChart3 size={14} />
-                            {task.project}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Users size={14} />
-                            {task.assignee}
-                          </span>
-                        </div>
-                      </div>
-                      <Badge variant="destructive" className="bg-red-500">
-                        {task.daysOverdue} {task.daysOverdue === 1 ? 'day' : 'days'} overdue
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {overdueTasks.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-3 opacity-50 text-green-500" />
+                  <p>No overdue tasks! Great work!</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-gray-50">
+                        <th className="text-left p-3 text-sm font-semibold text-gray-700">Task</th>
+                        <th className="text-left p-3 text-sm font-semibold text-gray-700">Project</th>
+                        <th className="text-left p-3 text-sm font-semibold text-gray-700">Progress</th>
+                        <th className="text-left p-3 text-sm font-semibold text-gray-700">Due Date</th>
+                        <th className="text-left p-3 text-sm font-semibold text-gray-700">Days Overdue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {overdueTasks.map((task) => (
+                        <tr key={task.id} className="border-b hover:bg-gray-50">
+                          <td className="p-3 font-medium text-gray-900">{task.title}</td>
+                          <td className="p-3 text-gray-600">{task.project_name}</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-blue-500 h-2 rounded-full"
+                                  style={{ width: `${task.progress_percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-gray-600">{task.progress_percentage}%</span>
+                            </div>
+                          </td>
+                          <td className="p-3 text-gray-600">
+                            {new Date(task.due_date).toLocaleDateString()}
+                          </td>
+                          <td className="p-3">
+                            <Badge variant="destructive" className="bg-red-500">
+                              {getDaysOverdue(task.due_date)} days
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="workload" className="mt-6">
+        <TabsContent value="workload" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Team Workload Distribution</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-[#194f87]" />
+                Team Workload Distribution
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={workloadData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="tasks" fill="#194f87" name="Total Tasks" />
-                  <Bar dataKey="completed" fill="#0f5841" name="Completed" />
-                </BarChart>
-              </ResponsiveContainer>
+              {workload.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No workload data available</p>
+                </div>
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={workloadChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="tasks" fill="#194f87" name="Active Tasks" />
+                    </BarChart>
+                  </ResponsiveContainer>
+
+                  <div className="mt-6">
+                    <h4 className="font-semibold mb-3">Detailed Workload</h4>
+                    <div className="space-y-2">
+                      {workload.map((member) => (
+                        <div key={member.user_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0f5841] to-[#194f87] flex items-center justify-center text-white font-semibold">
+                              {member.full_name.charAt(0)}
+                            </div>
+                            <span className="font-medium text-gray-900">{member.full_name}</span>
+                          </div>
+                          <Badge className="bg-[#194f87]">
+                            {member.task_count} {member.task_count === 1 ? 'task' : 'tasks'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
