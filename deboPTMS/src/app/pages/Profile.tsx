@@ -9,6 +9,12 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { User, Mail, Lock, Save } from "lucide-react";
 import { toast } from "sonner";
 
+interface PasswordValidationErrors {
+  currentPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+}
+
 export const Profile = () => {
   const { user, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
