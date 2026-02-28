@@ -149,9 +149,9 @@ export const Login = () => {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
+          {/* <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
             <LogIn size={48} className="text-white" />
-          </div>
+          </div> */}
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-white/80">Sign in to your PTMS account</p>
         </div>
@@ -180,9 +180,7 @@ export const Login = () => {
                   <span>{errors.email}</span>
                 </p>
               )}
-              <p className="text-xs text-gray-500">
-                Try: admin@example.com, manager@example.com, or member@example.com
-              </p>
+              
             </div>
 
             <div className="space-y-2">
