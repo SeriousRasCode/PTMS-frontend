@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { User, Mail, Lock, UserPlus } from "lucide-react";
+import { User, Mail, Lock, UserPlus, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface ValidationErrors {
@@ -22,6 +22,7 @@ export const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const { register, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -34,6 +35,7 @@ export const Register = () => {
     );
   }
 
+  // Validation functions
   const validateFullName = (value: string): string | undefined => {
     if (!value.trim()) return "Full name is required";
     if (value.trim().length < 2) return "Full name must be at least 2 characters";
@@ -41,14 +43,14 @@ export const Register = () => {
     return undefined;
   };
 
-    const validateEmail = (value: string): string | undefined => {
+  const validateEmail = (value: string): string | undefined => {
     if (!value.trim()) return "Email is required";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value)) return "Please enter a valid email address";
     return undefined;
   };
 
-    const validatePassword = (value: string): string | undefined => {
+  const validatePassword = (value: string): string | undefined => {
     if (!value) return "Password is required";
     if (value.length < 6) return "Password must be at least 6 characters";
     if (value.length > 100) return "Password is too long";
@@ -57,13 +59,13 @@ export const Register = () => {
     return undefined;
   };
 
-    const validateConfirmPassword = (value: string): string | undefined => {
+  const validateConfirmPassword = (value: string): string | undefined => {
     if (!value) return "Please confirm your password";
     if (value !== password) return "Passwords do not match";
     return undefined;
   };
 
-    // Real-time validation on blur
+  // Real-time validation on blur
   const handleBlur = (field: string) => {
     setTouched({ ...touched, [field]: true });
     
@@ -101,7 +103,7 @@ export const Register = () => {
     setErrors(newErrors);
   };
 
-    const validate = (): boolean => {
+  const validate = (): boolean => {
     const newErrors: ValidationErrors = {};
     
     const nameError = validateFullName(fullName);
@@ -122,7 +124,7 @@ export const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-    // Password strength indicator
+  // Password strength indicator
   const getPasswordStrength = (pass: string): { strength: number; label: string; color: string } => {
     if (!pass) return { strength: 0, label: "", color: "" };
     
@@ -143,13 +145,7 @@ export const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long!");
+    if (!validate()) {
       return;
     }
 
