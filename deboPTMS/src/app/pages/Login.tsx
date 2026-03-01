@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Mail, Lock, LogIn, XCircle, AlertCircle } from "lucide-react";
+import { Mail, Lock, LogIn, XCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 interface ValidationErrors {
@@ -18,6 +18,7 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+  const [showPassword, setShowPassword] = useState(false);
   const { login, user, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -47,9 +48,9 @@ export const Login = () => {
   // Real-time validation on blur
   const handleBlur = (field: string) => {
     setTouched({ ...touched, [field]: true });
-
+    
     const newErrors = { ...errors };
-
+    
     switch (field) {
       case "email":
         const emailError = validateEmail(email);
@@ -62,22 +63,22 @@ export const Login = () => {
         else delete newErrors.password;
         break;
     }
-
+    
     setErrors(newErrors);
   };
 
   const validate = (): boolean => {
     const newErrors: ValidationErrors = {};
-
+    
     const emailError = validateEmail(email);
     if (emailError) newErrors.email = emailError;
-
+    
     const passError = validatePassword(password);
     if (passError) newErrors.password = passError;
-
+    
     setErrors(newErrors);
     setTouched({ email: true, password: true });
-
+    
     return Object.keys(newErrors).length === 0;
   };
 
@@ -91,55 +92,33 @@ export const Login = () => {
 
     setLoading(true);
 
-    console.log("Starting login with:", { email, password: "***" });
-
     try {
       await login(email, password);
-      console.log("Login successful, navigating...");
       toast.success("Login successful!");
-
+      
       // Wait briefly for auth context to update, then redirect based on actual user role
       setTimeout(() => {
         // Get the updated user from localStorage (it's set in login)
         const storedUser = localStorage.getItem("user");
-        console.log("Stored user after login:", storedUser);
-
+        
         if (storedUser) {
           const userData = JSON.parse(storedUser);
           const role = userData.role || userData.role_name;
-
-          console.log("Redirecting to dashboard for role:", role);
-
-          const dashboardPath = role === "Admin"
-            ? "/dashboard/admin"
-            : role === "Manager"
-              ? "/dashboard/manager"
-              : "/dashboard/member";
+          
+          const dashboardPath = role === "Admin" 
+            ? "/dashboard/admin" 
+            : role === "Manager" 
+            ? "/dashboard/manager" 
+            : "/dashboard/member";
           navigate(dashboardPath);
         } else {
-          console.error("No user data found in localStorage after login!");
           toast.error("Login failed: User data not found");
           setLoading(false);
         }
       }, 100);
     } catch (error: any) {
-      console.error("Login error caught:", error);
-
       const errorMessage = error?.message || "Login failed. Please check your credentials.";
-
-      // If it's a backend endpoint error, show additional help
-      if (errorMessage.includes('Backend endpoint not found') || errorMessage.includes('Unable to connect to server')) {
-        toast.error('Backend connection error! Please check your backend server.', {
-          duration: 10000,
-          action: {
-            label: 'Diagnose',
-            onClick: () => window.open('/test-backend-connection.html', '_blank')
-          }
-        });
-      } else {
-        toast.error(errorMessage, { duration: 5000 });
-      }
-
+      toast.error(errorMessage, { duration: 5000 });
       setLoading(false);
     }
   };
@@ -150,13 +129,7 @@ export const Login = () => {
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
-            
-              <img
-                src="/assets/debo-logo.jpg"
-                alt="Debo Engineering Logo"
-                className="h-12 w-auto object-contain"
-              />
-           
+            <LogIn size={48} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-white/80">Sign in to your PTMS account</p>
@@ -168,7 +141,7 @@ export const Login = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="email"
                   type="email"
@@ -186,23 +159,29 @@ export const Login = () => {
                   <span>{errors.email}</span>
                 </p>
               )}
-
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   required
                   onBlur={() => handleBlur("password")}
                 />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
               {touched.password && errors.password && (
                 <p className="text-xs text-red-500 flex items-center gap-1">
