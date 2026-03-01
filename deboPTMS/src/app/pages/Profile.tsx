@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { User, Mail, Lock, Save, XCircle } from "lucide-react";
+import { User, Mail, Lock, Save, XCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 interface PasswordValidationErrors {
@@ -31,6 +31,9 @@ export const Profile = () => {
   });
   const [passwordErrors, setPasswordErrors] = useState<PasswordValidationErrors>({});
   const [passwordTouched, setPasswordTouched] = useState<{ [key: string]: boolean }>({});
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Password validation functions
   const validateCurrentPassword = (value: string): string | undefined => {
@@ -309,16 +312,23 @@ export const Profile = () => {
             <div className="space-y-2">
               <Label htmlFor="currentPassword">Current Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="currentPassword"
-                  type="password"
+                  type={showCurrentPassword ? "text" : "password"}
                   placeholder="Enter current password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("currentPassword")}
-                  className={`pl-10 ${passwordTouched.currentPassword && passwordErrors.currentPassword ? "border-red-500" : ""}`}
+                  className={`pl-10 pr-10 ${passwordTouched.currentPassword && passwordErrors.currentPassword ? "border-red-500" : ""}`}
                 />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
               {passwordTouched.currentPassword && passwordErrors.currentPassword && (
                 <p className="text-xs text-red-500 flex items-center gap-1">
@@ -331,16 +341,23 @@ export const Profile = () => {
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="newPassword"
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   placeholder="Enter new password (min 6 characters)"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("newPassword")}
-                  className={`pl-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""}`}
+                  className={`pl-10 pr-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""}`}
                 />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
               {passwordTouched.newPassword && passwordErrors.newPassword && (
                 <p className="text-xs text-red-500 flex items-center gap-1">
@@ -364,16 +381,23 @@ export const Profile = () => {
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm New Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 text-gray-400 pointer-events-none" size={18} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                 <Input
                   id="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="Re-enter new password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("confirmPassword")}
-                  className={`pl-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""}`}
+                  className={`pl-10 pr-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""}`}
                 />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
               {passwordTouched.confirmPassword && passwordErrors.confirmPassword && (
                 <p className="text-xs text-red-500 flex items-center gap-1">
