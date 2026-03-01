@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { Link } from 'expo-router';
 import { api } from '../../utils/api';
 
 export default function Projects() {
@@ -23,10 +24,14 @@ export default function Projects() {
   }, []);
 
   const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.itemTitle}>{item.name}</Text>
-      <Text>{item.description}</Text>
-    </View>
+    <Link href={`/projects/${item.id}`} asChild>
+      <Pressable>
+        <View style={styles.itemContainer}>
+          <Text style={styles.itemTitle}>{item.name}</Text>
+          <Text>{item.description}</Text>
+        </View>
+      </Pressable>
+    </Link>
   );
 
   if (loading) {
