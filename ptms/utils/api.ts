@@ -110,6 +110,8 @@ export const projectAPI = {
 // Task APIs
 export const taskAPI = {
   getMyTasks: () => apiRequest("/tasks/my-tasks"),
+  getTasksByProject: (projectId: number) =>
+    apiRequest(`/tasks/projects/${projectId}`),
 };
 
 // Export all APIs
