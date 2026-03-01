@@ -112,6 +112,21 @@ export const taskAPI = {
   getMyTasks: () => apiRequest("/tasks/my-tasks"),
   getTasksByProject: (projectId: number) =>
     apiRequest(`/tasks/projects/${projectId}`),
+  createTask: (
+    projectId: number,
+    data: {
+      title: string;
+      description: string;
+      start_date: string;
+      due_date: string;
+      status: string;
+      progress_percentage: number;
+    },
+  ) =>
+    apiRequest(`/tasks/projects/${projectId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 // Export all APIs
