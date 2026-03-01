@@ -3,17 +3,11 @@
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:3000/api"; // Backend runs on port 3333 - NO trailing slash
+  "http://localhost:3333/api"; // Backend API base URL
 
 // Helper function for API requests
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem("authToken");
-  
-  console.log("=== API REQUEST ===");
-  console.log("Endpoint:", endpoint);
-  console.log("Method:", options.method || "GET");
-  console.log("Token exists:", !!token);
-  console.log("Full URL:", `${API_BASE_URL}${endpoint}`);
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -22,7 +16,6 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
-    console.log("Authorization header added");
   }
 
   try {
@@ -31,43 +24,25 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
       headers,
     });
 
-    console.log("=== API RESPONSE ===");
-    console.log("Status:", response.status);
-    console.log("Status Text:", response.statusText);
-    console.log("OK:", response.ok);
-
     const contentType = response.headers.get("content-type");
-    console.log("Content-Type:", contentType);
 
     let data;
     if (contentType && contentType.includes("application/json")) {
       data = await response.json();
-      console.log("Response data:", data);
     } else {
       const text = await response.text();
-      console.log("Response text:", text);
       data = { message: text };
     }
 
     if (!response.ok) {
-      // Only log non-permission errors to avoid cluttering console
-      if (response.status !== 403 && !data.message?.includes('Forbidden')) {
-        console.error("API Error:", data);
-      } else {
-        console.log("Permission denied (403):", data.message);
-      }
       throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
     }
 
     return data;
   } catch (error: any) {
-    // Only log detailed errors for non-permission issues
-    if (!error.message?.includes('Forbidden') && !error.message?.includes('permission')) {
-      console.error("=== API REQUEST FAILED ===");
-      console.error("Error:", error);
-      console.error("Message:", error.message);
-    } else {
-      console.log("Permission check failed (expected for some user roles)");
+    // If it's a network error (server not reachable)
+    if (error.message === 'Failed to fetch' || error instanceof TypeError) {
+      throw new Error(`Unable to connect to server at ${API_BASE_URL}. Please ensure your backend is running.`);
     }
     throw error;
   }
@@ -163,12 +138,6 @@ export const adminAPI = {
 
   addUserToTeam: (teamId: number, userId: number) => {
     const payload = { userId };
-    console.log("addUserToTeam API call:", {
-      endpoint: `/teams/${teamId}/members`,
-      method: "POST",
-      payload: payload,
-      stringified: JSON.stringify(payload),
-    });
     return apiRequest(`/teams/${teamId}/members`, {
       method: "POST",
       body: JSON.stringify(payload),
@@ -225,19 +194,11 @@ export const taskAPI = {
       status: string;
       progress_percentage: number;
     },
-  ) => {
-    console.log("taskAPI.createTask called with:", { projectId, data });
-    return apiRequest(`/tasks/projects/${projectId}`, {
+  ) =>
+    apiRequest(`/tasks/projects/${projectId}`, {
       method: "POST",
       body: JSON.stringify(data),
-    }).then(response => {
-      console.log("taskAPI.createTask response:", response);
-      return response;
-    }).catch(error => {
-      console.error("taskAPI.createTask error:", error);
-      throw error;
-    });
-  },
+    }),
 
   getTasksByProject: (projectId: number) =>
     apiRequest(`/tasks/projects/${projectId}`),
@@ -273,26 +234,11 @@ export const taskAPI = {
 
   getMyTasks: () => apiRequest("/tasks/my-tasks"),
 
-  assignTask: (taskId: number, userId: number) => {
-    console.log("=== ASSIGNING TASK ===");
-    console.log("Task ID:", taskId);
-    console.log("User ID:", userId);
-    console.log("Endpoint:", `/tasks/${taskId}/assign`);
-    console.log("Payload:", { userId });
-    
-    return apiRequest(`/tasks/${taskId}/assign`, {
+  assignTask: (taskId: number, userId: number) =>
+    apiRequest(`/tasks/${taskId}/assign`, {
       method: "POST",
       body: JSON.stringify({ userId }),
-    }).then(response => {
-      console.log("=== TASK ASSIGNMENT RESPONSE ===");
-      console.log("Response:", response);
-      return response;
-    }).catch(error => {
-      console.error("=== TASK ASSIGNMENT ERROR ===");
-      console.error("Error:", error);
-      throw error;
-    });
-  },
+    }),
 
   getAssignments: (taskId: number) =>
     apiRequest(`/tasks/${taskId}/assignments`),
