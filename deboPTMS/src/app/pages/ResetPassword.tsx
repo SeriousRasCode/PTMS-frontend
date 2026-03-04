@@ -12,6 +12,10 @@ interface ValidationErrors {
   confirmPassword?: string;
 }
 
+interface ResetResponse {
+  message?: string;
+}
+
 export const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const { token: tokenFromPath } = useParams();
@@ -109,14 +113,26 @@ export const ResetPassword = () => {
     setLoading(true);
 
     try {
-      await authAPI.resetPassword({ token, newPassword: password });
-      
-      setSuccess(true);
-      toast.success("Password reset successful!");
-      
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, newPassword: password }),
+      });
+
+      const data: ResetResponse = await response.json();
+
+      if (response.ok) {
+        setSuccess(true);
+        toast.success(data.message || "Password reset successful");
+        setPassword("");
+        setConfirmPassword("");
+
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } else {
+        toast.error(data.message || "Something went wrong");
+      }
     } catch (error: any) {
       const errorMessage = error?.message || "Failed to reset password. Please try again.";
       toast.error(errorMessage);
