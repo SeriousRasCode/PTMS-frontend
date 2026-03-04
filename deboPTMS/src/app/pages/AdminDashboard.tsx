@@ -10,7 +10,9 @@ import {
   TrendingUp,
   UserPlus,
   Shield,
-  Search
+  Search,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { toast } from "sonner";
@@ -28,6 +30,8 @@ export const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [stats, setStats] = useState({
     total_users: 0,
     total_projects: 0,
@@ -46,7 +50,6 @@ export const AdminDashboard = () => {
       
       // Fetch admin summary stats
       const summaryResponse = await dashboardAPI.getAdminSummary();
-      console.log("Admin summary response:", summaryResponse);
       
       if (summaryResponse.success && summaryResponse.data) {
         setStats(summaryResponse.data);
@@ -54,14 +57,12 @@ export const AdminDashboard = () => {
 
       // Fetch all users
       const usersResponse = await adminAPI.getAllUsers();
-      console.log("Users response:", usersResponse);
       
       if (usersResponse.success && usersResponse.data) {
         setUsers(usersResponse.data);
       }
       
     } catch (error: any) {
-      console.error("Failed to fetch dashboard data:", error);
       toast.error(error.message || "Failed to load dashboard data");
     } finally {
       setLoading(false);
@@ -71,28 +72,21 @@ export const AdminDashboard = () => {
   const handleRoleChange = async (userId: number, newRole: string) => {
     try {
       await adminAPI.assignRole(userId, newRole);
-      toast.success(`Role updated to ${newRole}`);
-      
-      // Update local state
+      toast.success("Role updated successfully");
+      fetchDashboardData();
       setUsers(users.map(u => u.id === userId ? { ...u, roles: newRole } : u));
     } catch (error: any) {
-      console.error("Failed to update role:", error);
       toast.error(error.message || "Failed to update role");
     }
   };
 
-  const handleStatusToggle = async (userId: number) => {
+  const handleStatusChange = async (userId: number, newStatus: boolean) => {
     try {
-      const user = users.find(u => u.id === userId);
-      const newStatus = !user?.is_active;
-      
       await adminAPI.updateUserStatus(userId, newStatus);
-      toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
-      
-      // Update local state
+      toast.success(`User ${newStatus ? "activated" : "deactivated"} successfully`);
+      fetchDashboardData();
       setUsers(users.map(u => u.id === userId ? { ...u, is_active: newStatus } : u));
     } catch (error: any) {
-      console.error("Failed to update user status:", error);
       toast.error(error.message || "Failed to update user status");
     }
   };
@@ -172,10 +166,10 @@ export const AdminDashboard = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl">User Management</CardTitle>
-            {/* <Button className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white">
+            <Button className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white">
               <UserPlus className="mr-2 h-4 w-4" />
               Add User
-            </Button> */}
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -205,7 +199,7 @@ export const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((user) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50 transition-colors">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
@@ -243,7 +237,7 @@ export const AdminDashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleStatusToggle(user.id)}
+                        onClick={() => handleStatusChange(user.id, !user.is_active)}
                       >
                         {user.is_active ? "Deactivate" : "Activate"}
                       </Button>
@@ -252,6 +246,31 @@ export const AdminDashboard = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <div className="text-gray-500">
+              Page {currentPage} of {Math.ceil(filteredUsers.length / itemsPerPage)}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage * itemsPerPage >= filteredUsers.length}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
