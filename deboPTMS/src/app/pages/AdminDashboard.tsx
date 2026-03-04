@@ -1,260 +1,591 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
-import { 
-  Users, 
-  FolderKanban, 
-  CheckSquare, 
-  TrendingUp,
-  UserPlus,
-  Shield,
-  Search
-} from "lucide-react";
+import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { FolderKanban, Plus, Users, Calendar, Edit2, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { adminAPI, dashboardAPI } from "../utils/api";
+import { projectAPI, teamAPI } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
 
-interface User {
+interface Project {
   id: number;
-  full_name: string;
-  email: string;
-  roles: string;
-  is_active: boolean;
+  name: string;
+  description: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  team_name: string;
+  manager_name: string;
+  manager_id?: number;
 }
 
-export const AdminDashboard = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+interface Team {
+  id: number;
+  name: string;
+}
+
+export const Projects = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    total_users: 0,
-    total_projects: 0,
-    active_projects: 0,
-    completed_projects: 0,
-    on_hold_projects: 0,
+  const [creating, setCreating] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(6);
+
+  const [newProject, setNewProject] = useState({
+    name: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    team_id: "",
   });
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchProjects();
+    fetchTeams();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchProjects = async () => {
     try {
       setLoading(true);
       
-      // Fetch admin summary stats
-      const summaryResponse = await dashboardAPI.getAdminSummary();
-      console.log("Admin summary response:", summaryResponse);
+      let response;
       
-      if (summaryResponse.success && summaryResponse.data) {
-        setStats(summaryResponse.data);
+      if (user?.role === "Admin") {
+        response = await projectAPI.getAllProjects();
+      } else {
+        response = await projectAPI.getMyProjects();
       }
-
-      // Fetch all users
-      const usersResponse = await adminAPI.getAllUsers();
-      console.log("Users response:", usersResponse);
       
-      if (usersResponse.success && usersResponse.data) {
-        setUsers(usersResponse.data);
+      let projectsList = [];
+      
+      if (response && response.success && response.data) {
+        projectsList = response.data;
+      } else if (response && Array.isArray(response.data)) {
+        projectsList = response.data;
+      } else if (Array.isArray(response)) {
+        projectsList = response;
+      } else {
+        projectsList = [];
       }
+      
+      if (projectsList.length > 0) {
+        const hasManagerName = projectsList.some((p: any) => p.manager_name);
+        const hasManagerId = projectsList.some((p: any) => p.manager_id);
+        
+        if (!hasManagerName && hasManagerId && user?.role === "Manager") {
+          projectsList = projectsList.map((project: any) => ({
+            ...project,
+            manager_name: project.manager_id === user?.id ? user?.full_name : "Unknown Manager",
+          }));
+        } else if (!hasManagerName && hasManagerId && user?.role === "Member") {
+          projectsList = projectsList.map((project: any) => ({
+            ...project,
+            manager_name: project.manager_name || "Project Manager",
+          }));
+        }
+      }
+      
+      setProjects(projectsList);
       
     } catch (error: any) {
-      console.error("Failed to fetch dashboard data:", error);
-      toast.error(error.message || "Failed to load dashboard data");
+      toast.error(error.message || "Failed to load projects");
+      setProjects([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRoleChange = async (userId: number, newRole: string) => {
+  const fetchTeams = async () => {
     try {
-      await adminAPI.assignRole(userId, newRole);
-      toast.success(`Role updated to ${newRole}`);
+      let response;
       
-      // Update local state
-      setUsers(users.map(u => u.id === userId ? { ...u, roles: newRole } : u));
+      if (user?.role === "Admin") {
+        try {
+          response = await teamAPI.getAllTeams();
+        } catch (error) {
+          response = await teamAPI.getMyTeams();
+        }
+      } else {
+        response = await teamAPI.getMyTeams();
+      }
+      
+      if (response && response.success && response.data) {
+        setTeams(response.data);
+      } else if (response && response.data) {
+        setTeams(response.data);
+      } else {
+        setTeams([]);
+      }
     } catch (error: any) {
-      console.error("Failed to update role:", error);
-      toast.error(error.message || "Failed to update role");
+      toast.error("Failed to load teams. " + error.message);
+      setTeams([]);
     }
   };
 
-  const handleStatusToggle = async (userId: number) => {
+  const handleCreateProject = async () => {
+    if (!newProject.name || !newProject.description || !newProject.team_id) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!newProject.start_date || !newProject.end_date) {
+      toast.error("Please select start and end dates");
+      return;
+    }
+
     try {
-      const user = users.find(u => u.id === userId);
-      const newStatus = !user?.is_active;
+      setCreating(true);
       
-      await adminAPI.updateUserStatus(userId, newStatus);
-      toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      await projectAPI.createProject({
+        name: newProject.name,
+        description: newProject.description,
+        team_id: parseInt(newProject.team_id),
+        start_date: newProject.start_date,
+        end_date: newProject.end_date,
+      });
       
-      // Update local state
-      setUsers(users.map(u => u.id === userId ? { ...u, is_active: newStatus } : u));
+      toast.success("Project created successfully!");
+      
+      setNewProject({
+        name: "",
+        description: "",
+        start_date: "",
+        end_date: "",
+        team_id: "",
+      });
+      setDialogOpen(false);
+      fetchProjects();
+      
     } catch (error: any) {
-      console.error("Failed to update user status:", error);
-      toast.error(error.message || "Failed to update user status");
+      toast.error(error.message || "Failed to create project");
+    } finally {
+      setCreating(false);
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleStatusChange = async (projectId: number, projectData: Project, newStatus: string) => {
+    try {
+      setUpdatingStatus(projectId);
+      
+      const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      let statusToSend = newStatus;
+      
+      const backendStatuses = projects.map(p => p.status).filter(Boolean);
+      
+      if (backendStatuses.length > 0) {
+        const hasUnderscores = backendStatuses.some(s => s && s.includes('_'));
+        const hasSpaces = backendStatuses.some(s => s && s.includes(' '));
+        const isLowercase = backendStatuses.every(s => s && s === s.toLowerCase());
+        const isTitleCase = backendStatuses.some(s => s && s[0] === s[0].toUpperCase());
+        
+        if (hasUnderscores && isLowercase) {
+          const map: { [key: string]: string } = {
+            'Planned': 'planning',
+            'Active': 'in_progress',
+            'Completed': 'completed',
+            'On Hold': 'on_hold'
+          };
+          statusToSend = map[newStatus] || newStatus;
+        } else if (hasSpaces && isLowercase) {
+          const map: { [key: string]: string } = {
+            'Planned': 'planning',
+            'Active': 'in progress',
+            'Completed': 'completed',
+            'On Hold': 'on hold'
+          };
+          statusToSend = map[newStatus] || newStatus;
+        } else if (hasSpaces && isTitleCase) {
+          const map: { [key: string]: string } = {
+            'Planned': 'Planning',
+            'Active': 'In Progress',
+            'Completed': 'Completed',
+            'On Hold': 'On Hold'
+          };
+          statusToSend = map[newStatus] || newStatus;
+        } else if (hasUnderscores && isTitleCase) {
+          const map: { [key: string]: string } = {
+            'Planned': 'Planning',
+            'Active': 'In_Progress',
+            'Completed': 'Completed',
+            'On Hold': 'On_Hold'
+          };
+          statusToSend = map[newStatus] || newStatus;
+        } else if (isLowercase) {
+          const map: { [key: string]: string } = {
+            'Planned': 'planning',
+            'Active': 'active',
+            'Completed': 'completed',
+            'On Hold': 'onhold'
+          };
+          statusToSend = map[newStatus] || newStatus.toLowerCase();
+        } else if (isTitleCase) {
+          const map: { [key: string]: string } = {
+            'Planned': 'Planning',
+            'Active': 'Active',
+            'Completed': 'Completed',
+            'On Hold': 'OnHold'
+          };
+          statusToSend = map[newStatus] || newStatus;
+        }
+      }
+      
+      const updatePayload = {
+        name: projectData.name,
+        description: projectData.description,
+        status: statusToSend,
+        start_date: formatDate(projectData.start_date),
+        end_date: formatDate(projectData.end_date),
+      };
+      
+      await projectAPI.updateProject(projectId, updatePayload);
+      
+      toast.success("Project status updated successfully!");
+      fetchProjects();
+      
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update project status");
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
 
-  const activeUsers = users.filter(u => u.is_active).length;
+  const getStatusColor = (status: string) => {
+    const normalizedStatus = status?.toLowerCase().replace('_', ' ');
+    switch (normalizedStatus) {
+      case "completed":
+        return "bg-green-500";
+      case "in progress":
+      case "active":
+        return "bg-blue-500";
+      case "on hold":
+        return "bg-yellow-500";
+      case "planned":
+      case "planning":
+        return "bg-gray-500";
+      default:
+        return "bg-gray-400";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const normalizedStatus = status?.toLowerCase().replace('_', ' ');
+    switch (normalizedStatus) {
+      case "completed":
+        return "Completed";
+      case "in progress":
+      case "active":
+        return "Active";
+      case "on hold":
+        return "On Hold";
+      case "planned":
+      case "planning":
+        return "Planning";
+      default:
+        return status;
+    }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading dashboard...</div>
+        <div className="text-gray-600">Loading projects...</div>
       </div>
     );
   }
 
+  const canCreateProject = user?.role === "Manager" || user?.role === "Admin";
+  
+  const indexOfLastProject = currentPage * itemsPerPage;
+  const indexOfFirstProject = indexOfLastProject - itemsPerPage;
+  const currentProjects = projects.slice(indexOfFirstProject, indexOfLastProject);
+  const totalPages = Math.ceil(projects.length / itemsPerPage);
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#0f5841] to-[#194f87] rounded-xl p-6 text-white shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-white/90">Manage users, roles, and system overview</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+          <p className="text-gray-600 mt-1">Manage and track all your projects</p>
+        </div>
+        {canCreateProject && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                New Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>
+                  Fill in the project details to get started
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="name">Project Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter project name"
+                    value={newProject.name}
+                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description *</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe the project"
+                    value={newProject.description}
+                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="team">Team *</Label>
+                  <Select
+                    value={newProject.team_id}
+                    onValueChange={(value) => setNewProject({ ...newProject, team_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teams.map((team) => (
+                        <SelectItem key={team.id} value={team.id.toString()}>
+                          {team.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="start-date">Start Date *</Label>
+                    <Input
+                      id="start-date"
+                      type="date"
+                      value={newProject.start_date}
+                      onChange={(e) => setNewProject({ ...newProject, start_date: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="end-date">End Date *</Label>
+                    <Input
+                      id="end-date"
+                      type="date"
+                      value={newProject.end_date}
+                      onChange={(e) => setNewProject({ ...newProject, end_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={handleCreateProject}
+                  className="w-full bg-gradient-to-r from-[#0f5841] to-[#194f87]"
+                  disabled={creating}
+                >
+                  {creating ? "Creating..." : "Create Project"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-[#0f5841]">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
-            <Users className="h-5 w-5 text-[#0f5841]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.total_users}</div>
-            <p className="text-xs text-gray-500 mt-1">{activeUsers} active</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-[#194f87]">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Total Projects</CardTitle>
-            <FolderKanban className="h-5 w-5 text-[#194f87]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.total_projects}</div>
-            <p className="text-xs text-gray-500 mt-1">{stats.active_projects} active</p>
+            <div className="text-3xl font-bold text-gray-900">{projects.length}</div>
           </CardContent>
         </Card>
-
-        <Card className="border-l-4 border-l-[#0f5841]">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Completed Projects</CardTitle>
-            <CheckSquare className="h-5 w-5 text-[#0f5841]" />
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Active</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.completed_projects}</div>
-            <p className="text-xs text-gray-500 mt-1">+5% from last week</p>
+            <div className="text-3xl font-bold text-gray-900">
+              {projects.filter(p => {
+                const status = p.status?.toLowerCase().replace('_', ' ');
+                return status === "active" || status === "in progress";
+              }).length}
+            </div>
           </CardContent>
         </Card>
-
-        <Card className="border-l-4 border-l-[#194f87]">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">On Hold Projects</CardTitle>
-            <TrendingUp className="h-5 w-5 text-[#194f87]" />
+        <Card className="border-l-4 border-l-green-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.on_hold_projects}</div>
-            <p className="text-xs text-gray-500 mt-1">Paused projects</p>
+            <div className="text-3xl font-bold text-gray-900">
+              {projects.filter(p => p.status?.toLowerCase() === "completed").length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-yellow-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">On Hold</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900">
+              {projects.filter(p => {
+                const status = p.status?.toLowerCase().replace('_', ' ');
+                return status === "on hold";
+              }).length}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* User Management */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">User Management</CardTitle>
-            {/* <Button className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add User
-            </Button> */}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Search */}
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          {/* Users Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left p-3 text-sm font-semibold text-gray-700">User</th>
-                  <th className="text-left p-3 text-sm font-semibold text-gray-700">Email</th>
-                  <th className="text-left p-3 text-sm font-semibold text-gray-700">Role</th>
-                  <th className="text-left p-3 text-sm font-semibold text-gray-700">Status</th>
-                  <th className="text-left p-3 text-sm font-semibold text-gray-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b hover:bg-gray-50 transition-colors">
-                    <td className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0f5841] to-[#194f87] flex items-center justify-center text-white font-semibold">
-                          {user.full_name.charAt(0)}
-                        </div>
-                        <span className="font-medium text-gray-900">{user.full_name}</span>
-                      </div>
-                    </td>
-                    <td className="p-3 text-gray-600">{user.email}</td>
-                    <td className="p-3">
+      {/* Projects List */}
+      {projects.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <FolderKanban className="h-16 w-16 text-gray-400 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects yet</h3>
+            <p className="text-gray-600 text-center mb-4">
+              {canCreateProject 
+                ? "Create your first project to get started" 
+                : "No projects available"}
+            </p>
+            {canCreateProject && (
+              <Button
+                onClick={() => setDialogOpen(true)}
+                className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Your First Project
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {currentProjects.map((project) => (
+              <Card key={project.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="flex items-center gap-3 mb-2">
+                        <span>{project.name}</span>
+                        <Badge className={getStatusColor(project.status)}>
+                          {getStatusLabel(project.status)}
+                        </Badge>
+                      </CardTitle>
+                      <p className="text-sm text-gray-600">{project.description}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => navigate(`/dashboard/projects/${project.id}`)}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <Users size={16} />
+                      {project.team_name}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar size={16} />
+                      {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">Manager:</span> {project.manager_name}
+                  </div>
+                  {(user?.role === "Admin" || (user?.role === "Manager" && project.manager_id === user?.id)) && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Change Status</Label>
                       <Select
-                        value={user.roles}
-                        onValueChange={(value) => handleRoleChange(user.id, value)}
+                        value={(() => {
+                          const statusMap: { [key: string]: string } = {
+                            'planning': 'Planned',
+                            'planned': 'Planned',
+                            'in_progress': 'Active',
+                            'active': 'Active',
+                            'completed': 'Completed',
+                            'on_hold': 'On Hold',
+                            'on hold': 'On Hold'
+                          };
+                          const normalizedStatus = project.status?.toLowerCase().replace(' ', '_');
+                          return statusMap[normalizedStatus] || project.status;
+                        })()}
+                        onValueChange={(value) => handleStatusChange(project.id, project, value)}
+                        disabled={updatingStatus === project.id}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Admin">Admin</SelectItem>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="Member">Member</SelectItem>
+                          <SelectItem value="Planned">Planning</SelectItem>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                          <SelectItem value="On Hold">On Hold</SelectItem>
                         </SelectContent>
                       </Select>
-                    </td>
-                    <td className="p-3">
-                      <Badge
-                        variant={user.is_active ? "default" : "secondary"}
-                        className={user.is_active ? "bg-green-500" : ""}
-                      >
-                        {user.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </td>
-                    <td className="p-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleStatusToggle(user.id)}
-                      >
-                        {user.is_active ? "Deactivate" : "Activate"}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <div className="text-sm text-gray-500">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
