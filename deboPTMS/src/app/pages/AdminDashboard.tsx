@@ -166,10 +166,7 @@ export const AdminDashboard = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl">User Management</CardTitle>
-            <Button className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add User
-            </Button>
+            
           </div>
         </CardHeader>
         <CardContent>
