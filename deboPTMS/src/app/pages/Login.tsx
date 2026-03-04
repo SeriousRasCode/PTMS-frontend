@@ -7,6 +7,7 @@ import { Label } from "../components/ui/label";
 import { Mail, Lock, LogIn, XCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
+
 interface ValidationErrors {
   email?: string;
   password?: string;
@@ -48,9 +49,9 @@ export const Login = () => {
   // Real-time validation on blur
   const handleBlur = (field: string) => {
     setTouched({ ...touched, [field]: true });
-    
+
     const newErrors = { ...errors };
-    
+
     switch (field) {
       case "email":
         const emailError = validateEmail(email);
@@ -63,22 +64,22 @@ export const Login = () => {
         else delete newErrors.password;
         break;
     }
-    
+
     setErrors(newErrors);
   };
 
   const validate = (): boolean => {
     const newErrors: ValidationErrors = {};
-    
+
     const emailError = validateEmail(email);
     if (emailError) newErrors.email = emailError;
-    
+
     const passError = validatePassword(password);
     if (passError) newErrors.password = passError;
-    
+
     setErrors(newErrors);
     setTouched({ email: true, password: true });
-    
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -95,21 +96,21 @@ export const Login = () => {
     try {
       await login(email, password);
       toast.success("Login successful!");
-      
+
       // Wait briefly for auth context to update, then redirect based on actual user role
       setTimeout(() => {
         // Get the updated user from localStorage (it's set in login)
         const storedUser = localStorage.getItem("user");
-        
+
         if (storedUser) {
           const userData = JSON.parse(storedUser);
           const role = userData.role || userData.role_name;
-          
-          const dashboardPath = role === "Admin" 
-            ? "/dashboard/admin" 
-            : role === "Manager" 
-            ? "/dashboard/manager" 
-            : "/dashboard/member";
+
+          const dashboardPath = role === "Admin"
+            ? "/dashboard/admin"
+            : role === "Manager"
+              ? "/dashboard/manager"
+              : "/dashboard/member";
           navigate(dashboardPath);
         } else {
           toast.error("Login failed: User data not found");
@@ -129,7 +130,13 @@ export const Login = () => {
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
-            <LogIn size={48} className="text-white" />
+            <img
+              src="/debo-logo.png"
+              alt="Debo Logo"
+              width={48}
+              height={48}
+              className="object-contain"
+            />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-white/80">Sign in to your PTMS account</p>
