@@ -28,6 +28,7 @@ export const ResetPassword = () => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [success, setSuccess] = useState(false);
+  const [message, setMessage] = useState<string>("");
 
   // Support both query param (?token=xxx) and path param (/reset-password/xxx)
   const token = tokenFromPath || searchParams.get("token");
@@ -97,23 +98,29 @@ export const ResetPassword = () => {
 
   const passwordStrength = getPasswordStrength();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!validate()) {
-      toast.error("Please fix the errors before submitting");
+    if (!password || !confirmPassword) {
+      setMessage("Please fill both fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setMessage("Passwords do not match");
       return;
     }
 
     if (!token) {
-      toast.error("Invalid or missing reset token");
+      setMessage("Invalid or missing token");
       return;
     }
 
     setLoading(true);
+    setMessage("");
 
     try {
-      const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL}/auth/reset-password`, {
+      const response = await fetch("http://localhost:3333/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword: password }),
@@ -122,20 +129,19 @@ export const ResetPassword = () => {
       const data: ResetResponse = await response.json();
 
       if (response.ok) {
-        setSuccess(true);
-        toast.success(data.message || "Password reset successful");
+        setMessage(data.message || "Password reset successful");
         setPassword("");
         setConfirmPassword("");
 
+        // 🔥 Redirect to login page after 2 seconds
         setTimeout(() => {
-          navigate("/login");
+          navigate("/login"); // <-- adjust this to your login route
         }, 2000);
       } else {
-        toast.error(data.message || "Something went wrong");
+        setMessage(data.message || "Something went wrong");
       }
     } catch (error: any) {
-      const errorMessage = error?.message || "Failed to reset password. Please try again.";
-      toast.error(errorMessage);
+      setMessage("Network error: " + error.message);
     } finally {
       setLoading(false);
     }
