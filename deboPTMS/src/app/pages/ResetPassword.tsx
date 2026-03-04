@@ -12,10 +12,6 @@ interface ValidationErrors {
   confirmPassword?: string;
 }
 
-interface ResetResponse {
-  message?: string;
-}
-
 export const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const { token: tokenFromPath } = useParams();
@@ -28,7 +24,6 @@ export const ResetPassword = () => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [success, setSuccess] = useState(false);
-  const [message, setMessage] = useState<string>("");
 
   // Support both query param (?token=xxx) and path param (/reset-password/xxx)
   const token = tokenFromPath || searchParams.get("token");
@@ -98,50 +93,33 @@ export const ResetPassword = () => {
 
   const passwordStrength = getPasswordStrength();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!password || !confirmPassword) {
-      setMessage("Please fill both fields");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match");
+    if (!validate()) {
+      toast.error("Please fix the errors before submitting");
       return;
     }
 
     if (!token) {
-      setMessage("Invalid or missing token");
+      toast.error("Invalid or missing reset token");
       return;
     }
 
     setLoading(true);
-    setMessage("");
 
     try {
-      const response = await fetch("http://localhost:3333/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword: password }),
-      });
-
-      const data: ResetResponse = await response.json();
-
-      if (response.ok) {
-        setMessage(data.message || "Password reset successful");
-        setPassword("");
-        setConfirmPassword("");
-
-        // 🔥 Redirect to login page after 2 seconds
-        setTimeout(() => {
-          navigate("/login"); // <-- adjust this to your login route
-        }, 2000);
-      } else {
-        setMessage(data.message || "Something went wrong");
-      }
+      await authAPI.resetPassword({ token, newPassword: password });
+      
+      setSuccess(true);
+      toast.success("Password reset successful!");
+      
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (error: any) {
-      setMessage("Network error: " + error.message);
+      const errorMessage = error?.message || "Failed to reset password. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
