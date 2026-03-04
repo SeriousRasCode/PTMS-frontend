@@ -131,7 +131,7 @@ export const Login = () => {
         <div className="text-center mb-8">
           <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
             <img
-              src="/debo-logo.png"
+              src="/debo-logo.jpg"
               alt="Debo Logo"
               width={48}
               height={48}
