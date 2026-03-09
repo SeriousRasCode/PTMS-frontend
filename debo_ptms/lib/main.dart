@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../screens/dashboard/home.dart';
+import '../screens/dashboard/projects.dart';
+import '../screens/dashboard/profile.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -15,118 +19,52 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
 
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: .fromSeed(seedColor: Color(0xFF0F5841)),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home:HomeWrapper(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class HomeWrapper extends StatefulWidget {
+  const HomeWrapper({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomeWrapper> createState() => _HomeWrapperState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _HomeWrapperState extends State<HomeWrapper> {
 
-  void _incrementCounter() {
-    setState(() {
+  int _currentIndex = 0;
 
-    });
-  }
+  final List<Widget> _screens = [
+    const Home(title: 'Tasks'),
+    const Projects(title:'Projects'),
+    const Profile(title:'Profile'),
+  ];
 
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Dashboard", 
-        textAlign: TextAlign.center,
-        style:TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 20
-        )),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF0F5841), Color(0xFF194F87),],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-            ),
-          ),
-        ),
+    return  Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
       ),
-      body: 
-            ListView.builder(
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    print("List CLicked");
-                  },
-                  enableFeedback: true,
-                  child: Container(
-                    margin: const EdgeInsets.all(10),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-              colors: [Color(0xFF0F5841), Color(0xFF194F87),],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-            ),
-                      borderRadius: BorderRadius.circular(10),
-                      
-                    ),
-                  
-                    child:Row(
-                      children:[
-                        Icon(Icons.task_alt, size: 30, color: const Color.fromARGB(255, 255, 255, 255)),
-                        const SizedBox(width: 20),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Task ${index + 1}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 255, 255, 255))),
-                            Text('Description of task ${index + 1}', style: TextStyle(fontSize: 14, color: const Color.fromARGB(255, 255, 255, 255))),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                               Icon(Icons.calendar_month, size: 16, color: const Color.fromARGB(255, 255, 255, 255)),
-                                const SizedBox(width: 5),
-                                Text('Due: 2024-12-31', style: TextStyle(fontSize: 12, color: const Color.fromARGB(255, 255, 243, 243))),
-                                
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            Row(
-                              children: [
-                               Icon(Icons.fiber_manual_record, size: 16, color: const Color.fromARGB(255, 255, 255, 255)),
-                                const SizedBox(width: 5),
-                                Text('Active', style: TextStyle(fontSize: 12, color: const Color.fromARGB(255, 255, 243, 243))),
-                                
-                              ],
-                            )
-                          ],
-                        ),
-                      ]
-                    ),
-                  ),
-                );
-              },
-            ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        elevation: 5,
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.folder),
+            icon: Icon(Icons.work),
             label: 'Projects',
           ),
           BottomNavigationBarItem(
@@ -134,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'Profile',
           ),
         ],
-      ),
+      ),  
     );
   }
 }
