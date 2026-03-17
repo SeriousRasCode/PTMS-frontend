@@ -12,6 +12,7 @@ import { CheckSquare, AlertCircle, Calendar, CheckCircle2, Play, TrendingUp, His
 import { taskAPI, projectAPI } from "../utils/api";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 interface Task {
   id: number;
@@ -35,6 +36,7 @@ interface TaskUpdate {
 
 export const Tasks = () => {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -121,11 +123,10 @@ export const Tasks = () => {
       setTasks(allTasks);
       
     } catch (error: any) {
-      // Suppress permission errors for Members (they might not have access to some endpoints)
-      if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
-        console.log("Permission denied - user may not have access to tasks");
-        toast.error("You don't have permission to view tasks");
-      } else {
+      // Silently handle permission errors
+      if (!error.message?.includes("Forbidden") && 
+          !error.message?.includes("permission") &&
+          !error.message?.includes("not allowed")) {
         console.error("=== FETCH TASKS ERROR ===");
         console.error("Error:", error);
         toast.error(error.message || "Failed to load tasks");
@@ -142,11 +143,11 @@ export const Tasks = () => {
         return "bg-green-500";
       case "in_progress":
       case "started":
-        return "bg-blue-500";
+        return theme === 'dark' ? "bg-blue-400" : "bg-blue-500";
       case "not_started":
-        return "bg-gray-400";
+        return theme === 'dark' ? "bg-gray-600" : "bg-gray-400";
       default:
-        return "bg-gray-400";
+        return theme === 'dark' ? "bg-gray-600" : "bg-gray-400";
     }
   };
 
@@ -235,13 +236,13 @@ export const Tasks = () => {
       isOverdue(task.due_date) && task.status !== "completed"
         ? "border-l-4 border-l-red-500"
         : ""
-    }`}>
+    } ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
       <CardContent className="pt-6">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="font-semibold text-lg text-gray-900">{task.title}</h3>
+                <h3 className={`font-semibold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{task.title}</h3>
                 <Badge className={getStatusColor(task.status)}>
                   {getStatusLabel(task.status)}
                 </Badge>
@@ -252,8 +253,8 @@ export const Tasks = () => {
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-gray-600 mb-3">{task.description}</p>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-3`}>{task.description}</p>
+              <div className={`flex items-center gap-4 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                 {task.project_name && (
                   <span className="flex items-center gap-1">
                     <CheckSquare size={16} />
@@ -270,14 +271,14 @@ export const Tasks = () => {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Progress</span>
-              <span className="font-semibold text-gray-900">{task.progress_percentage}%</span>
+              <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Progress</span>
+              <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{task.progress_percentage}%</span>
             </div>
             <Progress value={task.progress_percentage} className="h-2" />
           </div>
           
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t">
+          <div className={`flex flex-wrap gap-2 pt-2 border-t ${theme === 'dark' ? 'border-slate-600' : ''}`}>
             <Button
               size="sm"
               variant="outline"
@@ -289,7 +290,7 @@ export const Tasks = () => {
                 });
                 setUpdateProgressDialogOpen(true);
               }}
-              className="flex-1"
+              className={`flex-1 ${theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}`}
             >
               <TrendingUp className="mr-2 h-4 w-4" />
               Update Progress
@@ -301,7 +302,7 @@ export const Tasks = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => viewTaskHistory(task)}
-                className="flex-1"
+                className={`flex-1 ${theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}`}
               >
                 <History className="mr-2 h-4 w-4" />
                 View History
@@ -316,7 +317,7 @@ export const Tasks = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading tasks...</div>
+        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading tasks...</div>
       </div>
     );
   }
@@ -330,50 +331,50 @@ export const Tasks = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
-          <p className="text-gray-600 mt-1">View and manage your assigned tasks</p>
+          <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Tasks</h1>
+          <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mt-1`}>View and manage your assigned tasks</p>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-[#0f5841]">
+        <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Tasks</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Total Tasks</CardTitle>
             <CheckSquare className="h-5 w-5 text-[#0f5841]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{allTasks.length}</div>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{allTasks.length}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className={`border-l-4 ${theme === 'dark' ? 'border-l-blue-400 bg-slate-800 border-slate-700' : 'border-l-blue-500 bg-white'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">In Progress</CardTitle>
-            <Play className="h-5 w-5 text-blue-500" />
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>In Progress</CardTitle>
+            <Play className={`h-5 w-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{inProgressTasks.length}</div>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{inProgressTasks.length}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className={`border-l-4 border-l-green-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Completed</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Completed</CardTitle>
             <CheckCircle2 className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{completedTasks.length}</div>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{completedTasks.length}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
+        <Card className={`border-l-4 border-l-red-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Overdue</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Overdue</CardTitle>
             <AlertCircle className="h-5 w-5 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {allTasks.filter(t => isOverdue(t.due_date) && t.status !== "completed").length}
             </div>
           </CardContent>
@@ -382,20 +383,20 @@ export const Tasks = () => {
 
       {/* Tasks Tabs */}
       <Tabs defaultValue="all" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all">All Tasks ({allTasks.length})</TabsTrigger>
-          <TabsTrigger value="in-progress">In Progress ({inProgressTasks.length})</TabsTrigger>
-          <TabsTrigger value="completed">Completed ({completedTasks.length})</TabsTrigger>
-          <TabsTrigger value="not-started">Not Started ({notStartedTasks.length})</TabsTrigger>
+        <TabsList className={theme === 'dark' ? 'bg-slate-800' : ''}>
+          <TabsTrigger value="all" className={theme === 'dark' ? 'data-[state=active]:bg-slate-700' : ''}>All Tasks ({allTasks.length})</TabsTrigger>
+          <TabsTrigger value="in-progress" className={theme === 'dark' ? 'data-[state=active]:bg-slate-700' : ''}>In Progress ({inProgressTasks.length})</TabsTrigger>
+          <TabsTrigger value="completed" className={theme === 'dark' ? 'data-[state=active]:bg-slate-700' : ''}>Completed ({completedTasks.length})</TabsTrigger>
+          <TabsTrigger value="not-started" className={theme === 'dark' ? 'data-[state=active]:bg-slate-700' : ''}>Not Started ({notStartedTasks.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
           {allTasks.length === 0 ? (
-            <Card>
+            <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
               <CardContent className="flex flex-col items-center justify-center py-16">
-                <CheckSquare className="h-16 w-16 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No tasks assigned</h3>
-                <p className="text-gray-600 text-center">
+                <CheckSquare className={`h-16 w-16 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`} />
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No tasks assigned</h3>
+                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center`}>
                   You don't have any tasks assigned yet
                 </p>
               </CardContent>
@@ -409,11 +410,11 @@ export const Tasks = () => {
 
         <TabsContent value="in-progress" className="space-y-4">
           {inProgressTasks.length === 0 ? (
-            <Card>
+            <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
               <CardContent className="flex flex-col items-center justify-center py-16">
-                <Play className="h-16 w-16 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No tasks in progress</h3>
-                <p className="text-gray-600 text-center">
+                <Play className={`h-16 w-16 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`} />
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No tasks in progress</h3>
+                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center`}>
                   Start working on a task to see it here
                 </p>
               </CardContent>
@@ -427,11 +428,11 @@ export const Tasks = () => {
 
         <TabsContent value="completed" className="space-y-4">
           {completedTasks.length === 0 ? (
-            <Card>
+            <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
               <CardContent className="flex flex-col items-center justify-center py-16">
-                <CheckCircle2 className="h-16 w-16 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No completed tasks</h3>
-                <p className="text-gray-600 text-center">
+                <CheckCircle2 className={`h-16 w-16 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`} />
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No completed tasks</h3>
+                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center`}>
                   Completed tasks will appear here
                 </p>
               </CardContent>
@@ -445,11 +446,11 @@ export const Tasks = () => {
 
         <TabsContent value="not-started" className="space-y-4">
           {notStartedTasks.length === 0 ? (
-            <Card>
+            <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
               <CardContent className="flex flex-col items-center justify-center py-16">
-                <CheckSquare className="h-16 w-16 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No pending tasks</h3>
-                <p className="text-gray-600 text-center">
+                <CheckSquare className={`h-16 w-16 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`} />
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No pending tasks</h3>
+                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center`}>
                   All your tasks have been started!
                 </p>
               </CardContent>
@@ -470,25 +471,25 @@ export const Tasks = () => {
           setProgressUpdate({ progress_percentage: 0, update_note: "" });
         }
       }}>
-        <DialogContent>
+        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
           <DialogHeader>
-            <DialogTitle>Update Task Progress</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Update Task Progress</DialogTitle>
+            <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
               Update the progress of this task
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="task-title">Task</Label>
+              <Label htmlFor="task-title" className={theme === 'dark' ? 'text-gray-200' : ''}>Task</Label>
               <Input
                 id="task-title"
                 value={selectedTask?.title || ""}
                 readOnly
-                className="bg-gray-50"
+                className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-gray-50'}
               />
             </div>
             <div>
-              <Label htmlFor="progress">Progress Percentage (0-100)</Label>
+              <Label htmlFor="progress" className={theme === 'dark' ? 'text-gray-200' : ''}>Progress Percentage (0-100)</Label>
               <Input
                 id="progress"
                 type="number"
@@ -499,10 +500,11 @@ export const Tasks = () => {
                   ...progressUpdate, 
                   progress_percentage: Number(e.target.value) 
                 })}
+                className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
               />
             </div>
             <div>
-              <Label htmlFor="note">Update Note</Label>
+              <Label htmlFor="note" className={theme === 'dark' ? 'text-gray-200' : ''}>Update Note</Label>
               <Textarea
                 id="note"
                 placeholder="Add a note about this update"
@@ -512,6 +514,7 @@ export const Tasks = () => {
                   update_note: e.target.value 
                 })}
                 rows={3}
+                className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
               />
             </div>
             <Button
@@ -532,24 +535,24 @@ export const Tasks = () => {
           setTaskHistory([]);
         }
       }}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className={`max-w-3xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <DialogHeader>
-            <DialogTitle>Task History</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Task History</DialogTitle>
+            <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
               View all updates for: {selectedTask?.title}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4 max-h-96 overflow-y-auto">
             {taskHistory.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No history available</p>
+              <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} py-8`}>No history available</p>
             ) : (
               taskHistory.map((update, index) => (
-                <Card key={index} className="border-l-4 border-l-blue-500">
+                <Card key={index} className={`border-l-4 ${theme === 'dark' ? 'border-l-blue-400 bg-slate-700 border-slate-600' : 'border-l-blue-500 bg-white'}`}>
                   <CardContent className="pt-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-medium text-gray-900">{update.full_name}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{update.full_name}</p>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                           {new Date(update.updated_at).toLocaleString()}
                         </p>
                       </div>
@@ -558,12 +561,12 @@ export const Tasks = () => {
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm text-gray-600">Progress:</span>
-                      <span className="font-medium text-gray-900">{update.progress_percentage}%</span>
+                      <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Progress:</span>
+                      <span className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{update.progress_percentage}%</span>
                       <Progress value={update.progress_percentage} className="h-2 flex-1" />
                     </div>
                     {update.update_note && (
-                      <p className="text-sm text-gray-700 mt-2 p-2 bg-gray-50 rounded">
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-200 bg-slate-600' : 'text-gray-700 bg-gray-50'} mt-2 p-2 rounded`}>
                         {update.update_note}
                       </p>
                     )}
