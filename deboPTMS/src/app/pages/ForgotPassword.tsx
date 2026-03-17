@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Mail, ArrowLeft, KeyRound } from "lucide-react";
+import { Mail, ArrowLeft, KeyRound, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { authAPI } from "../utils/api";
 
@@ -11,6 +12,7 @@ export const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +31,14 @@ export const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87] flex items-center justify-center p-4">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87]'} flex items-center justify-center p-4`}>
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 text-white hover:bg-white/10 p-3 rounded-lg transition-colors z-50"
+        title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+      >
+        {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+      </button>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
@@ -39,7 +48,7 @@ export const ForgotPassword = () => {
           <p className="text-white/80">We'll send you a reset link</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className={`${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white'} rounded-2xl shadow-2xl p-8`}>
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
@@ -71,8 +80,8 @@ export const ForgotPassword = () => {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail size={32} className="text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Check your email</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>Check your email</h3>
+              <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
                 We've sent a password reset link to <strong>{email}</strong>
               </p>
             </div>
@@ -81,7 +90,11 @@ export const ForgotPassword = () => {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-sm text-[#194f87] hover:text-[#0f5841] font-medium transition-colors"
+              className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+                theme === 'dark' 
+                  ? 'text-blue-400 hover:text-blue-300' 
+                  : 'text-[#194f87] hover:text-[#0f5841]'
+              }`}
             >
               <ArrowLeft size={16} />
               Back to login
