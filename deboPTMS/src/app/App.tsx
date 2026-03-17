@@ -1,12 +1,16 @@
 import { RouterProvider } from "react-router";
 import { Toaster } from "./components/ui/sonner";
 import { router } from "./routes";
+import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 
 export default function App() {
   return (
-    <>
-      <RouterProvider router={router} />
-      <Toaster />
-    </>
+    <ThemeProvider>
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster position="top-right" />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
