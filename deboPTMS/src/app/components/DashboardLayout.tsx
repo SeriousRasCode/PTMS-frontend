@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { 
   LayoutDashboard, 
   FolderKanban, 
@@ -9,12 +10,15 @@ import {
   User, 
   LogOut,
   Menu,
-  X
+  X,
+  Sun,
+  Moon
 } from "lucide-react";
 import { useState } from "react";
 
 export const DashboardLayout = () => {
   const { user, logout, isLoading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -60,7 +64,7 @@ export const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-slate-50 to-slate-100'}`}>
       {/* Top Navigation Bar */}
       <div className="fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-[#0f5841] to-[#194f87] shadow-lg z-50">
         <div className="flex items-center justify-between h-full px-4">
@@ -74,6 +78,14 @@ export const DashboardLayout = () => {
             <h1 className="text-white text-xl font-semibold">PTMS - Project Task Management</h1>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className="text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              type="button"
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
             <div className="text-white text-sm">
               <div className="font-medium">{user?.full_name}</div>
               <div className="text-xs text-white/80">{user?.role}</div>
@@ -92,7 +104,7 @@ export const DashboardLayout = () => {
       <div className="flex pt-16">
         {/* Sidebar */}
         <div
-          className={`fixed left-0 top-16 bottom-0 bg-white shadow-lg transition-all duration-300 z-40 overflow-hidden ${
+          className={`fixed left-0 top-16 bottom-0 ${theme === 'dark' ? 'bg-slate-800 border-r border-slate-700' : 'bg-white'} shadow-lg transition-all duration-300 z-40 overflow-hidden ${
             sidebarOpen ? "w-64" : "w-0"
           }`}
         >
@@ -107,7 +119,9 @@ export const DashboardLayout = () => {
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all whitespace-nowrap ${
                     active
                       ? "bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white shadow-md"
-                      : "text-gray-700 hover:bg-gray-100"
+                      : theme === 'dark'
+                        ? "text-gray-200 hover:bg-slate-700"
+                        : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <Icon size={20} />
