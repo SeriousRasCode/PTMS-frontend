@@ -9,6 +9,7 @@ import { Users, Plus, Mail, UserPlus, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { teamAPI, adminAPI, projectAPI } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 interface Team {
   id: number;
@@ -25,6 +26,7 @@ interface User {
 
 export const Teams = () => {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -158,7 +160,9 @@ export const Teams = () => {
               return membersList.length;
             } catch (error: any) {
               // Silently handle permission errors - user may not have access to all teams
-              if (!error.message?.includes('Forbidden') && !error.message?.includes('permission')) {
+              if (!error.message?.includes('Forbidden') && 
+                  !error.message?.includes('permission') && 
+                  !error.message?.includes('not allowed')) {
                 console.error(`Failed to fetch members for team ${team.id}:`, error);
               }
               return 0;
@@ -244,36 +248,36 @@ export const Teams = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading teams...</div>
+        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading teams...</div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Teams</h1>
-          <p className="text-gray-600 mt-1">Manage your teams and members</p>
+          <h1 className={`text-2xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Teams</h1>
+          <p className={`mt-1 text-sm sm:text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Manage your teams and members</p>
         </div>
         {user?.role === "Admin" && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white">
+              <Button className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Team
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className={theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : ''}>
               <DialogHeader>
-                <DialogTitle>Create New Team</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Create New Team</DialogTitle>
+                <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
                   Create a new team to organize your project members
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div>
-                  <Label htmlFor="team-name">Team Name</Label>
+                  <Label htmlFor="team-name" className={theme === 'dark' ? 'text-gray-200' : ''}>Team Name</Label>
                   <Input
                     id="team-name"
                     placeholder="Enter team name"
@@ -284,6 +288,7 @@ export const Teams = () => {
                         handleCreateTeam();
                       }
                     }}
+                    className={theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-400' : ''}
                   />
                 </div>
                 <Button
@@ -300,11 +305,11 @@ export const Teams = () => {
       </div>
 
       {teams.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Users className="h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No teams yet</h3>
-            <p className="text-gray-600 text-center mb-4">
+        <Card className={theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}>
+          <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+            <Users className={`h-12 w-12 sm:h-16 sm:w-16 mb-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+            <h3 className={`text-base sm:text-lg font-semibold mb-2 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>No teams yet</h3>
+            <p className={`text-sm sm:text-base text-center mb-4 max-w-md ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               {user?.role === "Admin" 
                 ? "Create your first team to start collaborating with others"
                 : "You are not a member of any teams yet"}
@@ -312,7 +317,7 @@ export const Teams = () => {
             {user?.role === "Admin" && (
               <Button
                 onClick={() => setDialogOpen(true)}
-                className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
+                className="bg-gradient-to-r from-[#0f5841] to-[#194f87] w-full sm:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Create Your First Team
@@ -321,29 +326,29 @@ export const Teams = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {teams.map((team) => (
-            <Card key={team.id} className="hover:shadow-lg transition-shadow">
+            <Card key={team.id} className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : ''}`}>
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className={`flex items-center gap-2 text-base sm:text-lg ${theme === 'dark' ? 'text-white' : ''}`}>
                   <div className="p-2 bg-gradient-to-br from-[#0f5841] to-[#194f87] rounded-lg">
-                    <Users className="h-5 w-5 text-white" />
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </div>
-                  <span>{team.name}</span>
+                  <span className="break-words">{team.name}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="h-4 w-4" />
+                <div className={`flex items-center gap-2 text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
                   <span>Created {new Date(team.created_at).toLocaleDateString()}</span>
                 </div>
 
                 {user?.role === "Admin" && (
-                  <div className="pt-3 border-t">
+                  <div className={`pt-3 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} border-t`}>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full"
+                      className={`w-full ${theme === 'dark' ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
                       onClick={() => {
                         setSelectedTeam(team);
                         setAddMemberDialogOpen(true);
@@ -362,33 +367,33 @@ export const Teams = () => {
 
       {/* Team Stats */}
       {teams.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-l-4 border-l-[#0f5841]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Teams</CardTitle>
+              <CardTitle className={`text-xs sm:text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Total Teams</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{teams.length}</div>
+              <div className={`text-2xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{teams.length}</div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-[#194f87]">
+          <Card className={`border-l-4 border-l-[#194f87] ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Active Projects</CardTitle>
+              <CardTitle className={`text-xs sm:text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Active Projects</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{activeProjects}</div>
-              <p className="text-xs text-gray-500 mt-1">Across all teams</p>
+              <div className={`text-2xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{activeProjects}</div>
+              <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Across all teams</p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-[#0f5841]">
+          <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Team Members</CardTitle>
+              <CardTitle className={`text-xs sm:text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Team Members</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{teamMembers}</div>
-              <p className="text-xs text-gray-500 mt-1">Total members</p>
+              <div className={`text-2xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{teamMembers}</div>
+              <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Total members</p>
             </CardContent>
           </Card>
         </div>
@@ -402,30 +407,34 @@ export const Teams = () => {
           setSelectedTeam(null);
         }
       }}>
-        <DialogContent>
+        <DialogContent className={theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : ''}>
           <DialogHeader>
-            <DialogTitle>Add Member to Team</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Add Member to Team</DialogTitle>
+            <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
               Add a new member to the selected team
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="team-name">Team</Label>
+              <Label htmlFor="team-name" className={theme === 'dark' ? 'text-gray-200' : ''}>Team</Label>
               <Input
                 id="team-name"
                 value={selectedTeam?.name || ""}
                 readOnly
-                className="bg-gray-50"
+                className={theme === 'dark' ? 'bg-gray-700 border-gray-600 text-gray-300' : 'bg-gray-50'}
               />
             </div>
             <div>
-              <Label htmlFor="user-select">Select User</Label>
+              <Label htmlFor="user-select" className={theme === 'dark' ? 'text-gray-200' : ''}>Select User</Label>
               <select
                 id="user-select"
                 value={selectedUserId || ""}
                 onChange={(e) => setSelectedUserId(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-[#194f87]' 
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
               >
                 <option value="">Select a user</option>
                 {allUsers.map((u) => (
