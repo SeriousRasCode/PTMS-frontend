@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { projectAPI, taskAPI, adminAPI, teamAPI } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -10,6 +11,9 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
+import { ProjectPhases } from "../components/ProjectPhases";
+import { AttachmentManager } from "../components/AttachmentManager";
+import { TaskSubtasks } from "../components/TaskSubtasks";
 import {
   Dialog,
   DialogContent,
@@ -75,6 +79,7 @@ export const ProjectDetails = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme } = useTheme();
   
   const [tasks, setTasks] = useState<Task[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -165,7 +170,12 @@ export const ProjectDetails = () => {
       }
     } catch (error: any) {
       console.error("Failed to fetch project details:", error);
-      toast.error(error.message || "Failed to load project details");
+      // Silently handle permission errors
+      if (!error.message?.includes("Forbidden") && 
+          !error.message?.includes("permission") &&
+          !error.message?.includes("not allowed")) {
+        toast.error(error.message || "Failed to load project details");
+      }
     }
   };
   
@@ -235,7 +245,12 @@ export const ProjectDetails = () => {
       console.log("Step 2: Fetching members from all teams");
       const allMembersPromises = teams.map((team: any) => 
         teamAPI.getTeamMembers(team.id).catch(err => {
-          console.error(`Failed to fetch members for team ${team.id}:`, err);
+          // Silently handle permission errors
+          if (!err.message?.includes('Forbidden') && 
+              !err.message?.includes('permission') && 
+              !err.message?.includes('not allowed')) {
+            console.error(`Failed to fetch members for team ${team.id}:`, err);
+          }
           return [];
         })
       );
@@ -723,6 +738,20 @@ export const ProjectDetails = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+      
+      {/* Project Phases Section */}
+      {projectId && (
+        <div className="mt-8">
+          <ProjectPhases projectId={Number(projectId)} />
+        </div>
+      )}
+      
+      {/* Attachments Section */}
+      {projectId && (
+        <div className="mt-8">
+          <AttachmentManager entityId={Number(projectId)} entityType="project" />
         </div>
       )}
       
