@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { User, Mail, Lock, UserPlus, CheckCircle2, XCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Lock, CheckCircle2, XCircle, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
 
 interface ValidationErrors {
@@ -26,6 +27,7 @@ export const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register, isLoading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   // If still loading auth state, show nothing (or a loader)
@@ -200,25 +202,26 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87] flex items-center justify-center p-4">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-[#194f87] via-[#0f5841] to-[#194f87]'} flex items-center justify-center p-4`}>
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 text-white hover:bg-white/10 p-3 rounded-lg transition-colors z-50"
+        title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+      >
+        {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+      </button>
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
-            <img
-              src="/debo-logo.jpg"
-              alt="Debo Logo"
-              width={48}
-              height={48}
-              className="object-contain"
-            />
+            <img src="/debo-logo.svg" alt="Debo Logo" className="w-16 h-16" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
           <p className="text-white/80">Join PTMS and start managing projects</p>
         </div>
 
         {/* Register Form */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className={`${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white'} rounded-2xl shadow-2xl p-8`}>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
@@ -347,11 +350,15 @@ export const Register = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-[#194f87] hover:text-[#0f5841] font-medium transition-colors"
+                className={`font-medium transition-colors ${
+                  theme === 'dark' 
+                    ? 'text-blue-400 hover:text-blue-300' 
+                    : 'text-[#194f87] hover:text-[#0f5841]'
+                }`}
               >
                 Sign in
               </Link>
