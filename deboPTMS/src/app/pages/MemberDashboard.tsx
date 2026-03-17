@@ -17,6 +17,7 @@ import { Slider } from "../components/ui/slider";
 import { toast } from "sonner";
 import { taskAPI, projectAPI } from "../utils/api";
 import { useNavigate } from "react-router";
+import { useTheme } from "../context/ThemeContext";
 
 interface Task {
   id: number;
@@ -40,6 +41,7 @@ interface Project {
 }
 
 export const MemberDashboard = () => {
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -47,32 +49,24 @@ export const MemberDashboard = () => {
   const [updatingTask, setUpdatingTask] = useState<number | null>(null);
 
   useEffect(() => {
-    console.log("=== MEMBER DASHBOARD MOUNTED ===");
     fetchMyTasks();
     fetchMyProjects();
   }, []);
 
   const fetchMyProjects = async () => {
     try {
-      console.log("=== FETCHING MY PROJECTS (Dashboard) ===");
       const response = await projectAPI.getMyProjects();
-      console.log("My projects response (Dashboard):", response);
       
       if (response && response.success && response.data) {
-        console.log("✅ Setting projects:", response.data);
         setProjects(response.data);
       } else {
-        console.warn("No projects data in response");
         setProjects([]);
       }
       
     } catch (error: any) {
-      // Suppress permission errors - handle gracefully
       if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
-        console.log("Permission denied for projects - user may not have access");
         setProjects([]);
       } else {
-        console.error("Failed to fetch my projects:", error);
         toast.error(error.message || "Failed to load projects");
         setProjects([]);
       }
@@ -83,13 +77,8 @@ export const MemberDashboard = () => {
     try {
       setLoading(true);
       
-      console.log("=== FETCHING MY TASKS (Dashboard - via Projects like ProjectDetails) ===");
-      
-      // Get all projects first
       const projectsResponse = await projectAPI.getMyProjects();
-      console.log("Projects response:", projectsResponse);
       
-      // Extract projects array (EXACT same logic as ProjectDetails line 145-153)
       let projectsList = [];
       if (projectsResponse && projectsResponse.success && projectsResponse.data) {
         projectsList = projectsResponse.data;
@@ -99,21 +88,15 @@ export const MemberDashboard = () => {
         projectsList = projectsResponse;
       }
       
-      console.log(`Found ${projectsList.length} projects`);
-      
       if (projectsList.length === 0) {
-        console.warn("No projects found");
         setTasks([]);
         return;
       }
       
-      // Fetch tasks for each project (EXACT same logic as ProjectDetails line 172-192)
       const allTasksPromises = projectsList.map(async (project: any) => {
         try {
           const response = await taskAPI.getTasksByProject(project.id);
-          console.log(`Tasks response for project ${project.id}:`, response);
           
-          // EXACT same handling as ProjectDetails line 179-185
           let projectTasks = [];
           if (Array.isArray(response)) {
             projectTasks = response;
@@ -123,14 +106,12 @@ export const MemberDashboard = () => {
             projectTasks = [];
           }
           
-          // Add project info to each task
           return projectTasks.map((task: any) => ({
             ...task,
             project_name: project.name,
             project_id: project.id
           }));
         } catch (error) {
-          console.error(`Failed to fetch tasks for project ${project.id}:`, error);
           return [];
         }
       });
@@ -138,21 +119,12 @@ export const MemberDashboard = () => {
       const allTasksArrays = await Promise.all(allTasksPromises);
       const allTasks = allTasksArrays.flat();
       
-      console.log("=== TASKS LOADED (Dashboard) ===");
-      console.log("Total tasks:", allTasks.length);
-      if (allTasks.length > 0) {
-        console.log("Sample task:", allTasks[0]);
-      }
-      
       setTasks(allTasks);
       
     } catch (error: any) {
-      // Suppress permission errors - handle gracefully
       if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
-        console.log("Permission denied for tasks - user may not have access");
         setTasks([]);
       } else {
-        console.error("Failed to fetch my tasks:", error);
         toast.error(error.message || "Failed to load tasks");
         setTasks([]);
       }
@@ -180,7 +152,6 @@ export const MemberDashboard = () => {
       ));
       
     } catch (error: any) {
-      console.error("Failed to update task progress:", error);
       toast.error(error.message || "Failed to update progress");
     } finally {
       setUpdatingTask(null);
@@ -227,7 +198,7 @@ export const MemberDashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading dashboard...</div>
+        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading dashboard...</div>
       </div>
     );
   }
@@ -242,60 +213,61 @@ export const MemberDashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-[#0f5841]">
+        <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">My Projects</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>My Projects</CardTitle>
             <FolderKanban className="h-5 w-5 text-[#0f5841]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{projects.length}</div>
-            <p className="text-xs text-gray-500 mt-1">Team projects</p>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{projects.length}</div>
+            <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Team projects</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className={`border-l-4 border-l-purple-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">My Tasks</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>My Tasks</CardTitle>
             <CheckSquare className="h-5 w-5 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{myTasks}</div>
-            <p className="text-xs text-gray-500 mt-1">Total assigned tasks</p>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{myTasks}</div>
+            <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Total assigned tasks</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">In Progress</CardTitle>
-            <Play className="h-5 w-5 text-blue-500" />
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>In Progress</CardTitle>
+            <Play className={`h-5 w-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{inProgress}</div>
-            <p className="text-xs text-gray-500 mt-1">Currently working on</p>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{inProgress}</div>
+            <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Currently working on</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className={`border-l-4 border-l-green-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Completed</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Completed</CardTitle>
             <CheckCircle2 className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{completed}</div>
-            <p className="text-xs text-gray-500 mt-1">Tasks completed</p>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{completed}</div>
+            <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Tasks completed</p>
           </CardContent>
         </Card>
       </div>
 
       {/* My Projects Section */}
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">My Projects</CardTitle>
+            <CardTitle className={`text-xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>My Projects</CardTitle>
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate("/dashboard/projects")}
+              className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
             >
               View All
             </Button>
@@ -303,7 +275,7 @@ export const MemberDashboard = () => {
         </CardHeader>
         <CardContent>
           {projects.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               <FolderKanban className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No projects available</p>
             </div>
@@ -312,17 +284,17 @@ export const MemberDashboard = () => {
               {projects.slice(0, 4).map((project) => (
                 <div
                   key={project.id}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white"
+                  className={`p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-white'}`}
                   onClick={() => navigate(`/dashboard/projects/${project.id}`)}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">{project.name}</h3>
+                    <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{project.name}</h3>
                     <Badge className={getStatusColor(project.status)}>
                       {getStatusLabel(project.status)}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-3 line-clamp-2`}>{project.description}</p>
+                  <div className={`flex items-center gap-3 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                     <span className="flex items-center gap-1">
                       <Users size={14} />
                       {project.team_name}
@@ -340,14 +312,14 @@ export const MemberDashboard = () => {
       </Card>
 
       {/* Tasks List */}
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
         <CardHeader>
-          <CardTitle className="text-xl">My Tasks</CardTitle>
+          <CardTitle className={`text-xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>My Tasks</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {tasks.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                 <CheckSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>No tasks assigned yet</p>
               </div>
@@ -357,14 +329,14 @@ export const MemberDashboard = () => {
                   key={task.id}
                   className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${
                     isOverdue(task.due_date) && task.status !== "completed"
-                      ? "border-l-4 border-l-red-500 bg-red-50/30"
-                      : "bg-white"
+                      ? `border-l-4 border-l-red-500 ${theme === 'dark' ? 'bg-red-900/20 border-slate-600' : 'bg-red-50/30'}`
+                      : theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-white'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg text-gray-900">{task.title}</h3>
+                        <h3 className={`font-semibold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{task.title}</h3>
                         <Badge className={getStatusColor(task.status)}>
                           {getStatusLabel(task.status)}
                         </Badge>
@@ -375,8 +347,8 @@ export const MemberDashboard = () => {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-2`}>{task.description}</p>
+                      <div className={`flex items-center gap-4 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                         {task.project_name && (
                           <span className="flex items-center gap-1">
                             <CheckSquare size={16} />
@@ -394,8 +366,8 @@ export const MemberDashboard = () => {
                   {/* Progress Update */}
                   <div className="space-y-3 mt-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Progress</span>
-                      <span className="font-semibold text-gray-900">{task.progress_percentage}%</span>
+                      <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Progress</span>
+                      <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{task.progress_percentage}%</span>
                     </div>
                     <Progress value={task.progress_percentage} className="h-2" />
                     
