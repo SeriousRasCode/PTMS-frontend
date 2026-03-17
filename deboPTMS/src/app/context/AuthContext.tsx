@@ -34,7 +34,35 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create context with a default value
+const defaultAuthContext: AuthContextType = {
+  user: null,
+  token: null,
+  login: async () => {
+    throw new Error("AuthProvider not initialized");
+  },
+  register: async () => {
+    throw new Error("AuthProvider not initialized");
+  },
+  logout: () => {
+    throw new Error("AuthProvider not initialized");
+  },
+  refreshUser: async () => {
+    throw new Error("AuthProvider not initialized");
+  },
+  isAuthenticated: false,
+  isLoading: true,
+};
+
+const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -61,13 +89,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
+        setIsLoading(false); // Set loading to false immediately with cached data
       } catch (e) {
         logout();
         setIsLoading(false);
         return;
       }
       
-      // Verify token is still valid
+      // Optionally verify token in background (non-blocking)
       userAPI.getMe()
         .then((response) => {
           const userProfile = response.user || response.data || response;
@@ -82,11 +111,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           setUser(userData);
           localStorage.setItem("user", JSON.stringify(userData));
-          setIsLoading(false);
         })
         .catch((error) => {
-          logout();
-          setIsLoading(false);
+          // Silently fail - user already has cached data
+          console.warn("Token verification failed:", error);
         });
     } else {
       setIsLoading(false);
@@ -97,14 +125,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await authAPI.login({ email, password });
       
-      if (response.token) {
-        const authToken = response.token;
+      // Debug: Log the actual response structure
+      console.log("Login response:", response);
+      
+      if (response.token || response.data?.token || response.accessToken) {
+        const authToken = response.token || response.data?.token || response.accessToken;
         setToken(authToken);
         localStorage.setItem("authToken", authToken);
         
-        if (response.user) {
-          const backendUser = response.user;
-          
+        // Get user data from response
+        const backendUser = response.user || response.data?.user || response.data;
+        
+        if (backendUser && backendUser.id) {
           let roleName = "Member";
           if (backendUser.roles && backendUser.roles.length > 0) {
             const firstRole = backendUser.roles[0];
@@ -113,6 +145,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else if (typeof firstRole === "object" && firstRole !== null) {
               roleName = firstRole.name || firstRole.role_name || "Member";
             }
+          } else if (backendUser.role) {
+            roleName = backendUser.role;
+          } else if (backendUser.role_id !== undefined) {
+            roleName = getRoleName(backendUser.role_id);
           }
 
           const userData: User = {
@@ -155,13 +191,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(userData);
             localStorage.setItem("user", JSON.stringify(userData));
           } catch (profileError) {
+            console.error("Profile fetch error:", profileError);
             throw new Error("Unable to fetch user profile");
           }
         }
       } else {
-        throw new Error("Invalid response from server");
+        console.error("No token in response:", response);
+        throw new Error(`Login failed: ${response.message || "Invalid response from server"}`);
       }
     } catch (error: any) {
+      console.error("Login error:", error);
       throw error;
     }
   };
@@ -210,12 +249,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 };
