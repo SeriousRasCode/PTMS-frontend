@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Mail, Lock, LogIn, XCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, XCircle, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
-
 
 interface ValidationErrors {
   email?: string;
@@ -21,6 +21,7 @@ export const Login = () => {
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [showPassword, setShowPassword] = useState(false);
   const { login, user, isLoading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   // If still loading auth state, show nothing (or a loader)
@@ -49,9 +50,9 @@ export const Login = () => {
   // Real-time validation on blur
   const handleBlur = (field: string) => {
     setTouched({ ...touched, [field]: true });
-
+    
     const newErrors = { ...errors };
-
+    
     switch (field) {
       case "email":
         const emailError = validateEmail(email);
@@ -64,22 +65,22 @@ export const Login = () => {
         else delete newErrors.password;
         break;
     }
-
+    
     setErrors(newErrors);
   };
 
   const validate = (): boolean => {
     const newErrors: ValidationErrors = {};
-
+    
     const emailError = validateEmail(email);
     if (emailError) newErrors.email = emailError;
-
+    
     const passError = validatePassword(password);
     if (passError) newErrors.password = passError;
-
+    
     setErrors(newErrors);
     setTouched({ email: true, password: true });
-
+    
     return Object.keys(newErrors).length === 0;
   };
 
@@ -96,21 +97,21 @@ export const Login = () => {
     try {
       await login(email, password);
       toast.success("Login successful!");
-
+      
       // Wait briefly for auth context to update, then redirect based on actual user role
       setTimeout(() => {
         // Get the updated user from localStorage (it's set in login)
         const storedUser = localStorage.getItem("user");
-
+        
         if (storedUser) {
           const userData = JSON.parse(storedUser);
           const role = userData.role || userData.role_name;
-
-          const dashboardPath = role === "Admin"
-            ? "/dashboard/admin"
-            : role === "Manager"
-              ? "/dashboard/manager"
-              : "/dashboard/member";
+          
+          const dashboardPath = role === "Admin" 
+            ? "/dashboard/admin" 
+            : role === "Manager" 
+            ? "/dashboard/manager" 
+            : "/dashboard/member";
           navigate(dashboardPath);
         } else {
           toast.error("Login failed: User data not found");
@@ -118,32 +119,45 @@ export const Login = () => {
         }
       }, 100);
     } catch (error: any) {
-      const errorMessage = error?.message || "Login failed. Please check your credentials.";
-      toast.error(errorMessage, { duration: 5000 });
+      let errorMessage = "Login failed. Please try again.";
+      
+      if (error?.message) {
+        if (error.message.includes('CORS') || error.message.includes('Cannot connect')) {
+          errorMessage = "Cannot connect to backend server. Please ensure:\n1. Backend is running on http://localhost:3333\n2. CORS is enabled on your backend to allow requests from this origin";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage, { 
+        duration: 8000,
+        style: { whiteSpace: 'pre-line' }
+      });
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center p-4">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841]'} flex items-center justify-center p-4`}>
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 text-white hover:bg-white/10 p-3 rounded-lg transition-colors z-50"
+        title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+      >
+        {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+      </button>
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-block p-4 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
-            <img
-              src="/debo-logo.jpg"
-              alt="Debo Logo"
-              width={48}
-              height={48}
-              className="object-contain"
-            />
+            <img src="/debo-logo.svg" alt="Debo Logo" className="w-16 h-16" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-white/80">Sign in to your PTMS account</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className={`${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white'} rounded-2xl shadow-2xl p-8`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
@@ -201,7 +215,11 @@ export const Login = () => {
             <div className="flex items-center justify-between">
               <Link
                 to="/forgot-password"
-                className="text-sm text-[#194f87] hover:text-[#0f5841] transition-colors"
+                className={`text-sm font-medium transition-colors ${
+                  theme === 'dark' 
+                    ? 'text-blue-400 hover:text-blue-300' 
+                    : 'text-[#194f87] hover:text-[#0f5841]'
+                }`}
               >
                 Forgot password?
               </Link>
@@ -217,11 +235,15 @@ export const Login = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               Don't have an account?{" "}
               <Link
                 to="/register"
-                className="text-[#194f87] hover:text-[#0f5841] font-medium transition-colors"
+                className={`font-medium transition-colors ${
+                  theme === 'dark' 
+                    ? 'text-blue-400 hover:text-blue-300' 
+                    : 'text-[#194f87] hover:text-[#0f5841]'
+                }`}
               >
                 Sign up
               </Link>
