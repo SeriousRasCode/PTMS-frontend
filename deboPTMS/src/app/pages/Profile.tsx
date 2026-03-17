@@ -8,6 +8,7 @@ import { Label } from "../components/ui/label";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { User, Mail, Lock, Save, XCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { useTheme } from "../context/ThemeContext";
 
 interface PasswordValidationErrors {
   currentPassword?: string;
@@ -17,6 +18,7 @@ interface PasswordValidationErrors {
 
 export const Profile = () => {
   const { user, refreshUser } = useAuth();
+  const { theme } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -185,25 +187,25 @@ export const Profile = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-        <p className="text-gray-600 mt-1">Manage your account settings and preferences</p>
+        <h1 className={`text-2xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>My Profile</h1>
+        <p className={`mt-1 text-sm sm:text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Manage your account settings and preferences</p>
       </div>
 
       {/* Profile Overview */}
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}>
         <CardHeader className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white rounded-t-lg">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20 border-4 border-white">
-              <AvatarFallback className="bg-white text-[#0f5841] text-2xl font-bold">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-4 border-white">
+              <AvatarFallback className="bg-white text-[#0f5841] text-xl sm:text-2xl font-bold">
                 {getInitials(user?.full_name || "U")}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h2 className="text-2xl font-bold">{user?.full_name}</h2>
-              <p className="text-white/80">{user?.email}</p>
-              <p className="text-sm text-white/90 mt-1 bg-white/20 inline-block px-3 py-1 rounded-full">
+            <div className="text-center sm:text-left">
+              <h2 className="text-xl sm:text-2xl font-bold">{user?.full_name}</h2>
+              <p className="text-white/80 text-sm sm:text-base break-all">{user?.email}</p>
+              <p className="text-xs sm:text-sm text-white/90 mt-1 bg-white/20 inline-block px-3 py-1 rounded-full">
                 {user?.role}
               </p>
             </div>
@@ -212,10 +214,10 @@ export const Profile = () => {
       </Card>
 
       {/* Edit Profile */}
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className={`flex items-center gap-2 ${theme === 'dark' ? 'text-white' : ''}`}>
               <User className="h-5 w-5 text-[#0f5841]" />
               Profile Information
             </CardTitle>
@@ -223,6 +225,7 @@ export const Profile = () => {
               <Button
                 variant="outline"
                 onClick={() => setIsEditing(true)}
+                className={`w-full sm:w-auto ${theme === 'dark' ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
               >
                 Edit Profile
               </Button>
@@ -232,50 +235,58 @@ export const Profile = () => {
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Full Name</Label>
+              <Label htmlFor="full_name" className={theme === 'dark' ? 'text-gray-200' : ''}>Full Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <User className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
                 <Input
                   id="full_name"
                   value={profileData.full_name}
                   onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
                   disabled={!isEditing}
-                  className="pl-10"
+                  className={`pl-10 ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white disabled:bg-gray-800 disabled:text-gray-400' : ''}`}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className={theme === 'dark' ? 'text-gray-200' : ''}>Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
                 <Input
                   id="email"
                   type="email"
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                   disabled={!isEditing}
-                  className="pl-10"
+                  className={`pl-10 ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white disabled:bg-gray-800 disabled:text-gray-400' : ''}`}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Role</Label>
-              <Input value={user?.role || ""} disabled />
+              <Label className={theme === 'dark' ? 'text-gray-200' : ''}>Role</Label>
+              <Input 
+                value={user?.role || ""} 
+                disabled 
+                className={theme === 'dark' ? 'bg-gray-800 border-gray-600 text-gray-400' : ''}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label>Account Status</Label>
-              <Input value={user?.is_active ? "Active" : "Inactive"} disabled />
+              <Label className={theme === 'dark' ? 'text-gray-200' : ''}>Account Status</Label>
+              <Input 
+                value={user?.is_active ? "Active" : "Inactive"} 
+                disabled 
+                className={theme === 'dark' ? 'bg-gray-800 border-gray-600 text-gray-400' : ''}
+              />
             </div>
 
             {isEditing && (
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button
                   onClick={handleUpdateProfile}
                   disabled={isUpdating}
-                  className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white"
+                  className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white w-full sm:w-auto"
                 >
                   <Save className="mr-2 h-4 w-4" />
                   {isUpdating ? "Saving..." : "Save Changes"}
@@ -290,6 +301,7 @@ export const Profile = () => {
                       email: user?.email || "",
                     });
                   }}
+                  className={`w-full sm:w-auto ${theme === 'dark' ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
                 >
                   Cancel
                 </Button>
@@ -300,9 +312,9 @@ export const Profile = () => {
       </Card>
 
       {/* Change Password */}
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className={`flex items-center gap-2 ${theme === 'dark' ? 'text-white' : ''}`}>
             <Lock className="h-5 w-5 text-[#194f87]" />
             Change Password
           </CardTitle>
@@ -310,9 +322,9 @@ export const Profile = () => {
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
+              <Label htmlFor="currentPassword" className={theme === 'dark' ? 'text-gray-200' : ''}>Current Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
                 <Input
                   id="currentPassword"
                   type={showCurrentPassword ? "text" : "password"}
@@ -320,11 +332,11 @@ export const Profile = () => {
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("currentPassword")}
-                  className={`pl-10 pr-10 ${passwordTouched.currentPassword && passwordErrors.currentPassword ? "border-red-500" : ""}`}
+                  className={`pl-10 pr-10 ${passwordTouched.currentPassword && passwordErrors.currentPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-400' : ''}`}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 >
                   {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -339,9 +351,9 @@ export const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword" className={theme === 'dark' ? 'text-gray-200' : ''}>New Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
                 <Input
                   id="newPassword"
                   type={showNewPassword ? "text" : "password"}
@@ -349,11 +361,11 @@ export const Profile = () => {
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("newPassword")}
-                  className={`pl-10 pr-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""}`}
+                  className={`pl-10 pr-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-400' : ''}`}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
                   {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -367,21 +379,21 @@ export const Profile = () => {
               )}
               {passwordData.newPassword && (
                 <div className="mt-2">
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className={`w-full h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${newPasswordStrength.color}`}
                       style={{ width: `${newPasswordStrength.strength}%` }}
                     ></div>
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">Strength: {newPasswordStrength.label}</p>
+                  <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Strength: {newPasswordStrength.label}</p>
                 </div>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword" className={theme === 'dark' ? 'text-gray-200' : ''}>Confirm New Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
@@ -389,11 +401,11 @@ export const Profile = () => {
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("confirmPassword")}
-                  className={`pl-10 pr-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""}`}
+                  className={`pl-10 pr-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-400' : ''}`}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -410,7 +422,7 @@ export const Profile = () => {
             <Button
               onClick={handleChangePassword}
               disabled={isChangingPassword}
-              className="bg-gradient-to-r from-[#194f87] to-[#0f5841] text-white"
+              className="bg-gradient-to-r from-[#194f87] to-[#0f5841] text-white w-full sm:w-auto"
             >
               {isChangingPassword ? "Updating..." : "Update Password"}
             </Button>
