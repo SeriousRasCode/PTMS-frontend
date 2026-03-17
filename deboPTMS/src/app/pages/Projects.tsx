@@ -12,6 +12,7 @@ import { FolderKanban, Plus, Users, Calendar, Edit2, ExternalLink, ChevronLeft, 
 import { toast } from "sonner";
 import { projectAPI, teamAPI } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 interface Project {
   id: number;
@@ -33,6 +34,7 @@ interface Team {
 
 export const Projects = () => {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -100,7 +102,12 @@ export const Projects = () => {
       setProjects(projectsList);
       
     } catch (error: any) {
-      toast.error(error.message || "Failed to load projects");
+      // Don't show permission errors if user doesn't have access
+      if (!error.message?.includes('Forbidden') && 
+          !error.message?.includes('permission') && 
+          !error.message?.includes('not allowed')) {
+        toast.error(error.message || "Failed to load projects");
+      }
       setProjects([]);
     } finally {
       setLoading(false);
@@ -275,12 +282,12 @@ export const Projects = () => {
         return "bg-green-500";
       case "in progress":
       case "active":
-        return "bg-blue-500";
+        return theme === 'dark' ? "bg-blue-400" : "bg-blue-500";
       case "on hold":
         return "bg-yellow-500";
       case "planned":
       case "planning":
-        return "bg-gray-500";
+        return theme === 'dark' ? "bg-gray-600" : "bg-gray-500";
       default:
         return "bg-gray-400";
     }
@@ -307,7 +314,7 @@ export const Projects = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading projects...</div>
+        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading projects...</div>
       </div>
     );
   }
@@ -323,8 +330,8 @@ export const Projects = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-          <p className="text-gray-600 mt-1">Manage and track all your projects</p>
+          <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Projects</h1>
+          <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mt-1`}>Manage and track all your projects</p>
         </div>
         {canCreateProject && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -334,45 +341,47 @@ export const Projects = () => {
                 New Project
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className={`max-w-2xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
               <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Create New Project</DialogTitle>
+                <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
                   Fill in the project details to get started
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div>
-                  <Label htmlFor="name">Project Name *</Label>
+                  <Label htmlFor="name" className={theme === 'dark' ? 'text-gray-200' : ''}>Project Name *</Label>
                   <Input
                     id="name"
                     placeholder="Enter project name"
                     value={newProject.name}
                     onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                    className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description" className={theme === 'dark' ? 'text-gray-200' : ''}>Description *</Label>
                   <Textarea
                     id="description"
                     placeholder="Describe the project"
                     value={newProject.description}
                     onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
                     rows={3}
+                    className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="team">Team *</Label>
+                  <Label htmlFor="team" className={theme === 'dark' ? 'text-gray-200' : ''}>Team *</Label>
                   <Select
                     value={newProject.team_id}
                     onValueChange={(value) => setNewProject({ ...newProject, team_id: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}>
                       <SelectValue placeholder="Select a team" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
                       {teams.map((team) => (
-                        <SelectItem key={team.id} value={team.id.toString()}>
+                        <SelectItem key={team.id} value={team.id.toString()} className={theme === 'dark' ? 'text-white' : ''}>
                           {team.name}
                         </SelectItem>
                       ))}
@@ -381,21 +390,23 @@ export const Projects = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="start-date">Start Date *</Label>
+                    <Label htmlFor="start-date" className={theme === 'dark' ? 'text-gray-200' : ''}>Start Date *</Label>
                     <Input
                       id="start-date"
                       type="date"
                       value={newProject.start_date}
                       onChange={(e) => setNewProject({ ...newProject, start_date: e.target.value })}
+                      className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="end-date">End Date *</Label>
+                    <Label htmlFor="end-date" className={theme === 'dark' ? 'text-gray-200' : ''}>End Date *</Label>
                     <Input
                       id="end-date"
                       type="date"
                       value={newProject.end_date}
                       onChange={(e) => setNewProject({ ...newProject, end_date: e.target.value })}
+                      className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
                     />
                   </div>
                 </div>
@@ -414,20 +425,20 @@ export const Projects = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-[#0f5841]">
+        <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Projects</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Total Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{projects.length}</div>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{projects.length}</div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className={`border-l-4 ${theme === 'dark' ? 'border-l-blue-400 bg-slate-800 border-slate-700' : 'border-l-blue-500 bg-white'}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Active</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Active</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {projects.filter(p => {
                 const status = p.status?.toLowerCase().replace('_', ' ');
                 return status === "active" || status === "in progress";
@@ -435,22 +446,22 @@ export const Projects = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500">
+        <Card className={`border-l-4 border-l-green-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Completed</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {projects.filter(p => p.status?.toLowerCase() === "completed").length}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-yellow-500">
+        <Card className={`border-l-4 border-l-yellow-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">On Hold</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>On Hold</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {projects.filter(p => {
                 const status = p.status?.toLowerCase().replace('_', ' ');
                 return status === "on hold";
@@ -462,11 +473,11 @@ export const Projects = () => {
 
       {/* Projects List */}
       {projects.length === 0 ? (
-        <Card>
+        <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <FolderKanban className="h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects yet</h3>
-            <p className="text-gray-600 text-center mb-4">
+            <FolderKanban className={`h-16 w-16 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`} />
+            <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No projects yet</h3>
+            <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center mb-4`}>
               {canCreateProject 
                 ? "Create your first project to get started" 
                 : "No projects available"}
@@ -486,29 +497,30 @@ export const Projects = () => {
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {currentProjects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow">
+              <Card key={project.id} className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="flex items-center gap-3 mb-2">
-                        <span>{project.name}</span>
+                        <span className={theme === 'dark' ? 'text-white' : ''}>{project.name}</span>
                         <Badge className={getStatusColor(project.status)}>
                           {getStatusLabel(project.status)}
                         </Badge>
                       </CardTitle>
-                      <p className="text-sm text-gray-600">{project.description}</p>
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{project.description}</p>
                     </div>
                     <Button 
                       variant="ghost" 
                       size="sm"
                       onClick={() => navigate(`/dashboard/projects/${project.id}`)}
+                      className={theme === 'dark' ? 'hover:bg-slate-700' : ''}
                     >
-                      <ExternalLink className="h-4 w-4" />
+                      <ExternalLink className={`h-4 w-4 ${theme === 'dark' ? 'text-gray-300' : ''}`} />
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className={`flex items-center gap-4 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                     <span className="flex items-center gap-1">
                       <Users size={16} />
                       {project.team_name}
@@ -518,12 +530,12 @@ export const Projects = () => {
                       {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                     <span className="font-medium">Manager:</span> {project.manager_name}
                   </div>
                   {(user?.role === "Admin" || (user?.role === "Manager" && project.manager_id === user?.id)) && (
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Change Status</Label>
+                      <Label className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Change Status</Label>
                       <Select
                         value={(() => {
                           const statusMap: { [key: string]: string } = {
@@ -541,14 +553,14 @@ export const Projects = () => {
                         onValueChange={(value) => handleStatusChange(project.id, project, value)}
                         disabled={updatingStatus === project.id}
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className={`w-full ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}`}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Planned">Planning</SelectItem>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Completed">Completed</SelectItem>
-                          <SelectItem value="On Hold">On Hold</SelectItem>
+                        <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+                          <SelectItem value="Planned" className={theme === 'dark' ? 'text-white' : ''}>Planning</SelectItem>
+                          <SelectItem value="Active" className={theme === 'dark' ? 'text-white' : ''}>Active</SelectItem>
+                          <SelectItem value="Completed" className={theme === 'dark' ? 'text-white' : ''}>Completed</SelectItem>
+                          <SelectItem value="On Hold" className={theme === 'dark' ? 'text-white' : ''}>On Hold</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -566,11 +578,12 @@ export const Projects = () => {
                 size="sm"
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
+                className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
               </Button>
-              <div className="text-sm text-gray-500">
+              <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                 Page {currentPage} of {totalPages}
               </div>
               <Button
@@ -578,6 +591,7 @@ export const Projects = () => {
                 size="sm"
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
+                className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
               >
                 Next
                 <ChevronRight className="h-4 w-4 ml-1" />
