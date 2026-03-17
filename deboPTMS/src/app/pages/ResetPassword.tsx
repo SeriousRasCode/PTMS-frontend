@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate, Link, useParams } from "react-router";
+import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Lock, KeyRound, Eye, EyeOff, XCircle, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Lock, KeyRound, Eye, EyeOff, XCircle, CheckCircle2, ArrowLeft, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { authAPI } from "../utils/api";
 
@@ -24,6 +25,7 @@ export const ResetPassword = () => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [success, setSuccess] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   // Support both query param (?token=xxx) and path param (/reset-password/xxx)
   const token = tokenFromPath || searchParams.get("token");
@@ -127,14 +129,21 @@ export const ResetPassword = () => {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841]'} flex items-center justify-center p-4`}>
+        <button
+          onClick={toggleTheme}
+          className="fixed top-4 right-4 text-white hover:bg-white/10 p-3 rounded-lg transition-colors z-50"
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+        </button>
+        <div className={`w-full max-w-md ${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white'} rounded-2xl shadow-2xl p-8`}>
           <div className="text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <XCircle size={32} className="text-red-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Invalid Reset Link</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>Invalid Reset Link</h2>
+            <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
               This password reset link is invalid or has expired.
             </p>
             <Link to="/forgot-password">
@@ -150,14 +159,21 @@ export const ResetPassword = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841]'} flex items-center justify-center p-4`}>
+        <button
+          onClick={toggleTheme}
+          className="fixed top-4 right-4 text-white hover:bg-white/10 p-3 rounded-lg transition-colors z-50"
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+        </button>
+        <div className={`w-full max-w-md ${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white'} rounded-2xl shadow-2xl p-8`}>
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 size={32} className="text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Reset Successful!</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>Password Reset Successful!</h2>
+            <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
               Your password has been reset successfully. Redirecting to login...
             </p>
           </div>
@@ -167,7 +183,14 @@ export const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841] flex items-center justify-center p-4">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-[#0f5841] via-[#194f87] to-[#0f5841]'} flex items-center justify-center p-4`}>
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 text-white hover:bg-white/10 p-3 rounded-lg transition-colors z-50"
+        title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+      >
+        {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+      </button>
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
@@ -179,7 +202,7 @@ export const ResetPassword = () => {
         </div>
 
         {/* Reset Form */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className={`${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white'} rounded-2xl shadow-2xl p-8`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="password">New Password</Label>
@@ -271,7 +294,7 @@ export const ResetPassword = () => {
             </Link>
           </div>
 
-          <div className="mt-6 text-center text-gray-500 text-sm">
+          <div className={`mt-6 text-center text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
             <p>Your reset token expires in 15 minutes.</p>
           </div>
         </div>
