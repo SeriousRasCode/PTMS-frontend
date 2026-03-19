@@ -12,6 +12,13 @@ import 'package:debo_ptms/features/user/presentation/bloc/user_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+class _AssignableUser {
+  const _AssignableUser({required this.id, required this.fullName});
+
+  final int id;
+  final String fullName;
+}
+
 class TaskDetailsScreen extends StatefulWidget {
   const TaskDetailsScreen({
     super.key,
@@ -35,6 +42,9 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   int _progress = 0;
   final _note = TextEditingController();
   final _assignUserId = TextEditingController();
+  bool _loadingAssignableUsers = false;
+  List<_AssignableUser> _assignableUsers = const [];
+  int? _selectedAssigneeId;
 
   bool _loadingHistory = false;
   List<TaskHistoryEntity> _history = const [];
@@ -44,6 +54,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     super.initState();
     _progress = widget.initialProgress.clamp(0, 100);
     _loadHistoryIfAllowed();
+    _loadAssignableUsersIfAllowed();
   }
 
   @override
@@ -65,9 +76,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     try {
       final apiClient = context.read<ApiClient>();
       final useCase = GetTaskHistoryUseCase(
-        TasksRepositoryImpl(
-          TasksRemoteDataSourceImpl(apiClient),
-        ),
+        TasksRepositoryImpl(TasksRemoteDataSourceImpl(apiClient)),
       );
       _history = await useCase(taskId: widget.taskId);
     } catch (_) {
@@ -79,14 +88,73 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     }
   }
 
+  Future<void> _loadAssignableUsersIfAllowed() async {
+    final role = context.read<UserAuthBloc>().state.user?.role;
+    if (!AppRoles.isManager(role)) return;
+
+    setState(() {
+      _loadingAssignableUsers = true;
+      _assignableUsers = const [];
+      _selectedAssigneeId = null;
+    });
+
+    try {
+      final apiClient = context.read<ApiClient>();
+      final teamResponse = await apiClient.get('/api/teams/my-teams');
+      final teamsPayload = teamResponse['data'];
+      if (teamsPayload is! List) {
+        return;
+      }
+
+      final byId = <int, _AssignableUser>{};
+      for (final team in teamsPayload.whereType<Map>()) {
+        final teamId = int.tryParse((team['id'] ?? '').toString());
+        if (teamId == null) continue;
+
+        final membersResponse = await apiClient.get('/api/teams/$teamId/members');
+        final membersPayload = membersResponse['data'];
+        if (membersPayload is! List) continue;
+
+        for (final row in membersPayload.whereType<Map>()) {
+          final userId = int.tryParse((row['id'] ?? '').toString());
+          if (userId == null) continue;
+          final isActive = (row['is_active'] ?? 1).toString() != '0';
+          if (!isActive) continue;
+
+          final name = (row['full_name'] ?? '').toString().trim();
+          byId[userId] = _AssignableUser(
+            id: userId,
+            fullName: name.isEmpty ? 'User #$userId' : name,
+          );
+        }
+      }
+
+      final users = byId.values.toList(growable: false)
+        ..sort((a, b) => a.fullName.compareTo(b.fullName));
+
+      if (!mounted) return;
+      setState(() {
+        _assignableUsers = users;
+        if (users.isNotEmpty) {
+          _selectedAssigneeId = users.first.id;
+          _assignUserId.text = users.first.id.toString();
+        }
+      });
+    } catch (_) {
+      // Keep manual fallback for assignment if team-member loading fails.
+    } finally {
+      if (mounted) {
+        setState(() => _loadingAssignableUsers = false);
+      }
+    }
+  }
+
   Future<void> _updateProgress() async {
     setState(() => _saving = true);
     try {
       final apiClient = context.read<ApiClient>();
       final useCase = UpdateTaskProgressUseCase(
-        TasksRepositoryImpl(
-          TasksRemoteDataSourceImpl(apiClient),
-        ),
+        TasksRepositoryImpl(TasksRemoteDataSourceImpl(apiClient)),
       );
       await useCase(
         TaskProgressUpdateInput(
@@ -97,14 +165,15 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Progress updated.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Progress updated.')));
       _note.clear();
       _loadHistoryIfAllowed();
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -113,11 +182,14 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   }
 
   Future<void> _assignTask() async {
-    final userId = int.tryParse(_assignUserId.text.trim());
+    final role = context.read<UserAuthBloc>().state.user?.role;
+    final userId = AppRoles.isManager(role)
+        ? (_selectedAssigneeId ?? int.tryParse(_assignUserId.text.trim()))
+        : int.tryParse(_assignUserId.text.trim());
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid User ID.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter a valid User ID.')));
       return;
     }
 
@@ -125,19 +197,18 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     try {
       final apiClient = context.read<ApiClient>();
       final useCase = AssignTaskUseCase(
-        TasksRepositoryImpl(
-          TasksRemoteDataSourceImpl(apiClient),
-        ),
+        TasksRepositoryImpl(TasksRemoteDataSourceImpl(apiClient)),
       );
       await useCase(taskId: widget.taskId, userId: userId);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Task assigned.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Task assigned.')));
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -209,6 +280,26 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                             ? null
                             : (v) => setState(() => _progress = v.round()),
                       ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 10,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: _saving
+                                ? null
+                                : () => setState(() => _progress = 1),
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text('Mark Started'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: _saving
+                                ? null
+                                : () => setState(() => _progress = 100),
+                            icon: const Icon(Icons.check_circle_outline),
+                            label: const Text('Mark Completed'),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 10),
                       TextField(
                         controller: _note,
@@ -257,22 +348,26 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                         const Text('No updates yet.')
                       else
                         Column(
-                          children: _history.map((h) {
-                            final pct = h.progress.toString();
-                            final st = h.status;
-                            final note = h.note;
-                            final by = h.updatedBy;
-                            final at = h.updatedAt;
-                            return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text('$pct% • $st'),
-                              subtitle: Text([
-                                if (note.isNotEmpty) note,
-                                if (by.isNotEmpty) 'Updated by: $by',
-                                if (at.isNotEmpty) at,
-                              ].join('\n')),
-                            );
-                          }).toList(growable: false),
+                          children: _history
+                              .map((h) {
+                                final pct = h.progress.toString();
+                                final st = h.status;
+                                final note = h.note;
+                                final by = h.updatedBy;
+                                final at = h.updatedAt;
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text('$pct% • $st'),
+                                  subtitle: Text(
+                                    [
+                                      if (note.isNotEmpty) note,
+                                      if (by.isNotEmpty) 'Updated by: $by',
+                                      if (at.isNotEmpty) at,
+                                    ].join('\n'),
+                                  ),
+                                );
+                              })
+                              .toList(growable: false),
                         ),
                     ],
                   ),
@@ -292,10 +387,41 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
+                      if (_loadingAssignableUsers)
+                        const LinearProgressIndicator(minHeight: 2),
+                      if (!_loadingAssignableUsers && _assignableUsers.isNotEmpty)
+                        DropdownButtonFormField<int>(
+                          value: _selectedAssigneeId,
+                          decoration: const InputDecoration(
+                            labelText: 'Assign to team member',
+                          ),
+                          items: _assignableUsers
+                              .map(
+                                (u) => DropdownMenuItem<int>(
+                                  value: u.id,
+                                  child: Text(u.fullName),
+                                ),
+                              )
+                              .toList(growable: false),
+                          onChanged: _saving
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _selectedAssigneeId = value;
+                                    if (value != null) {
+                                      _assignUserId.text = value.toString();
+                                    }
+                                  });
+                                },
+                        ),
+                      if (!_loadingAssignableUsers && _assignableUsers.isNotEmpty)
+                        const SizedBox(height: 10),
                       TextField(
                         controller: _assignUserId,
-                        decoration: const InputDecoration(
-                          labelText: 'User ID',
+                        decoration: InputDecoration(
+                          labelText: _assignableUsers.isNotEmpty
+                              ? 'User ID (optional manual override)'
+                              : 'User ID',
                         ),
                         keyboardType: TextInputType.number,
                       ),

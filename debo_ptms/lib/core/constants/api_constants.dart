@@ -1,22 +1,7 @@
-import 'package:flutter/foundation.dart';
-
 class ApiConstants {
   ApiConstants._();
 
-  static String get baseUrl {
-    const fromEnv = String.fromEnvironment('BASE_URL', defaultValue: '');
-    if (fromEnv.isNotEmpty) return fromEnv;
-
-    // Defaults for local development.
-    // Web: localhost points to the machine running Chrome.
-    // Android emulator: 10.0.2.2 reaches the host machine.
-    if (kIsWeb) return 'http://localhost:3000';
-
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return 'http://10.0.2.2:3000';
-      default:
-        return 'http://localhost:3000';
-    }
-  }
+  // Change only this one value to your PC IPv4 address when needed.
+  // Example: http://10.141.130.162:3000
+  static const String baseUrl = 'http://10.141.130.162:3000';
 }

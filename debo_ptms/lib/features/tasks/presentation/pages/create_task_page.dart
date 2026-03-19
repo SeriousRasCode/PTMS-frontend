@@ -33,7 +33,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   }
 
   Future<void> _pickDate({required bool isStart}) async {
-    final initial = isStart ? (_start ?? DateTime.now()) : (_due ?? DateTime.now());
+    final initial = isStart
+        ? (_start ?? DateTime.now())
+        : (_due ?? DateTime.now());
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -62,9 +64,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     try {
       final apiClient = context.read<ApiClient>();
       final useCase = CreateTaskUseCase(
-        TasksRepositoryImpl(
-          TasksRemoteDataSourceImpl(apiClient),
-        ),
+        TasksRepositoryImpl(TasksRemoteDataSourceImpl(apiClient)),
       );
       await useCase(
         CreateTaskInput(
@@ -78,7 +78,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -116,7 +118,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _description,
-                  decoration: const InputDecoration(labelText: 'Description (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                  ),
                   minLines: 2,
                   maxLines: 4,
                 ),
@@ -125,15 +129,23 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: _saving ? null : () => _pickDate(isStart: true),
-                        child: Text(_start == null ? 'Start Date' : _fmtDate(_start!)),
+                        onPressed: _saving
+                            ? null
+                            : () => _pickDate(isStart: true),
+                        child: Text(
+                          _start == null ? 'Start Date' : _fmtDate(_start!),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: _saving ? null : () => _pickDate(isStart: false),
-                        child: Text(_due == null ? 'Due Date' : _fmtDate(_due!)),
+                        onPressed: _saving
+                            ? null
+                            : () => _pickDate(isStart: false),
+                        child: Text(
+                          _due == null ? 'Due Date' : _fmtDate(_due!),
+                        ),
                       ),
                     ),
                   ],

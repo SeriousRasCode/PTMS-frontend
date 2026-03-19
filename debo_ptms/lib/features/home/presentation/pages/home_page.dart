@@ -41,9 +41,7 @@ class _HomeState extends State<Home> {
     try {
       final apiClient = context.read<ApiClient>();
       final useCase = GetMyTeamsUseCase(
-        HomeRepositoryImpl(
-          HomeRemoteDataSourceImpl(apiClient),
-        ),
+        HomeRepositoryImpl(HomeRemoteDataSourceImpl(apiClient)),
       );
       _teams = await useCase();
     } catch (_) {
@@ -106,14 +104,16 @@ class _HomeState extends State<Home> {
     final teamFromProfile = (user?.team ?? '').trim();
 
     final teamNames = _teams
-      .map((team) => team.name.trim())
+        .map((team) => team.name.trim())
         .where((name) => name.isNotEmpty)
         .toSet()
         .toList(growable: false);
 
     final activeTeam = teamNames.isNotEmpty
         ? teamNames.first
-        : (teamFromProfile.isNotEmpty ? teamFromProfile : 'No team assigned yet');
+        : (teamFromProfile.isNotEmpty
+              ? teamFromProfile
+              : 'No team assigned yet');
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -155,9 +155,9 @@ class _HomeState extends State<Home> {
                 children: [
                   Text(
                     'Welcome, ${name.isEmpty ? 'User' : name}',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(color: Colors.white),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -213,8 +213,8 @@ class _HomeState extends State<Home> {
               subtitle: AppRoles.isAdmin(role)
                   ? 'Administration and system operations'
                   : AppRoles.isManager(role)
-                      ? 'Project planning and delivery'
-                      : 'Assigned task execution',
+                  ? 'Project planning and delivery'
+                  : 'Assigned task execution',
             ),
           ],
         ),

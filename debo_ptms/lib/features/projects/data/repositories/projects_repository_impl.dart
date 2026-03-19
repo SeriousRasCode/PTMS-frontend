@@ -1,8 +1,10 @@
 import 'package:debo_ptms/features/projects/data/datasources/projects_remote_data_source.dart';
 import 'package:debo_ptms/features/projects/domain/entities/create_project_input.dart';
+import 'package:debo_ptms/features/projects/domain/entities/project_documentation_input.dart';
 import 'package:debo_ptms/features/projects/domain/entities/project_entity.dart';
 import 'package:debo_ptms/features/projects/domain/entities/project_list_result_entity.dart';
 import 'package:debo_ptms/features/projects/domain/entities/project_task_entity.dart';
+import 'package:debo_ptms/features/projects/domain/entities/update_project_input.dart';
 import 'package:debo_ptms/features/projects/domain/repositories/projects_repository.dart';
 
 class ProjectsRepositoryImpl implements ProjectsRepository {
@@ -61,7 +63,9 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
   }
 
   @override
-  Future<List<ProjectTaskEntity>> getProjectTasks({required int projectId}) async {
+  Future<List<ProjectTaskEntity>> getProjectTasks({
+    required int projectId,
+  }) async {
     final rows = await _remoteDataSource.getProjectTasks(projectId: projectId);
     return rows
         .map(
@@ -78,6 +82,16 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
   @override
   Future<void> createProject(CreateProjectInput input) {
     return _remoteDataSource.createProject(input);
+  }
+
+  @override
+  Future<void> updateProject(UpdateProjectInput input) {
+    return _remoteDataSource.updateProject(input);
+  }
+
+  @override
+  Future<void> submitProjectDocumentation(ProjectDocumentationInput input) {
+    return _remoteDataSource.submitProjectDocumentation(input);
   }
 
   ProjectEntity _mapProject(Map<String, dynamic> row) {
@@ -97,6 +111,8 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
 
   int? _readInt(dynamic value) {
     if (value is int) return value;
-    return int.tryParse(value?.toString() ?? '');
+    if (value is num) return value.round();
+    final text = value?.toString() ?? '';
+    return int.tryParse(text) ?? double.tryParse(text)?.round();
   }
 }

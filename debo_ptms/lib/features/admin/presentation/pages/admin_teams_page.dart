@@ -48,7 +48,9 @@ class _AdminTeamsScreenState extends State<AdminTeamsScreen> {
 
     try {
       final apiClient = context.read<ApiClient>();
-      final repository = AdminRepositoryImpl(AdminRemoteDataSourceImpl(apiClient));
+      final repository = AdminRepositoryImpl(
+        AdminRemoteDataSourceImpl(apiClient),
+      );
       final useCase = GetAllTeamsUseCase(repository);
       _teams = await useCase();
     } catch (e) {
@@ -63,15 +65,17 @@ class _AdminTeamsScreenState extends State<AdminTeamsScreen> {
   Future<void> _createTeam() async {
     final teamName = _teamNameController.text.trim();
     if (teamName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Team name is required.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Team name is required.')));
       return;
     }
 
     try {
       final apiClient = context.read<ApiClient>();
-      final repository = AdminRepositoryImpl(AdminRemoteDataSourceImpl(apiClient));
+      final repository = AdminRepositoryImpl(
+        AdminRemoteDataSourceImpl(apiClient),
+      );
       final useCase = CreateTeamUseCase(repository);
       await useCase(name: teamName);
       _teamNameController.clear();
@@ -84,9 +88,9 @@ class _AdminTeamsScreenState extends State<AdminTeamsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -110,76 +114,80 @@ class _AdminTeamsScreenState extends State<AdminTeamsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        ElevatedButton(onPressed: _load, child: const Text('Retry')),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _load,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Create Team',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _teamNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Team name',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _createTeam,
+                              child: const Text('Create Team'),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Create Team',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 10),
-                              TextField(
-                                controller: _teamNameController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Team name',
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _createTeam,
-                                  child: const Text('Create Team'),
-                                ),
-                              ),
-                            ],
+                  const SizedBox(height: 12),
+                  ..._teams.map((team) {
+                    final id = team.id.toString();
+                    final name = team.name.isEmpty ? 'Team' : team.name;
+                    final createdBy = team.createdBy;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Card(
+                        child: ListTile(
+                          title: Text(name),
+                          subtitle: Text(
+                            [
+                              'Team ID: $id',
+                              if (createdBy.isNotEmpty)
+                                'Created by: $createdBy',
+                            ].join(' • '),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      ..._teams.map((team) {
-                        final id = team.id.toString();
-                        final name = team.name.isEmpty ? 'Team' : team.name;
-                        final createdBy = team.createdBy;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Card(
-                            child: ListTile(
-                              title: Text(name),
-                              subtitle: Text(
-                                [
-                                  'Team ID: $id',
-                                  if (createdBy.isNotEmpty) 'Created by: $createdBy',
-                                ].join(' • '),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
+                    );
+                  }),
+                ],
+              ),
+            ),
     );
   }
 }

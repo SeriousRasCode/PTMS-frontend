@@ -87,6 +87,7 @@ class ApiClient {
     final responseData = error.response?.data;
     String message = 'Something went wrong.';
     final statusCode = error.response?.statusCode;
+    final requestPath = error.requestOptions.path.toLowerCase();
 
     // On Flutter Web, many network failures surface as an opaque XHR onError.
     // Common causes: backend not running, wrong baseUrl/port, or CORS blocked.
@@ -117,7 +118,14 @@ class ApiClient {
           'Invalid role selected. Try Role ID 1 (Admin), 2 (Project Manager), or 3 (Team Member).';
     }
 
-    if (statusCode == 403 ||
+    final isAuthLogin = requestPath.contains('/api/auth/login');
+    final isDeactivated =
+        lowerMessage.contains('deactivated') ||
+        lowerMessage.contains('inactive');
+
+    if (isAuthLogin && statusCode == 403 && isDeactivated) {
+      message = 'Account is deactivated. Contact admin.';
+    } else if (statusCode == 403 ||
         lowerMessage.contains('forbidden') ||
         lowerMessage.contains('permission')) {
       message = 'This action is unavailable in your current workspace view.';
@@ -141,7 +149,8 @@ class ApiClient {
     final trimmed = raw.trim();
 
     // If the backend sends an HTML error page, strip it down.
-    final looksLikeHtml = trimmed.startsWith('<!DOCTYPE') ||
+    final looksLikeHtml =
+        trimmed.startsWith('<!DOCTYPE') ||
         trimmed.startsWith('<html') ||
         trimmed.contains('<body') ||
         trimmed.contains('<pre>');

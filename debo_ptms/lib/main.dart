@@ -69,12 +69,18 @@ class MyApp extends StatelessWidget {
         home: const AuthGate(),
         routes: {
           '/home': (context) => const HomeWrapper(initialIndex: 0),
-          '/dashboard': (context) => const HomeWrapper(initialIndex: 0),
-          '/projects': (context) => const RoleBasedHome(target: HomeTarget.projects),
-          '/my-tasks': (context) => const RoleBasedHome(target: HomeTarget.myTasks),
-          '/profile': (context) => const RoleBasedHome(target: HomeTarget.profile),
-          '/admin/users': (context) => const RoleBasedHome(target: HomeTarget.adminUsers),
-          '/admin/teams': (context) => const RoleBasedHome(target: HomeTarget.adminTeams),
+          '/dashboard': (context) =>
+              const RoleBasedHome(target: HomeTarget.dashboard),
+          '/projects': (context) =>
+              const RoleBasedHome(target: HomeTarget.projects),
+          '/my-tasks': (context) =>
+              const RoleBasedHome(target: HomeTarget.myTasks),
+          '/profile': (context) =>
+              const RoleBasedHome(target: HomeTarget.profile),
+          '/admin/users': (context) =>
+              const RoleBasedHome(target: HomeTarget.adminUsers),
+          '/admin/teams': (context) =>
+              const RoleBasedHome(target: HomeTarget.adminTeams),
           // Route still exists, but always delegates to AuthGate so we don't
           // get stuck on a static Login screen when auth state changes.
           '/login': (context) => const AuthGate(),
@@ -86,7 +92,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-enum HomeTarget { home, projects, myTasks, profile, adminUsers, adminTeams }
+enum HomeTarget {
+  home,
+  dashboard,
+  projects,
+  myTasks,
+  profile,
+  adminUsers,
+  adminTeams,
+}
 
 class RoleBasedHome extends StatelessWidget {
   const RoleBasedHome({super.key, required this.target});
@@ -105,6 +119,7 @@ class RoleBasedHome extends StatelessWidget {
       // [0]=Home, [1]=Dashboard, [2]=Projects, [3]=Users, [4]=Teams, [5]=Profile
       index = switch (target) {
         HomeTarget.home => 0,
+        HomeTarget.dashboard => 1,
         HomeTarget.projects => 2,
         HomeTarget.adminUsers => 3,
         HomeTarget.adminTeams => 4,
@@ -112,12 +127,13 @@ class RoleBasedHome extends StatelessWidget {
         HomeTarget.myTasks => 2,
       };
     } else if (isManager) {
-      // [0]=Home, [1]=Dashboard, [2]=Projects, [3]=Profile
+      // [0]=Home, [1]=Dashboard, [2]=Projects, [3]=My Tasks, [4]=Profile
       index = switch (target) {
         HomeTarget.home => 0,
+        HomeTarget.dashboard => 1,
         HomeTarget.projects => 2,
-        HomeTarget.profile => 3,
-        HomeTarget.myTasks => 2,
+        HomeTarget.myTasks => 3,
+        HomeTarget.profile => 4,
         HomeTarget.adminUsers => 0,
         HomeTarget.adminTeams => 0,
       };
@@ -125,6 +141,7 @@ class RoleBasedHome extends StatelessWidget {
       // [0]=Home, [1]=Projects, [2]=My Tasks, [3]=Profile
       index = switch (target) {
         HomeTarget.home => 0,
+        HomeTarget.dashboard => 1,
         HomeTarget.projects => 1,
         HomeTarget.myTasks => 2,
         HomeTarget.profile => 3,
@@ -155,9 +172,7 @@ class AuthGate extends StatelessWidget {
         }
 
         if (state.status == UserAuthStatus.authenticated) {
-          // HomeWrapper builds its tabs based on role.
-          // Index 0 means: Dashboard (Admin/Manager) or Projects (Member).
-          return const HomeWrapper(initialIndex: 0);
+          return const RoleBasedHome(target: HomeTarget.dashboard);
         }
 
         return const Login();
@@ -184,6 +199,14 @@ class _HomeWrapperState extends State<HomeWrapper> {
     // Actual clamping happens in build() because the available tabs can depend
     // on the authenticated user's role.
     _currentIndex = widget.initialIndex;
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex) {
+      _currentIndex = widget.initialIndex;
+    }
   }
 
   @override
@@ -215,30 +238,45 @@ class _HomeWrapperState extends State<HomeWrapper> {
 
     tabs.add((
       screen: const ProjectsListScreen(),
-      item: const BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Projects'),
+      item: const BottomNavigationBarItem(
+        icon: Icon(Icons.work),
+        label: 'Projects',
+      ),
     ));
 
-    if (isMember) {
+    if (isManager || isMember) {
       tabs.add((
         screen: const MyTasksScreen(),
-        item: const BottomNavigationBarItem(icon: Icon(Icons.task_alt), label: 'My Tasks'),
+        item: const BottomNavigationBarItem(
+          icon: Icon(Icons.task_alt),
+          label: 'My Tasks',
+        ),
       ));
     }
 
     if (isAdmin) {
       tabs.add((
         screen: const AdminUsersScreen(),
-        item: const BottomNavigationBarItem(icon: Icon(Icons.manage_accounts), label: 'Users'),
+        item: const BottomNavigationBarItem(
+          icon: Icon(Icons.manage_accounts),
+          label: 'Users',
+        ),
       ));
       tabs.add((
         screen: const AdminTeamsScreen(),
-        item: const BottomNavigationBarItem(icon: Icon(Icons.groups), label: 'Teams'),
+        item: const BottomNavigationBarItem(
+          icon: Icon(Icons.groups),
+          label: 'Teams',
+        ),
       ));
     }
 
     tabs.add((
       screen: const Profile(title: 'Profile'),
-      item: const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      item: const BottomNavigationBarItem(
+        icon: Icon(Icons.person),
+        label: 'Profile',
+      ),
     ));
 
     final screens = tabs.map((t) => t.screen).toList(growable: false);

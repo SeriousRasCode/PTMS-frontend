@@ -41,18 +41,24 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
       '/api/tasks/${input.taskId}/progress',
       body: {
         'progress_percentage': input.progress,
-        if ((input.note ?? '').trim().isNotEmpty) 'update_note': input.note!.trim(),
+        if ((input.note ?? '').trim().isNotEmpty)
+          'update_note': input.note!.trim(),
       },
     );
   }
 
   @override
   Future<void> assignTask({required int taskId, required int userId}) {
-    return _apiClient.post('/api/tasks/$taskId/assign', body: {'userId': userId});
+    return _apiClient.post(
+      '/api/tasks/$taskId/assign',
+      body: {'userId': userId},
+    );
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getTaskHistory({required int taskId}) async {
+  Future<List<Map<String, dynamic>>> getTaskHistory({
+    required int taskId,
+  }) async {
     final response = await _apiClient.get('/api/tasks/$taskId/history');
     return _toListMap(response['data']);
   }

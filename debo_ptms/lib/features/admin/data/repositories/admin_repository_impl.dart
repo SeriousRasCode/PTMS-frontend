@@ -26,7 +26,10 @@ class AdminRepositoryImpl implements AdminRepository {
 
   @override
   Future<void> changeUserStatus({required int userId, required bool isActive}) {
-    return _remoteDataSource.changeUserStatus(userId: userId, isActive: isActive);
+    return _remoteDataSource.changeUserStatus(
+      userId: userId,
+      isActive: isActive,
+    );
   }
 
   @override

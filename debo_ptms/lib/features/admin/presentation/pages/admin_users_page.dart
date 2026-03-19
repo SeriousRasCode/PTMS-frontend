@@ -50,7 +50,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
     try {
       final apiClient = context.read<ApiClient>();
-      final repository = AdminRepositoryImpl(AdminRemoteDataSourceImpl(apiClient));
+      final repository = AdminRepositoryImpl(
+        AdminRemoteDataSourceImpl(apiClient),
+      );
       final useCase = GetAllUsersUseCase(repository);
       _users = await useCase();
     } catch (e) {
@@ -65,30 +67,34 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   Future<void> _toggleStatus(int userId, bool isActive) async {
     try {
       final apiClient = context.read<ApiClient>();
-      final repository = AdminRepositoryImpl(AdminRemoteDataSourceImpl(apiClient));
+      final repository = AdminRepositoryImpl(
+        AdminRemoteDataSourceImpl(apiClient),
+      );
       final useCase = ChangeUserStatusUseCase(repository);
       await useCase(userId: userId, isActive: isActive);
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
   Future<void> _changeRole(int userId, String roleName) async {
     try {
       final apiClient = context.read<ApiClient>();
-      final repository = AdminRepositoryImpl(AdminRemoteDataSourceImpl(apiClient));
+      final repository = AdminRepositoryImpl(
+        AdminRemoteDataSourceImpl(apiClient),
+      );
       final useCase = ChangeUserRoleUseCase(repository);
       await useCase(userId: userId, roleName: roleName);
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -112,89 +118,92 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        ElevatedButton(onPressed: _load, child: const Text('Retry')),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _load,
+                      child: const Text('Retry'),
                     ),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _users.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final user = _users[index];
-                      final userId = user.id;
-                      final fullName = user.fullName;
-                      final email = user.email;
-                      final role = user.role;
-                      final active = user.isActive;
+                  ],
+                ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: _users.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final user = _users[index];
+                  final userId = user.id;
+                  final fullName = user.fullName;
+                  final email = user.email;
+                  final role = user.role;
+                  final active = user.isActive;
 
-                      return Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            fullName.isEmpty ? 'User #$userId' : fullName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(email),
+                          const SizedBox(height: 4),
+                          Text('Role: $role'),
+                          const SizedBox(height: 12),
+                          Row(
                             children: [
-                              Text(
-                                fullName.isEmpty ? 'User #$userId' : fullName,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: null,
+                                  hint: const Text('Change role'),
+                                  items: _roleOptions
+                                      .map(
+                                        (r) => DropdownMenuItem<String>(
+                                          value: r,
+                                          child: Text(r),
+                                        ),
+                                      )
+                                      .toList(growable: false),
+                                  onChanged: (value) {
+                                    if (value != null && value.isNotEmpty) {
+                                      _changeRole(userId, value);
+                                    }
+                                  },
+                                ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(email),
-                              const SizedBox(height: 4),
-                              Text('Role: $role'),
-                              const SizedBox(height: 12),
-                              Row(
+                              const SizedBox(width: 12),
+                              Column(
                                 children: [
-                                  Expanded(
-                                    child: DropdownButtonFormField<String>(
-                                      initialValue: null,
-                                      hint: const Text('Change role'),
-                                      items: _roleOptions
-                                          .map(
-                                            (r) => DropdownMenuItem<String>(
-                                              value: r,
-                                              child: Text(r),
-                                            ),
-                                          )
-                                          .toList(growable: false),
-                                      onChanged: (value) {
-                                        if (value != null && value.isNotEmpty) {
-                                          _changeRole(userId, value);
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    children: [
-                                      const Text('Active'),
-                                      Switch(
-                                        value: active,
-                                        onChanged: (value) => _toggleStatus(userId, value),
-                                      ),
-                                    ],
+                                  const Text('Active'),
+                                  Switch(
+                                    value: active,
+                                    onChanged: (value) =>
+                                        _toggleStatus(userId, value),
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
-
 }

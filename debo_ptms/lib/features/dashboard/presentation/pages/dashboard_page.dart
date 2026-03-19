@@ -45,9 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final apiClient = context.read<ApiClient>();
       final role = context.read<UserAuthBloc>().state.user?.role;
       final useCase = GetDashboardSummaryUseCase(
-        DashboardRepositoryImpl(
-          DashboardRemoteDataSourceImpl(apiClient),
-        ),
+        DashboardRepositoryImpl(DashboardRemoteDataSourceImpl(apiClient)),
       );
 
       _summary = await useCase(isAdmin: AppRoles.isAdmin(role));
@@ -60,37 +58,129 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Widget _statCard(String title, String value) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+  Widget _heroCard({
+    required BuildContext context,
+    required bool isAdmin,
+    required DashboardSummaryEntity summary,
+  }) {
+    final keyMetric = isAdmin
+        ? summary.metric('total_users').toString()
+        : summary.metric('total_tasks').toString();
+
+    final keyLabel = isAdmin ? 'Total Users' : 'Total Tasks';
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0B6E99), Color(0xFF2F80ED), Color(0xFF56CCF2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(22),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isAdmin ? 'Admin Control Center' : 'Project Delivery Board',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Realtime project pulse and performance metrics.',
+            style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.auto_graph, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '$keyLabel: $keyMetric',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricTile({
+    required String title,
+    required String value,
+    required IconData icon,
+    required List<Color> colors,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.white),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricGrid(List<Widget> tiles) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final tileWidth = (width - 10) / 2;
+
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: tiles
+              .map(
+                (tile) => SizedBox(
+                  width: tileWidth,
+                  height: 132,
+                  child: tile,
+                ),
+              )
+              .toList(growable: false),
+        );
+      },
     );
   }
 
@@ -117,45 +207,120 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: _load,
-                          child: const Text('Retry'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _load,
+                      child: const Text('Retry'),
                     ),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      if (_summary != null) ...[
-                        if (isAdmin) ...[
-                          _statCard('Total Users', '${_summary!.metric('total_users')}'),
-                          _statCard('Total Projects', '${_summary!.metric('total_projects')}'),
-                          _statCard('Active Projects', '${_summary!.metric('active_projects')}'),
-                          _statCard('Completed Projects', '${_summary!.metric('completed_projects')}'),
-                          _statCard('On Hold Projects', '${_summary!.metric('on_hold_projects')}'),
-                        ] else ...[
-                          _statCard('Total Projects', '${_summary!.metric('total_projects')}'),
-                          _statCard('Active Projects', '${_summary!.metric('active_projects')}'),
-                          _statCard('Total Tasks', '${_summary!.metric('total_tasks')}'),
-                          _statCard('Completed Tasks', '${_summary!.metric('completed_tasks')}'),
-                          _statCard('Overdue Tasks', '${_summary!.metric('overdue_tasks')}'),
-                        ],
-                      ],
-                    ],
-                  ),
+                  ],
                 ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (_summary != null) ...[
+                    _heroCard(
+                      context: context,
+                      isAdmin: isAdmin,
+                      summary: _summary!,
+                    ),
+                    const SizedBox(height: 14),
+                    if (isAdmin) ...[
+                      _metricGrid([
+                        _metricTile(
+                          title: 'Total Users',
+                          value: '${_summary!.metric('total_users')}',
+                          icon: Icons.people_alt_rounded,
+                          colors: const [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                        ),
+                        _metricTile(
+                          title: 'Total Projects',
+                          value: '${_summary!.metric('total_projects')}',
+                          icon: Icons.folder_special_rounded,
+                          colors: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+                        ),
+                        _metricTile(
+                          title: 'Active Projects',
+                          value: '${_summary!.metric('active_projects')}',
+                          icon: Icons.rocket_launch_rounded,
+                          colors: const [Color(0xFF1D976C), Color(0xFF93F9B9)],
+                        ),
+                        _metricTile(
+                          title: 'Completed Projects',
+                          value: '${_summary!.metric('completed_projects')}',
+                          icon: Icons.verified_rounded,
+                          colors: const [Color(0xFF2193B0), Color(0xFF6DD5ED)],
+                        ),
+                      ]),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        height: 132,
+                        child: _metricTile(
+                          title: 'On Hold Projects',
+                          value: '${_summary!.metric('on_hold_projects')}',
+                          icon: Icons.pause_circle_filled_rounded,
+                          colors: const [Color(0xFFFF512F), Color(0xFFDD2476)],
+                        ),
+                      ),
+                    ] else ...[
+                      _metricGrid([
+                        _metricTile(
+                          title: 'Total Projects',
+                          value: '${_summary!.metric('total_projects')}',
+                          icon: Icons.workspaces_rounded,
+                          colors: const [Color(0xFF36D1DC), Color(0xFF5B86E5)],
+                        ),
+                        _metricTile(
+                          title: 'Active Projects',
+                          value: '${_summary!.metric('active_projects')}',
+                          icon: Icons.timeline_rounded,
+                          colors: const [Color(0xFF00B09B), Color(0xFF96C93D)],
+                        ),
+                        _metricTile(
+                          title: 'Total Tasks',
+                          value: '${_summary!.metric('total_tasks')}',
+                          icon: Icons.task_alt_rounded,
+                          colors: const [Color(0xFF4776E6), Color(0xFF8E54E9)],
+                        ),
+                        _metricTile(
+                          title: 'Completed Tasks',
+                          value: '${_summary!.metric('completed_tasks')}',
+                          icon: Icons.check_circle_rounded,
+                          colors: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+                        ),
+                      ]),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        height: 132,
+                        child: _metricTile(
+                          title: 'Overdue Tasks',
+                          value: '${_summary!.metric('overdue_tasks')}',
+                          icon: Icons.warning_rounded,
+                          colors: const [Color(0xFFFF8008), Color(0xFFFFC837)],
+                        ),
+                      ),
+                    ],
+                  ] else ...[
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('No dashboard data available right now.'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
     );
   }
 }

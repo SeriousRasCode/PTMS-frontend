@@ -42,9 +42,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
     try {
       final apiClient = context.read<ApiClient>();
       final useCase = GetMyTasksUseCase(
-        TasksRepositoryImpl(
-          TasksRemoteDataSourceImpl(apiClient),
-        ),
+        TasksRepositoryImpl(TasksRemoteDataSourceImpl(apiClient)),
       );
 
       _tasks = await useCase();
@@ -77,75 +75,102 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        ElevatedButton(onPressed: _load, child: const Text('Retry')),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _load,
+                      child: const Text('Retry'),
                     ),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: _tasks.isEmpty
-                      ? ListView(
-                          padding: const EdgeInsets.all(16),
-                          children: const [
-                            Card(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Text('No tasks assigned yet.'),
-                              ),
-                            ),
-                          ],
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _tasks.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 10),
-                          itemBuilder: (context, index) {
-                            final t = _tasks[index];
-                            final taskId = t.id;
-                            final title = t.title;
-                            final status = t.status;
-                            final progress = t.progress;
-                            final projectName = t.projectName;
-
-                            return Card(
-                              child: ListTile(
-                                title: Text(title.isEmpty ? 'Task #$taskId' : title),
-                                subtitle: Text(
-                                  [
-                                    if (projectName.isNotEmpty) projectName,
-                                    'Status: $status',
-                                    'Progress: $progress%'
-                                  ].join(' • '),
-                                ),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => TaskDetailsScreen(
-                                        taskId: taskId,
-                                        initialTitle: title,
-                                        initialStatus: status,
-                                        initialProgress: progress,
-                                      ),
-                                    ),
-                                  );
-                                  _load();
-                                },
-                              ),
-                            );
-                          },
-                        ),
+                  ],
                 ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: _tasks.isEmpty
+                  ? ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: const [
+                        Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Text('No tasks assigned yet.'),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _tasks.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final t = _tasks[index];
+                        final taskId = t.id;
+                        final title = t.title;
+                        final status = t.status;
+                        final progress = t.progress;
+                        final projectName = t.projectName;
+                        final value = (progress.clamp(0, 100)) / 100;
+
+                        final progressColor = progress >= 100
+                            ? Colors.green
+                            : (progress > 0 ? AppColors.brandPrimary : Colors.grey);
+
+                        return Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    title.isEmpty ? 'Task #$taskId' : title,
+                                  ),
+                                  subtitle: Text(
+                                    [
+                                      if (projectName.isNotEmpty) projectName,
+                                      'Status: $status',
+                                      'Progress: $progress%',
+                                    ].join(' • '),
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () async {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => TaskDetailsScreen(
+                                          taskId: taskId,
+                                          initialTitle: title,
+                                          initialStatus: status,
+                                          initialProgress: progress,
+                                        ),
+                                      ),
+                                    );
+                                    _load();
+                                  },
+                                ),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(99),
+                                  child: LinearProgressIndicator(
+                                    value: value.toDouble(),
+                                    minHeight: 8,
+                                    color: progressColor,
+                                    backgroundColor: Colors.grey.shade300,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
     );
   }
-
 }

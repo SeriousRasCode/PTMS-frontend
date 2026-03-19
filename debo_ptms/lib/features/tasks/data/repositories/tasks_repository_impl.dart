@@ -59,6 +59,8 @@ class TasksRepositoryImpl implements TasksRepository {
 
   int? _readInt(dynamic value) {
     if (value is int) return value;
-    return int.tryParse(value?.toString() ?? '');
+    if (value is num) return value.round();
+    final text = value?.toString() ?? '';
+    return int.tryParse(text) ?? double.tryParse(text)?.round();
   }
 }

@@ -66,6 +66,7 @@ class AppDrawer extends StatelessWidget {
     final isAdmin = roleLower.contains('admin');
     final isManager = roleLower.contains('manager');
     final isMember = roleLower.contains('member');
+    final canViewTasks = isManager || isMember;
 
     return Drawer(
       child: ListView(
@@ -121,7 +122,7 @@ class AppDrawer extends StatelessWidget {
             onTap: () => _goTo(context, route: '/projects', replace: true),
           ),
 
-          if (isMember)
+          if (canViewTasks)
             _tile(
               context,
               icon: Icons.task_alt,

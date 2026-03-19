@@ -26,7 +26,8 @@ class UserModel extends UserEntity {
       id: _readInt(json['id']) ?? 0,
       fullName: (json['full_name'] ?? json['fullName'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      role: _readNestedName(roleValue) ??
+      role:
+          _readNestedName(roleValue) ??
           (json['role_name']?.toString()) ??
           roleFromList,
       team: _readNestedName(teamValue) ?? (json['team_name']?.toString()),
