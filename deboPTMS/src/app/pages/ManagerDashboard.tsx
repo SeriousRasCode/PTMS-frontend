@@ -23,6 +23,7 @@ interface ManagerStats {
   total_tasks: number;
   in_progress_tasks: number;
   completed_tasks: number;
+  overdue_tasks: number;
 }
 
 export const ManagerDashboard = () => {
@@ -34,6 +35,7 @@ export const ManagerDashboard = () => {
     completed_projects: 0,
     total_tasks: 0,
     in_progress_tasks: 0,
+    overdue_tasks: 0,
     completed_tasks: 0,
   });
 
@@ -48,8 +50,8 @@ export const ManagerDashboard = () => {
       const response = await dashboardAPI.getManagerDashboard();
       
       if (response.success && response.data) {
-        const { total_projects, active_projects, completed_projects, total_tasks, in_progress_tasks, completed_tasks } = response.data;
-        setStats({ total_projects, active_projects, completed_projects, total_tasks, in_progress_tasks, completed_tasks });
+        const { total_projects, active_projects, completed_projects, total_tasks, in_progress_tasks, completed_tasks, overdue_tasks } = response.data;
+        setStats({ total_projects, active_projects, completed_projects, total_tasks, in_progress_tasks, completed_tasks, overdue_tasks });
       }
       
     } catch (error: any) {
