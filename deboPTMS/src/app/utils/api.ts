@@ -1,21 +1,22 @@
 // API Utility Functions for PTMS
 // Backend API configuration
 
+
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:3333/api"; // Backend API base URL
+
+  "http://localhost:3000/api"; // Backend API base URL
 
 // Helper function for API requests
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem("authToken");
 
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...(options.headers || {}),
-  };
+const headers = new Headers({
+  "Content-Type": "application/json",
+  ...(options.headers as Record<string, string>),
+});
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   try {
