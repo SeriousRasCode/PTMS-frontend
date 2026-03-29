@@ -1,5 +1,5 @@
 // API Utility Functions for PTMS
-// Backend API configuration
+// Backend API config
 
 const API_BASE_URL = "http://localhost:3333/api"; // Direct connection to backend
 
