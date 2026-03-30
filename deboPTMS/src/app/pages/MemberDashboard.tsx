@@ -144,7 +144,7 @@ export const MemberDashboard = () => {
       
       toast.success("Task progress updated successfully");
       
-      // Update local state
+      // Update local state here
       setTasks(tasks.map(t => 
         t.id === taskId 
           ? { ...t, progress_percentage: newProgress, status: newProgress === 100 ? "completed" : "in_progress" } 
