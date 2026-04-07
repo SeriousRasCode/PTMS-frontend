@@ -308,12 +308,11 @@ export const ProjectDetails = () => {
     }
 
     try {
-      // Convert empty date strings to null for MySQL compatibility
       const taskData = {
         ...newTask,
-        start_date: newTask.start_date || null,
-        due_date: newTask.due_date || null,
-        phase_id: newTask.phase_id || null,
+        start_date: newTask.start_date || "",
+        due_date: newTask.due_date || "",
+        phase_id: newTask.phase_id || undefined,
       };
 
       console.log("Creating task with data:", taskData);
