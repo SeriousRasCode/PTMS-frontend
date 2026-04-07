@@ -12,6 +12,7 @@ interface Attachment {
   project_id?: number;
   task_id?: number;
   subtask_id?: number;
+  phase_id?: number;
   file_name: string;
   file_path: string;
   file_size: number;
@@ -21,8 +22,8 @@ interface Attachment {
 }
 
 interface AttachmentManagerProps {
-  entityId: number; // Can be projectId, taskId, or subtaskId
-  entityType: "project" | "task" | "subtask";
+  entityId: number; // Can be projectId, taskId, subtaskId, or phaseId
+  entityType: "project" | "task" | "subtask" | "phase";
 }
 
 export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerProps) => {
@@ -42,19 +43,26 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
   const fetchAttachments = async () => {
     try {
       setLoading(true);
+      console.log("Fetching attachments for entityId:", entityId, "entityType:", entityType);
       const data = await attachmentAPI.getAttachments(entityId);
+      console.log("Attachments API response:", data);
       
       // Handle different response formats
       if (Array.isArray(data)) {
+        console.log("Response is array, setting attachments:", data);
         setAttachments(data);
       } else if (data && data.data && Array.isArray(data.data)) {
+        console.log("Response has data property (array), setting attachments:", data.data);
         setAttachments(data.data);
       } else if (data && data.success && Array.isArray(data.attachments)) {
+        console.log("Response has success and attachments, setting attachments:", data.attachments);
         setAttachments(data.attachments);
       } else {
+        console.log("Unknown response format, setting empty array. Response:", data);
         setAttachments([]);
       }
     } catch (error: any) {
+      console.error("Error fetching attachments:", error);
       // Silently handle ENOENT errors (missing files on server)
       if (!error.message?.includes('ENOENT') && !error.message?.includes('no such file')) {
         toast.error(error.message || "Failed to fetch attachments");
@@ -87,6 +95,8 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
       formData.append("task_id", String(entityId));
     } else if (entityType === "subtask") {
       formData.append("subtask_id", String(entityId));
+    } else if (entityType === "phase") {
+      formData.append("phase_id", String(entityId));
     }
 
     try {
@@ -98,7 +108,9 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
         fileInputRef.current.value = "";
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to upload file");
+      console.error("Upload error details:", error);
+      const errorMessage = error.message || error.error || error.toString() || "Failed to upload file";
+      toast.error(errorMessage.trim() || "Failed to upload file - please check backend logs");
     } finally {
       setUploading(false);
     }
@@ -200,7 +212,9 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
                       </p>
                       <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                         {formatFileSize(attachment.file_size)} •{" "}
-                        {new Date(attachment.created_at).toLocaleDateString()}
+                        {attachment.created_at && !isNaN(new Date(attachment.created_at).getTime())
+                          ? new Date(attachment.created_at).toLocaleDateString()
+                          : "Unknown date"}
                       </p>
                     </div>
                   </div>
