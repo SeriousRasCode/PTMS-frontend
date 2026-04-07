@@ -108,6 +108,7 @@ export const ProjectDetails = () => {
     due_date: "",
     status: "not_started",
     progress_percentage: 0,
+    phase_id: null,
   });
   
   const [progressUpdate, setProgressUpdate] = useState({
@@ -305,13 +306,24 @@ export const ProjectDetails = () => {
       toast.error("Please fill in all required fields");
       return;
     }
-    
+
     try {
-      console.log("Creating task with data:", newTask);
-      const response = await taskAPI.createTask(Number(projectId), newTask);
+      // Convert empty date strings to null for MySQL compatibility
+      const taskData = {
+        ...newTask,
+        start_date: newTask.start_date || null,
+        due_date: newTask.due_date || null,
+        phase_id: newTask.phase_id || null,
+      };
+
+      console.log("Creating task with data:", taskData);
+      console.log("Project ID:", projectId);
+      console.log("Task data stringified:", JSON.stringify(taskData, null, 2));
+
+      const response = await taskAPI.createTask(Number(projectId), taskData);
       console.log("Task creation response:", response);
       toast.success("Task created successfully!");
-      
+
       setNewTask({
         title: "",
         description: "",
@@ -319,6 +331,7 @@ export const ProjectDetails = () => {
         due_date: "",
         status: "not_started",
         progress_percentage: 0,
+        phase_id: null,
       });
       setCreateTaskDialogOpen(false);
       fetchTasks();
@@ -329,7 +342,7 @@ export const ProjectDetails = () => {
         stack: error.stack,
         error: error
       });
-      toast.error(error.message || "Failed to create task");
+      toast.error(error.message || "Failed to create task. Check console and backend logs for details.");
     }
   };
   
