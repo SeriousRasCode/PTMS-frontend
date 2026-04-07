@@ -32,6 +32,7 @@ import {
   Clock,
   AlertCircle,
   CheckCircle2,
+  ListTree,
 } from "lucide-react";
 
 interface Task {
@@ -94,6 +95,7 @@ export const ProjectDetails = () => {
   const [updateProgressDialogOpen, setUpdateProgressDialogOpen] = useState(false);
   const [taskHistoryDialogOpen, setTaskHistoryDialogOpen] = useState(false);
   const [assignmentsDialogOpen, setAssignmentsDialogOpen] = useState(false);
+  const [subtasksDialogOpen, setSubtasksDialogOpen] = useState(false);
   
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [taskHistory, setTaskHistory] = useState<TaskUpdate[]>([]);
@@ -711,6 +713,18 @@ export const ProjectDetails = () => {
                     View Assignments
                   </Button>
                   
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedTask(task);
+                      setSubtasksDialogOpen(true);
+                    }}
+                  >
+                    <ListTree className="mr-2 h-4 w-4" />
+                    Subtasks
+                  </Button>
+                  
                   {/* Only show History button for Admins and Managers */}
                   {(user?.role === "Admin" || user?.role === "Manager") && (
                     <Button
@@ -970,6 +984,30 @@ export const ProjectDetails = () => {
                   </CardContent>
                 </Card>
               ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Task Subtasks Dialog */}
+      <Dialog open={subtasksDialogOpen} onOpenChange={(open) => {
+        setSubtasksDialogOpen(open);
+        if (!open) {
+          setSelectedTask(null);
+        }
+      }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Task Subtasks</DialogTitle>
+            <DialogDescription>
+              View and manage subtasks for: {selectedTask?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 max-h-96 overflow-y-auto">
+            {selectedTask ? (
+              <TaskSubtasks taskId={selectedTask.id} />
+            ) : (
+              <p className="text-center text-gray-500 py-8">No task selected</p>
             )}
           </div>
         </DialogContent>
