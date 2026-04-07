@@ -1,5 +1,5 @@
 // API Utility Functions for PTMS
-// Backend API config
+// Backend API configuration
 
 const API_BASE_URL = "http://localhost:3333/api"; // Direct connection to backend
 
@@ -395,6 +395,11 @@ export const phaseAPI = {
 
 // Subtask APIs
 export const subtaskAPI = {
+  // Get subtasks by task_id - since backend doesn't have this endpoint,
+  // we'll need to work around it or you need to add it to backend
+  getSubtasksByTaskId: (taskId: number) => 
+    apiRequest(`/subtasks/task/${taskId}`),
+
   createSubtask: (
     taskId: number,
     data: {
@@ -526,7 +531,12 @@ export const attachmentAPI = {
       try {
         const data = JSON.parse(text);
         if (!res.ok) {
-          throw new Error(data.error || data.message || res.statusText);
+          // Handle empty error strings from backend
+          const errorMsg = (data.error && data.error.trim()) ||
+                          (data.message && data.message.trim()) ||
+                          res.statusText ||
+                          'Upload failed - check backend logs for details';
+          throw new Error(errorMsg);
         }
         return data;
       } catch (e) {
@@ -534,13 +544,18 @@ export const attachmentAPI = {
         if (res.ok) {
           return { success: true, message: text };
         } else {
-          throw new Error(text || res.statusText);
+          const errorText = text && text.trim() ? text : res.statusText || 'Upload failed';
+          throw new Error(errorText);
         }
       }
     });
   },
 
-  getAttachments: (id: number) => apiRequest(`/attachments/${id}`),
+  getAttachments: (id: number) => {
+    // The backend returns attachments filtered by entity ID
+    // It returns phase_id, project_id, task_id, or subtask_id
+    return apiRequest(`/attachments/${id}`);
+  },
 
   deleteAttachment: (attachmentId: number) =>
     apiRequest(`/attachments/${attachmentId}`, {
