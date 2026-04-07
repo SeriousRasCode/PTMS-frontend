@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { subtaskAPI, subtaskAssignmentAPI, adminAPI } from "../utils/api";
+import { subtaskAPI, subtaskAssignmentAPI, taskAPI } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Button } from "./ui/button";
@@ -70,7 +70,7 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [progressData, setProgressData] = useState({
     progress_percentage: 0,
-    status: "Not Started",
+    status: "not_started",
   });
 
   const [newSubtask, setNewSubtask] = useState({
@@ -92,22 +92,26 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
   const fetchSubtasks = async () => {
     try {
       setLoading(true);
-      // Note: You'll need to add this endpoint to get subtasks by task_id
-      // For now, we'll assume the backend has this endpoint
-      const response = await fetch(
-        `http://localhost:3333/api/subtasks/task/${taskId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
+      // Use the API helper instead of direct fetch
+      const data = await subtaskAPI.getSubtasksByTaskId(taskId);
+      
+      // Handle different response formats
+      if (Array.isArray(data)) {
         setSubtasks(data);
+      } else if (data && Array.isArray(data.subtasks)) {
+        setSubtasks(data.subtasks);
+      } else if (data && Array.isArray(data.data)) {
+        setSubtasks(data.data);
+      } else {
+        setSubtasks([]);
       }
     } catch (error: any) {
       console.error("Failed to fetch subtasks:", error);
+      // Don't show error toast if it's just "not found" - subtasks might not exist yet
+      if (!error.message?.includes('not found') && !error.message?.includes('404')) {
+        toast.error(error.message || "Failed to fetch subtasks");
+      }
+      setSubtasks([]);
     } finally {
       setLoading(false);
     }
@@ -115,9 +119,29 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
 
   const fetchAllUsers = async () => {
     try {
-      const users = await adminAPI.getAllUsers();
+      // Get users assigned to this task
+      const assignments = await taskAPI.getAssignments(taskId);
+
+      // Handle different response formats
+      let assignedUsers = [];
+      if (Array.isArray(assignments)) {
+        assignedUsers = assignments;
+      } else if (assignments && Array.isArray(assignments.data)) {
+        assignedUsers = assignments.data;
+      } else if (assignments && Array.isArray(assignments.assignments)) {
+        assignedUsers = assignments.assignments;
+      }
+
+      // Map to user format
+      const users = assignedUsers.map((assignment: any) => ({
+        id: assignment.user_id || assignment.id,
+        full_name: assignment.full_name,
+        email: assignment.email,
+      }));
+
       setAllUsers(users);
     } catch (error: any) {
+      console.error("Failed to fetch task users:", error);
       toast.error("Failed to fetch users");
     }
   };
@@ -218,16 +242,27 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed":
+      case "completed":
         return "bg-green-500/20 text-green-700 dark:text-green-300";
-      case "In Progress":
+      case "started":
         return "bg-blue-500/20 text-blue-700 dark:text-blue-300";
-      case "Not Started":
+      case "not_started":
         return "bg-gray-500/20 text-gray-700 dark:text-gray-300";
-      case "Blocked":
-        return "bg-red-500/20 text-red-700 dark:text-red-300";
       default:
         return "bg-gray-500/20 text-gray-700 dark:text-gray-300";
+    }
+  };
+
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case "not_started":
+        return "Not Started";
+      case "started":
+        return "Started";
+      case "completed":
+        return "Completed";
+      default:
+        return "Not Started";
     }
   };
 
@@ -345,8 +380,8 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
                     <CardTitle className={`text-base mb-2 ${theme === 'dark' ? 'text-white' : ''}`}>
                       {subtask.title}
                     </CardTitle>
-                    <Badge className={getStatusColor(subtask.status || "Not Started")}>
-                      {subtask.status || "Not Started"}
+                    <Badge className={getStatusColor(subtask.status || "not_started")}>
+                      {formatStatus(subtask.status || "not_started")}
                     </Badge>
                   </div>
                   <div className="flex gap-2">
@@ -596,6 +631,56 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
                   required
                   className={theme === 'dark' ? 'bg-slate-700 text-white border-slate-600' : ''}
                 />
+                <div className="mt-3">
+                  <Label className="text-sm mb-2 block">Quick Progress</Label>
+                  <div className="grid grid-cols-5 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setProgressData({ ...progressData, progress_percentage: 25 })}
+                      className={theme === 'dark' ? 'border-slate-600 hover:bg-slate-700' : ''}
+                    >
+                      Quarter
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setProgressData({ ...progressData, progress_percentage: 50 })}
+                      className={theme === 'dark' ? 'border-slate-600 hover:bg-slate-700' : ''}
+                    >
+                      Half
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setProgressData({ ...progressData, progress_percentage: 75 })}
+                      className={theme === 'dark' ? 'border-slate-600 hover:bg-slate-700' : ''}
+                    >
+                      3/4
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setProgressData({ ...progressData, progress_percentage: 90 })}
+                      className={theme === 'dark' ? 'border-slate-600 hover:bg-slate-700' : ''}
+                    >
+                      Almost
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setProgressData({ ...progressData, progress_percentage: 100 })}
+                      className={theme === 'dark' ? 'border-slate-600 hover:bg-slate-700' : ''}
+                    >
+                      Done
+                    </Button>
+                  </div>
+                </div>
               </div>
               <div>
                 <Label htmlFor="status">Status</Label>
@@ -606,13 +691,14 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
                   }
                 >
                   <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 text-white border-slate-600' : ''}>
-                    <SelectValue />
+                    <SelectValue>
+                      {formatStatus(progressData.status)}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                    <SelectItem value="Blocked">Blocked</SelectItem>
+                    <SelectItem value="not_started">Not Started</SelectItem>
+                    <SelectItem value="started">Started</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
