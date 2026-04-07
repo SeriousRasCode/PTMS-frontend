@@ -315,7 +315,7 @@ export const Reports = () => {
                       dataKey="value"
                     >
                       {taskStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={`status-cell-${entry.name}-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip contentStyle={{
@@ -339,7 +339,7 @@ export const Reports = () => {
               <CardContent>
                 <div className="space-y-4">
                   {taskStatusData.map((status, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div key={`status-legend-${status.name}-${index}`} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-4 h-4 rounded" style={{ backgroundColor: status.color }}></div>
                         <span className={theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}>{status.name}</span>
@@ -390,7 +390,7 @@ export const Reports = () => {
                         dataKey="value"
                       >
                         {workloadPieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell key={`workload-cell-${entry.name}-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
                       <Tooltip contentStyle={{
