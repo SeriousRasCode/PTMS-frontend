@@ -24,7 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Plus, Edit2, Trash2, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, Paperclip } from "lucide-react";
+import { AttachmentManager } from "./AttachmentManager";
 
 interface Phase {
   id: number;
@@ -50,6 +51,7 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
   const [createPhaseDialogOpen, setCreatePhaseDialogOpen] = useState(false);
   const [editPhaseDialogOpen, setEditPhaseDialogOpen] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
+  const [viewAttachmentsPhaseId, setViewAttachmentsPhaseId] = useState<number | null>(null);
 
   const [newPhase, setNewPhase] = useState({
     name: "",
@@ -290,6 +292,14 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => setViewAttachmentsPhaseId(phase.id)}
+                        title="View attachments"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => {
                           setSelectedPhase(phase);
                           setEditPhaseDialogOpen(true);
@@ -432,6 +442,26 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Phase Attachments Dialog */}
+      {viewAttachmentsPhaseId && (
+        <Dialog open={viewAttachmentsPhaseId !== null} onOpenChange={(open) => !open && setViewAttachmentsPhaseId(null)}>
+          <DialogContent className={`max-w-4xl ${theme === 'dark' ? 'bg-slate-800 text-white' : ''}`}>
+            <DialogHeader>
+              <DialogTitle>Phase Attachments</DialogTitle>
+              <DialogDescription>
+                Manage files and documents for this phase
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4">
+              <AttachmentManager 
+                entityId={viewAttachmentsPhaseId} 
+                entityType="phase" 
+              />
+            </div>
           </DialogContent>
         </Dialog>
       )}
