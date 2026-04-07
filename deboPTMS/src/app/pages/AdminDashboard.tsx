@@ -180,7 +180,7 @@ export const AdminDashboard = () => {
             <div className="relative">
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
               <Input
-                placeholder="Search Users..."
+                placeholder="Search users..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`pl-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}`}
