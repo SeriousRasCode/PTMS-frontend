@@ -506,8 +506,8 @@ export const ProjectDetails = () => {
             Back to Projects
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Project Tasks</h1>
-            <p className="text-gray-600 mt-1">Manage tasks for this project</p>
+            <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Project Tasks</h1>
+            <p className={`mt-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Manage tasks for this project</p>
           </div>
         </div>
         {canManageTasks && (
@@ -518,50 +518,54 @@ export const ProjectDetails = () => {
                 Create Task
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className={`max-w-2xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
               <DialogHeader>
-                <DialogTitle>Create New Task</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Create New Task</DialogTitle>
+                <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
                   Add a new task to this project
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div>
-                  <Label htmlFor="title">Task Title *</Label>
+                  <Label htmlFor="title" className={theme === 'dark' ? 'text-gray-200' : ''}>Task Title *</Label>
                   <Input
                     id="title"
                     placeholder="Enter task title"
                     value={newTask.title}
                     onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                    className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description" className={theme === 'dark' ? 'text-gray-200' : ''}>Description *</Label>
                   <Textarea
                     id="description"
                     placeholder="Describe the task"
                     value={newTask.description}
                     onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                     rows={3}
+                    className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="start-date">Start Date</Label>
+                    <Label htmlFor="start-date" className={theme === 'dark' ? 'text-gray-200' : ''}>Start Date</Label>
                     <Input
                       id="start-date"
                       type="date"
                       value={newTask.start_date}
                       onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
+                      className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="due-date">Due Date</Label>
+                    <Label htmlFor="due-date" className={theme === 'dark' ? 'text-gray-200' : ''}>Due Date</Label>
                     <Input
                       id="due-date"
                       type="date"
                       value={newTask.due_date}
                       onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                      className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
                     />
                   </div>
                 </div>
@@ -579,40 +583,40 @@ export const ProjectDetails = () => {
       
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-[#0f5841]">
+        <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Tasks</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Total Tasks</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{tasks.length}</div>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{tasks.length}</div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">In Progress</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>In Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {tasks.filter(t => t.status === "started").length}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500">
+        <Card className={`border-l-4 border-l-green-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Completed</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {tasks.filter(t => t.status === "completed").length}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-gray-500">
+        <Card className={`border-l-4 border-l-gray-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Not Started</CardTitle>
+            <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Not Started</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {tasks.filter(t => t.status === "not_started").length}
             </div>
           </CardContent>
@@ -621,13 +625,13 @@ export const ProjectDetails = () => {
       
       {/* Tasks List */}
       {tasks.length === 0 ? (
-        <Card>
+        <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <CheckCircle2 className="h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No tasks yet</h3>
-            <p className="text-gray-600 text-center mb-4">
-              {canManageTasks 
-                ? "Create your first task to get started" 
+            <CheckCircle2 className={`h-16 w-16 mb-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+            <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>No tasks yet</h3>
+            <p className={`text-center mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+              {canManageTasks
+                ? "Create your first task to get started"
                 : "No tasks have been created for this project"}
             </p>
             {canManageTasks && (
@@ -644,29 +648,29 @@ export const ProjectDetails = () => {
       ) : (
         <div className="space-y-4">
           {tasks.map((task) => (
-            <Card key={task.id} className="hover:shadow-lg transition-shadow">
+            <Card key={task.id} className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <CardTitle className="text-xl">{task.title}</CardTitle>
+                      <CardTitle className={`text-xl ${theme === 'dark' ? 'text-white' : ''}`}>{task.title}</CardTitle>
                       <Badge className={getStatusColor(task.status)}>
                         {getStatusLabel(task.status)}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">{task.description}</p>
-                    
+                    <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{task.description}</p>
+
                     {/* Progress Bar */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Progress</span>
-                        <span className="font-medium text-gray-900">{task.progress_percentage}%</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Progress</span>
+                        <span className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{task.progress_percentage}%</span>
                       </div>
                       <Progress value={task.progress_percentage} className="h-2" />
                     </div>
-                    
+
                     {/* Task Dates */}
-                    <div className="flex items-center gap-4 mt-4 text-sm text-gray-600">
+                    <div className={`flex items-center gap-4 mt-4 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                       {task.start_date && (
                         <span className="flex items-center gap-1">
                           <Clock size={14} />
@@ -790,33 +794,33 @@ export const ProjectDetails = () => {
           setSelectedUserId(null);
         }
       }}>
-        <DialogContent>
+        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
           <DialogHeader>
-            <DialogTitle>Assign Task to User</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Assign Task to User</DialogTitle>
+            <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
               Select a user to assign this task to
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="task-name">Task</Label>
+              <Label htmlFor="task-name" className={theme === 'dark' ? 'text-gray-200' : ''}>Task</Label>
               <Input
                 id="task-name"
                 value={selectedTask?.title || ""}
                 readOnly
-                className="bg-gray-50"
+                className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-gray-50'}
               />
             </div>
             <div>
-              <Label htmlFor="user-select">Select User</Label>
+              <Label htmlFor="user-select" className={theme === 'dark' ? 'text-gray-200' : ''}>Select User</Label>
               {loadingMembers ? (
-                <div className="text-sm text-gray-500 py-2">Loading users...</div>
+                <div className={`text-sm py-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Loading users...</div>
               ) : usersForAssignment.length === 0 ? (
-                <div className="text-sm text-amber-600 py-2 bg-amber-50 rounded-md px-3">
+                <div className={`text-sm py-2 rounded-md px-3 ${theme === 'dark' ? 'text-amber-400 bg-amber-950' : 'text-amber-600 bg-amber-50'}`}>
                   <p className="font-medium">No users available</p>
                   <p className="text-xs mt-1">
-                    {user?.role === "Admin" 
-                      ? "No users found in the system." 
+                    {user?.role === "Admin"
+                      ? "No users found in the system."
                       : "No team members found. The project manager needs to add team members to this project's team."}
                   </p>
                   {project?.team_id && (
@@ -828,7 +832,11 @@ export const ProjectDetails = () => {
                   id="user-select"
                   value={selectedUserId || ""}
                   onChange={(e) => setSelectedUserId(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                    theme === 'dark'
+                      ? 'bg-slate-700 border-slate-600 text-white focus:ring-blue-400'
+                      : 'border-gray-300 focus:ring-blue-500'
+                  }`}
                 >
                   <option value="">Select a user</option>
                   {usersForAssignment.map((u) => (
@@ -858,48 +866,50 @@ export const ProjectDetails = () => {
           setProgressUpdate({ progress_percentage: 0, update_note: "" });
         }
       }}>
-        <DialogContent>
+        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
           <DialogHeader>
-            <DialogTitle>Update Task Progress</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Update Task Progress</DialogTitle>
+            <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
               Update the progress of this task
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="task-title">Task</Label>
+              <Label htmlFor="task-title" className={theme === 'dark' ? 'text-gray-200' : ''}>Task</Label>
               <Input
                 id="task-title"
                 value={selectedTask?.title || ""}
                 readOnly
-                className="bg-gray-50"
+                className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-gray-50'}
               />
             </div>
             <div>
-              <Label htmlFor="progress">Progress Percentage (0-100)</Label>
+              <Label htmlFor="progress" className={theme === 'dark' ? 'text-gray-200' : ''}>Progress Percentage (0-100)</Label>
               <Input
                 id="progress"
                 type="number"
                 min="0"
                 max="100"
                 value={progressUpdate.progress_percentage}
-                onChange={(e) => setProgressUpdate({ 
-                  ...progressUpdate, 
-                  progress_percentage: Number(e.target.value) 
+                onChange={(e) => setProgressUpdate({
+                  ...progressUpdate,
+                  progress_percentage: Number(e.target.value)
                 })}
+                className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
               />
             </div>
             <div>
-              <Label htmlFor="note">Update Note</Label>
+              <Label htmlFor="note" className={theme === 'dark' ? 'text-gray-200' : ''}>Update Note</Label>
               <Textarea
                 id="note"
                 placeholder="Add a note about this update"
                 value={progressUpdate.update_note}
-                onChange={(e) => setProgressUpdate({ 
-                  ...progressUpdate, 
-                  update_note: e.target.value 
+                onChange={(e) => setProgressUpdate({
+                  ...progressUpdate,
+                  update_note: e.target.value
                 })}
                 rows={3}
+                className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}
               />
             </div>
             <Button
@@ -920,24 +930,24 @@ export const ProjectDetails = () => {
           setTaskHistory([]);
         }
       }}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className={`max-w-3xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
           <DialogHeader>
-            <DialogTitle>Task History</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Task History</DialogTitle>
+            <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
               View all updates for: {selectedTask?.title}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4 max-h-96 overflow-y-auto">
             {taskHistory.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No history available</p>
+              <p className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No history available</p>
             ) : (
               taskHistory.map((update, index) => (
-                <Card key={index} className="border-l-4 border-l-blue-500">
+                <Card key={index} className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}`}>
                   <CardContent className="pt-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-medium text-gray-900">{update.full_name}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{update.full_name}</p>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                           {new Date(update.updated_at).toLocaleString()}
                         </p>
                       </div>
@@ -946,12 +956,12 @@ export const ProjectDetails = () => {
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm text-gray-600">Progress:</span>
-                      <span className="font-medium text-gray-900">{update.progress_percentage}%</span>
+                      <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Progress:</span>
+                      <span className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{update.progress_percentage}%</span>
                       <Progress value={update.progress_percentage} className="h-2 flex-1" />
                     </div>
                     {update.update_note && (
-                      <p className="text-sm text-gray-700 mt-2 p-2 bg-gray-50 rounded">
+                      <p className={`text-sm mt-2 p-2 rounded ${theme === 'dark' ? 'text-gray-300 bg-slate-600' : 'text-gray-700 bg-gray-50'}`}>
                         {update.update_note}
                       </p>
                     )}
@@ -971,27 +981,27 @@ export const ProjectDetails = () => {
           setTaskAssignments([]);
         }
       }}>
-        <DialogContent>
+        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
           <DialogHeader>
-            <DialogTitle>Task Assignments</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Task Assignments</DialogTitle>
+            <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
               Users assigned to: {selectedTask?.title}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             {taskAssignments.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No users assigned</p>
+              <p className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No users assigned</p>
             ) : (
               taskAssignments.map((assignment) => (
-                <Card key={assignment.id}>
+                <Card key={assignment.id} className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
                   <CardContent className="pt-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#0f5841] to-[#194f87] flex items-center justify-center text-white font-medium">
                         {assignment.full_name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{assignment.full_name}</p>
-                        <p className="text-sm text-gray-600">{assignment.email}</p>
+                        <p className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{assignment.full_name}</p>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{assignment.email}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -1009,10 +1019,10 @@ export const ProjectDetails = () => {
           setSelectedTask(null);
         }
       }}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className={`max-w-3xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
           <DialogHeader>
-            <DialogTitle>Task Subtasks</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Task Subtasks</DialogTitle>
+            <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
               View and manage subtasks for: {selectedTask?.title}
             </DialogDescription>
           </DialogHeader>
@@ -1020,7 +1030,7 @@ export const ProjectDetails = () => {
             {selectedTask ? (
               <TaskSubtasks taskId={selectedTask.id} />
             ) : (
-              <p className="text-center text-gray-500 py-8">No task selected</p>
+              <p className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No task selected</p>
             )}
           </div>
         </DialogContent>
