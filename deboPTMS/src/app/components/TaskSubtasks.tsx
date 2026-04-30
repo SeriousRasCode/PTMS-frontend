@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Plus, Edit2, Trash2, UserPlus, Calendar, TrendingUp } from "lucide-react";
+import { Plus, Edit2, Trash2, UserPlus, Calendar, TrendingUp, X } from "lucide-react";
 
 interface Subtask {
   id: number;
@@ -203,16 +203,34 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
     e.preventDefault();
     if (!selectedSubtask || !selectedUserId) return;
 
+    // Check if user is already assigned
+    const userIdNum = parseInt(selectedUserId);
+    const isAlreadyAssigned = subtaskAssignments.some(
+      (assignment) => assignment.id === userIdNum
+    );
+
+    if (isAlreadyAssigned) {
+      toast.error("This user is already assigned to this subtask");
+      return;
+    }
+
     try {
       await subtaskAssignmentAPI.assignSubtask({
         subtask_id: selectedSubtask.id,
-        user_id: parseInt(selectedUserId),
+        user_id: userIdNum,
       });
       toast.success("User assigned to subtask successfully");
       setAssignSubtaskDialogOpen(false);
       setSelectedUserId("");
+      // Refresh assignments
+      fetchSubtaskAssignments(selectedSubtask.id);
     } catch (error: any) {
-      toast.error(error.message || "Failed to assign user");
+      // Handle specific duplicate entry error
+      if (error.message?.includes("Duplicate entry") || error.message?.includes("already assigned")) {
+        toast.error("This user is already assigned to this subtask");
+      } else {
+        toast.error(error.message || "Failed to assign user");
+      }
     }
   };
 
@@ -237,6 +255,17 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
       setSubtaskAssignments(assignments);
     } catch (error: any) {
       toast.error("Failed to fetch assignments");
+    }
+  };
+
+  const handleRemoveSubtaskAssignment = async (subtaskId: number, userId: number) => {
+    try {
+      await subtaskAssignmentAPI.removeSubtaskAssignment(subtaskId, userId);
+      toast.success("User removed from subtask successfully");
+      // Refresh assignments
+      fetchSubtaskAssignments(subtaskId);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to remove user");
     }
   };
 
@@ -564,20 +593,56 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
               <DialogDescription>Select a user to assign to this subtask</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAssignSubtask} className="space-y-4">
+              {/* Show currently assigned users */}
+              {subtaskAssignments.length > 0 && (
+                <div>
+                  <Label className="text-sm mb-2 block">Currently Assigned</Label>
+                  <div className="space-y-1">
+                    {subtaskAssignments.map((assignment) => (
+                      <div
+                        key={`assignment-${assignment.id}`}
+                        className={`text-sm p-2 rounded flex items-center justify-between ${
+                          theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'
+                        }`}
+                      >
+                        <span>{assignment.full_name} ({assignment.email})</span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveSubtaskAssignment(selectedSubtask!.id, assignment.id)}
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          title="Remove user"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
-                <Label htmlFor="assign-user">Select User</Label>
+                <Label htmlFor="assign-user">Select User to Add</Label>
                 <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                   <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 text-white border-slate-600' : ''}>
                     <SelectValue placeholder="Choose a user" />
                   </SelectTrigger>
                   <SelectContent>
-                    {allUsers.map((u) => (
-                      <SelectItem key={u.id} value={String(u.id)}>
-                        {u.full_name} ({u.email})
-                      </SelectItem>
-                    ))}
+                    {allUsers
+                      .filter((u) => !subtaskAssignments.some((a) => a.id === u.id))
+                      .map((u) => (
+                        <SelectItem key={u.id} value={String(u.id)}>
+                          {u.full_name} ({u.email})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
+                {allUsers.filter((u) => !subtaskAssignments.some((a) => a.id === u.id)).length === 0 && (
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-2">
+                    All task members are already assigned to this subtask
+                  </p>
+                )}
               </div>
               <div className="flex justify-end gap-2">
                 <Button
@@ -593,7 +658,7 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
                 <Button
                   type="submit"
                   className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
-                  disabled={!selectedUserId}
+                  disabled={!selectedUserId || allUsers.filter((u) => !subtaskAssignments.some((a) => a.id === u.id)).length === 0}
                 >
                   Assign User
                 </Button>
