@@ -372,28 +372,105 @@ export const MemberDashboard = () => {
                     <Progress value={task.progress_percentage} className="h-2" />
                     
                     {task.status !== "completed" && (
-                      <div className="flex items-center gap-4 pt-2">
-                        <Slider
-                          value={[task.progress_percentage]}
-                          onValueChange={([value]) => {
-                            setTasks(tasks.map(t => 
-                              t.id === task.id ? { ...t, progress_percentage: value } : t
-                            ));
-                          }}
-                          max={100}
-                          step={5}
-                          className="flex-1"
-                          disabled={updatingTask === task.id}
-                        />
-                        <Button
-                          onClick={() => handleProgressUpdate(task.id, task.progress_percentage)}
-                          size="sm"
-                          className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
-                          disabled={updatingTask === task.id}
-                        >
-                          {updatingTask === task.id ? "Updating..." : "Update"}
-                        </Button>
-                      </div>
+                      <>
+                        <div className="flex items-center gap-4 pt-2">
+                          <Slider
+                            value={[task.progress_percentage]}
+                            onValueChange={([value]) => {
+                              setTasks(tasks.map(t => 
+                                t.id === task.id ? { ...t, progress_percentage: value } : t
+                              ));
+                            }}
+                            max={100}
+                            step={5}
+                            className="flex-1"
+                            disabled={updatingTask === task.id}
+                          />
+                          <Button
+                            onClick={() => handleProgressUpdate(task.id, task.progress_percentage)}
+                            size="sm"
+                            className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
+                            disabled={updatingTask === task.id}
+                          >
+                            {updatingTask === task.id ? "Updating..." : "Update"}
+                          </Button>
+                        </div>
+                        {/* Quick Progress Buttons */}
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setTasks(tasks.map(t => 
+                                t.id === task.id ? { ...t, progress_percentage: 25 } : t
+                              ));
+                              handleProgressUpdate(task.id, 25);
+                            }}
+                            disabled={updatingTask === task.id}
+                            className={theme === 'dark' 
+                              ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
+                              : 'hover:bg-gray-100'
+                            }
+                          >
+                            25%
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setTasks(tasks.map(t => 
+                                t.id === task.id ? { ...t, progress_percentage: 50 } : t
+                              ));
+                              handleProgressUpdate(task.id, 50);
+                            }}
+                            disabled={updatingTask === task.id}
+                            className={theme === 'dark' 
+                              ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
+                              : 'hover:bg-gray-100'
+                            }
+                          >
+                            50%
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setTasks(tasks.map(t => 
+                                t.id === task.id ? { ...t, progress_percentage: 75 } : t
+                              ));
+                              handleProgressUpdate(task.id, 75);
+                            }}
+                            disabled={updatingTask === task.id}
+                            className={theme === 'dark' 
+                              ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
+                              : 'hover:bg-gray-100'
+                            }
+                          >
+                            75%
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setTasks(tasks.map(t => 
+                                t.id === task.id ? { ...t, progress_percentage: 100 } : t
+                              ));
+                              handleProgressUpdate(task.id, 100);
+                            }}
+                            disabled={updatingTask === task.id}
+                            className={theme === 'dark' 
+                              ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
+                              : 'hover:bg-gray-100'
+                            }
+                          >
+                            100%
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
