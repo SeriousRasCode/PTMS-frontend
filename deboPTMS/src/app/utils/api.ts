@@ -62,7 +62,7 @@ const apiRequest = async (
 
     // Only log errors, not successful requests
     if (!response.ok) {
-      // Don't log 403 (permission) errors - these are expected for users without access
+      // Don't log 403 (permission) errors
       if (response.status !== 403) {
         console.error(`API ${options.method || "GET"} ${endpoint}:`, {
           status: response.status,
