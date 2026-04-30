@@ -41,6 +41,7 @@ interface Subtask {
 
 interface SubtaskAssignment {
   id: number;
+  user_id?: number; // The actual user ID for deletion
   full_name: string;
   email: string;
 }
@@ -206,7 +207,7 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
     // Check if user is already assigned
     const userIdNum = parseInt(selectedUserId);
     const isAlreadyAssigned = subtaskAssignments.some(
-      (assignment) => assignment.id === userIdNum
+      (assignment) => (assignment.user_id || assignment.id) === userIdNum
     );
 
     if (isAlreadyAssigned) {
@@ -252,19 +253,43 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
   const fetchSubtaskAssignments = async (subtaskId: number) => {
     try {
       const assignments = await subtaskAssignmentAPI.getSubtaskAssignments(subtaskId);
-      setSubtaskAssignments(assignments);
+      console.log("Fetched subtask assignments:", assignments);
+
+      // Handle different response formats
+      let assignmentsList = [];
+      if (Array.isArray(assignments)) {
+        assignmentsList = assignments;
+      } else if (assignments && Array.isArray(assignments.data)) {
+        assignmentsList = assignments.data;
+      } else if (assignments && Array.isArray(assignments.assignments)) {
+        assignmentsList = assignments.assignments;
+      }
+
+      console.log("Setting assignments:", assignmentsList);
+      setSubtaskAssignments(assignmentsList);
     } catch (error: any) {
+      console.error("Error fetching subtask assignments:", error);
       toast.error("Failed to fetch assignments");
     }
   };
 
   const handleRemoveSubtaskAssignment = async (subtaskId: number, userId: number) => {
     try {
-      await subtaskAssignmentAPI.removeSubtaskAssignment(subtaskId, userId);
+      console.log("=== REMOVE SUBTASK ASSIGNMENT ===");
+      console.log("Subtask ID:", subtaskId);
+      console.log("User ID to remove:", userId);
+      console.log("Current user role:", user?.role);
+      console.log("Current assignments before removal:", subtaskAssignments);
+
+      const result = await subtaskAssignmentAPI.removeSubtaskAssignment(subtaskId, userId);
+      console.log("API Remove result:", result);
+
+      // Always refresh and show success - the API would throw an error if it failed
       toast.success("User removed from subtask successfully");
-      // Refresh assignments
-      fetchSubtaskAssignments(subtaskId);
+      await fetchSubtaskAssignments(subtaskId);
+
     } catch (error: any) {
+      console.error("Error removing subtask assignment:", error);
       toast.error(error.message || "Failed to remove user");
     }
   };
@@ -610,7 +635,7 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
                           type="button"
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleRemoveSubtaskAssignment(selectedSubtask!.id, assignment.id)}
+                          onClick={() => handleRemoveSubtaskAssignment(selectedSubtask!.id, assignment.user_id || assignment.id)}
                           className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                           title="Remove user"
                         >
@@ -630,7 +655,7 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
                   </SelectTrigger>
                   <SelectContent>
                     {allUsers
-                      .filter((u) => !subtaskAssignments.some((a) => a.id === u.id))
+                      .filter((u) => !subtaskAssignments.some((a) => (a.user_id || a.id) === u.id))
                       .map((u) => (
                         <SelectItem key={u.id} value={String(u.id)}>
                           {u.full_name} ({u.email})
@@ -638,7 +663,7 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
                       ))}
                   </SelectContent>
                 </Select>
-                {allUsers.filter((u) => !subtaskAssignments.some((a) => a.id === u.id)).length === 0 && (
+                {allUsers.filter((u) => !subtaskAssignments.some((a) => (a.user_id || a.id) === u.id)).length === 0 && (
                   <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-2">
                     All task members are already assigned to this subtask
                   </p>
