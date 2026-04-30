@@ -18,7 +18,8 @@ interface Attachment {
   file_size: number;
   file_type: string;
   uploaded_by: number;
-  created_at: string;
+  uploaded_at: string;
+  created_at?: string; // Fallback for backwards compatibility
 }
 
 interface AttachmentManagerProps {
@@ -78,6 +79,15 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check if user is authenticated
+    if (!user || !user.id) {
+      toast.error("You must be logged in to upload files");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast.error("File size must be less than 10MB");
@@ -86,7 +96,7 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("uploaded_by", String(user?.id));
+    formData.append("uploaded_by", String(user.id));
 
     // Set the appropriate entity ID
     if (entityType === "project") {
@@ -99,9 +109,29 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
       formData.append("phase_id", String(entityId));
     }
 
+    // Debug: Log what's being sent
+    console.log("=== UPLOAD DEBUG INFO ===");
+    console.log("Entity Type:", entityType);
+    console.log("Entity ID:", entityId);
+    console.log("User ID:", user.id);
+    console.log("File name:", file.name);
+    console.log("File size:", file.size);
+    console.log("FormData contents:");
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
+    console.log("========================");
+
     try {
       setUploading(true);
-      await attachmentAPI.uploadAttachment(formData);
+      console.log("Uploading attachment with formData:", {
+        file: file.name,
+        uploaded_by: user.id,
+        entityType,
+        entityId
+      });
+      const response = await attachmentAPI.uploadAttachment(formData);
+      console.log("Upload response:", response);
       toast.success("File uploaded successfully");
       fetchAttachments();
       if (fileInputRef.current) {
@@ -109,8 +139,46 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
       }
     } catch (error: any) {
       console.error("Upload error details:", error);
-      const errorMessage = error.message || error.error || error.toString() || "Failed to upload file";
-      toast.error(errorMessage.trim() || "Failed to upload file - please check backend logs");
+      console.error("Full error object:", JSON.stringify(error, null, 2));
+      
+      // Better error message handling
+      let errorMessage = "Failed to upload file";
+      
+      if (error.message) {
+        errorMessage = error.message;
+        
+        // Check for specific error types
+        if (error.message.includes('ENETUNREACH')) {
+          errorMessage = "Cannot reach file storage service (Backblaze B2). This is a backend network issue. Please:\n1. Check your internet connection\n2. Verify B2 credentials in .env file\n3. Try starting the backend with: node --dns-result-order=ipv4first server.js\n4. Check backend console logs for detailed error";
+        } else if (error.message.includes('ECONNREFUSED')) {
+          errorMessage = "Backend cannot connect to file storage service. Please check backend logs and B2 configuration.";
+        } else if (error.message.includes('Server error')) {
+          errorMessage = "Backend server error occurred during upload. Common causes:\n• Backblaze B2 connection failed (check network/credentials)\n• Database error (verify phase_id column exists)\n• Missing environment variables\n\nPlease check the backend console logs for the actual error message.";
+        }
+      } else if (error.error) {
+        errorMessage = error.error;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (typeof error === 'object') {
+        errorMessage = JSON.stringify(error);
+      }
+      
+      // Clean up the error message
+      errorMessage = errorMessage.trim();
+      if (!errorMessage || errorMessage === '{}' || errorMessage === '[]' || errorMessage === '') {
+        errorMessage = "Upload failed with no error details from backend.\n\nTroubleshooting steps:\n1. Check backend console for error logs\n2. Verify Backblaze B2 credentials in .env\n3. Ensure 'phase_id' column exists in attachments table\n4. Check network connectivity to B2\n5. Try: node --dns-result-order=ipv4first server.js";
+      }
+      
+      toast.error(errorMessage, { duration: 10000 });
+      
+      // Also show in console
+      console.error("=== TROUBLESHOOTING INFO ===");
+      console.error("If you see this error, check your backend logs for:");
+      console.error("1. B2/Backblaze connection errors (ENETUNREACH, ECONNREFUSED)");
+      console.error("2. Database errors (phase_id column missing)");
+      console.error("3. Environment variable issues (.env file)");
+      console.error("4. Authentication/permission errors");
+      console.error("============================");
     } finally {
       setUploading(false);
     }
@@ -212,9 +280,13 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
                       </p>
                       <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                         {formatFileSize(attachment.file_size)} •{" "}
-                        {attachment.created_at && !isNaN(new Date(attachment.created_at).getTime())
-                          ? new Date(attachment.created_at).toLocaleDateString()
-                          : "Unknown date"}
+                        {(() => {
+                          const dateStr = attachment.uploaded_at || attachment.created_at;
+                          if (dateStr && !isNaN(new Date(dateStr).getTime())) {
+                            return new Date(dateStr).toLocaleDateString();
+                          }
+                          return "Unknown date";
+                        })()}
                       </p>
                     </div>
                   </div>
