@@ -289,6 +289,7 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
                   </div>
                   {isManager && (
                     <div className="flex gap-2">
+                      {/* Attachment button hidden - use project-level attachments instead
                       <Button
                         size="sm"
                         variant="ghost"
@@ -297,6 +298,7 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
                       >
                         <Paperclip className="h-4 w-4" />
                       </Button>
+                      */}
                       <Button
                         size="sm"
                         variant="ghost"
@@ -446,7 +448,7 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
         </Dialog>
       )}
 
-      {/* Phase Attachments Dialog */}
+      {/* Phase Attachments Dialog - Hidden, use project-level attachments instead
       {viewAttachmentsPhaseId && (
         <Dialog open={viewAttachmentsPhaseId !== null} onOpenChange={(open) => !open && setViewAttachmentsPhaseId(null)}>
           <DialogContent className={`max-w-4xl ${theme === 'dark' ? 'bg-slate-800 text-white' : ''}`}>
@@ -457,14 +459,15 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
               </DialogDescription>
             </DialogHeader>
             <div className="mt-4">
-              <AttachmentManager 
-                entityId={viewAttachmentsPhaseId} 
-                entityType="phase" 
+              <AttachmentManager
+                entityId={viewAttachmentsPhaseId}
+                entityType="phase"
               />
             </div>
           </DialogContent>
         </Dialog>
       )}
+      */}
     </div>
   );
 };
