@@ -308,11 +308,12 @@ export const ProjectDetails = () => {
     }
 
     try {
+      // Convert empty date strings to null for MySQL compatibility
       const taskData = {
         ...newTask,
         start_date: newTask.start_date || "",
         due_date: newTask.due_date || "",
-        phase_id: newTask.phase_id || undefined,
+        phase_id: newTask.phase_id || null,
       };
 
       console.log("Creating task with data:", taskData);
@@ -896,6 +897,69 @@ export const ProjectDetails = () => {
                 })}
                 className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
               />
+              {/* Quick Progress Buttons */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setProgressUpdate({
+                    ...progressUpdate,
+                    progress_percentage: 25
+                  })}
+                  className={theme === 'dark' 
+                    ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
+                    : 'hover:bg-gray-100'
+                  }
+                >
+                  25%
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setProgressUpdate({
+                    ...progressUpdate,
+                    progress_percentage: 50
+                  })}
+                  className={theme === 'dark' 
+                    ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
+                    : 'hover:bg-gray-100'
+                  }
+                >
+                  50%
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setProgressUpdate({
+                    ...progressUpdate,
+                    progress_percentage: 75
+                  })}
+                  className={theme === 'dark' 
+                    ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
+                    : 'hover:bg-gray-100'
+                  }
+                >
+                  75%
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setProgressUpdate({
+                    ...progressUpdate,
+                    progress_percentage: 100
+                  })}
+                  className={theme === 'dark' 
+                    ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
+                    : 'hover:bg-gray-100'
+                  }
+                >
+                  100%
+                </Button>
+              </div>
             </div>
             <div>
               <Label htmlFor="note" className={theme === 'dark' ? 'text-gray-200' : ''}>Update Note</Label>
