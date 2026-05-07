@@ -127,13 +127,13 @@ class RoleBasedHome extends StatelessWidget {
         HomeTarget.myTasks => 2,
       };
     } else if (isManager) {
-      // [0]=Home, [1]=Dashboard, [2]=Projects, [3]=My Tasks, [4]=Profile
+      // [0]=Home, [1]=Dashboard, [2]=Projects, [3]=Profile
       index = switch (target) {
         HomeTarget.home => 0,
         HomeTarget.dashboard => 1,
         HomeTarget.projects => 2,
-        HomeTarget.myTasks => 3,
-        HomeTarget.profile => 4,
+        HomeTarget.myTasks => 2,
+        HomeTarget.profile => 3,
         HomeTarget.adminUsers => 0,
         HomeTarget.adminTeams => 0,
       };
@@ -244,7 +244,7 @@ class _HomeWrapperState extends State<HomeWrapper> {
       ),
     ));
 
-    if (isManager || isMember) {
+    if (isMember) {
       tabs.add((
         screen: const MyTasksScreen(),
         item: const BottomNavigationBarItem(
@@ -288,19 +288,104 @@ class _HomeWrapperState extends State<HomeWrapper> {
 
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: screens),
-      bottomNavigationBar: BottomNavigationBar(
-        elevation: 6,
-        backgroundColor: AppColors.brandPrimary,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white70,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: items,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.brandPrimary,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(28),
+            topRight: Radius.circular(28),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 18,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(items.length, (index) {
+                final item = items[index];
+                final isActive = index == _currentIndex;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: _BlueNavItem(
+                    isActive: isActive,
+                    label: item.label ?? '',
+                    icon: item.icon,
+                    onTap: () {
+                      setState(() {
+                        _currentIndex = index;
+                      });
+                    },
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BlueNavItem extends StatelessWidget {
+  const _BlueNavItem({
+    required this.isActive,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final bool isActive;
+  final String label;
+  final Widget icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          decoration: const BoxDecoration(color: Colors.transparent),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? Colors.white.withValues(alpha: 0.18)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: IconTheme(
+                  data: const IconThemeData(size: 22, color: Colors.white),
+                  child: icon,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  color: isActive ? Colors.white : Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

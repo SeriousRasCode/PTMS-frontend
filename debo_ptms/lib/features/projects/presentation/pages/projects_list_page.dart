@@ -64,6 +64,17 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
     }
   }
 
+  Future<void> _openCreateProject() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => const CreateProjectScreen(),
+      ),
+    );
+    if (created == true) {
+      _load();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final role = context.select((UserAuthBloc b) => b.state.user?.role);
@@ -82,21 +93,6 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
             icon: const Icon(Icons.notifications_none_rounded),
             tooltip: 'Notifications',
           ),
-          if (canCreate)
-            IconButton(
-              onPressed: () async {
-                final created = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => const CreateProjectScreen(),
-                  ),
-                );
-                if (created == true) {
-                  _load();
-                }
-              },
-              icon: const Icon(Icons.add),
-              tooltip: 'Create project',
-            ),
         ],
       ),
       body: _loading
@@ -120,89 +116,99 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
             )
           : RefreshIndicator(
               onRefresh: _load,
-              child: _projects.isEmpty
-                  ? ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        if (_notice != null)
-                          Card(
-                            color: const Color(0xFFE8F2FF),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Text(
-                                _notice!,
-                                style: const TextStyle(
-                                  color: AppColors.brandPrimary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        const Card(
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Text('No projects found. Project Managers can create one using the + button.'),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (_notice != null) ...[
+                    Card(
+                      color: const Color(0xFFE8F2FF),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          _notice!,
+                          style: const TextStyle(
+                            color: AppColors.brandPrimary,
                           ),
                         ),
-                      ],
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _projects.length + (_notice != null ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (_notice != null && index == 0) {
-                          return Card(
-                            color: const Color(0xFFE8F2FF),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Text(
-                                _notice!,
-                                style: const TextStyle(
-                                  color: AppColors.brandPrimary,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-
-                        final adjustedIndex = index - (_notice != null ? 1 : 0);
-                        final p = _projects[adjustedIndex];
-                        final id = p.id;
-                        final name = p.name;
-                        final status = p.status;
-                        final teamName = p.teamName;
-
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            top: adjustedIndex == 0 && _notice == null ? 0 : 10,
-                          ),
-                          child: Card(
-                            child: ListTile(
-                              title: Text(name.isEmpty ? 'Project #$id' : name),
-                              subtitle: Text(
-                                [
-                                  if (teamName.isNotEmpty) 'Team: $teamName',
-                                  if (status.isNotEmpty) 'Status: $status',
-                                ].join(' • '),
-                              ),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => ProjectDetailsScreen(
-                                      projectId: id,
-                                      projectName: name.isEmpty
-                                          ? 'Project'
-                                          : name,
-                                      initialStatus: status,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                      },
+                      ),
                     ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (canCreate) ...[
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Create Project',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Start a new project and assign a team.',
+                              style: TextStyle(color: AppColors.textMuted),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _openCreateProject,
+                                icon: const Icon(Icons.add_circle_outline),
+                                label: const Text('Create Project'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (_projects.isEmpty)
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('No projects found yet.'),
+                      ),
+                    )
+                  else
+                    ..._projects.map((p) {
+                      final id = p.id;
+                      final name = p.name;
+                      final status = p.status;
+                      final teamName = p.teamName;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Card(
+                          child: ListTile(
+                            title: Text(name.isEmpty ? 'Project #$id' : name),
+                            subtitle: Text(
+                              [
+                                if (teamName.isNotEmpty) 'Team: $teamName',
+                                if (status.isNotEmpty) 'Status: $status',
+                              ].join(' • '),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ProjectDetailsScreen(
+                                    projectId: id,
+                                    projectName:
+                                        name.isEmpty ? 'Project' : name,
+                                    initialStatus: status,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    }),
+                ],
+              ),
             ),
     );
   }

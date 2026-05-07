@@ -48,7 +48,7 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
           () => ProjectEntity(
             id: id,
             name: _toProjectName(row['project_name'], id),
-            status: 'in_progress',
+            status: 'active',
             teamName: (row['team_name'] ?? '').toString(),
           ),
         );

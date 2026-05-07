@@ -60,12 +60,13 @@ class ProjectsRemoteDataSourceImpl implements ProjectsRemoteDataSource {
 
   @override
   Future<void> updateProject(UpdateProjectInput input) {
+    final status = _normalizeStatus(input.status);
     return _apiClient.put(
       '/api/update-projects/${input.projectId}',
       body: {
         'name': input.name,
         'description': input.description,
-        'status': input.status,
+        'status': status,
         'start_date': input.startDate == null ? null : _fmtDate(input.startDate!),
         'end_date': input.endDate == null ? null : _fmtDate(input.endDate!),
       },
@@ -91,11 +92,29 @@ class ProjectsRemoteDataSourceImpl implements ProjectsRemoteDataSource {
         body: {
           'name': input.projectName,
           'description': mergedDescription,
-          'status': input.projectStatus,
+          'status': _normalizeStatus(input.projectStatus),
           'start_date': null,
           'end_date': null,
         },
       );
+    }
+  }
+
+  String _normalizeStatus(String status) {
+    final raw = status.trim().toLowerCase();
+    switch (raw) {
+      case 'in_progress':
+      case 'in progress':
+        return 'active';
+      case 'not_started':
+      case 'not started':
+        return 'planned';
+      case 'on hold':
+      case 'on-hold':
+      case 'onhold':
+        return 'on_hold';
+      default:
+        return raw.isEmpty ? 'planned' : raw;
     }
   }
 

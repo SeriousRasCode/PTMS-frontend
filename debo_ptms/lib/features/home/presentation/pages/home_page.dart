@@ -65,17 +65,28 @@ class _HomeState extends State<Home> {
     required String title,
     required String subtitle,
   }) {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
             Container(
-              height: 42,
-              width: 42,
+              height: 46,
+              width: 46,
               decoration: BoxDecoration(
                 gradient: AppColors.brandGradient,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(icon, color: Colors.white),
             ),
@@ -85,8 +96,11 @@ class _HomeState extends State<Home> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 3),
-                  Text(subtitle),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: AppColors.textMuted),
+                  ),
                 ],
               ),
             ),
@@ -149,6 +163,13 @@ class _HomeState extends State<Home> {
               decoration: BoxDecoration(
                 gradient: AppColors.brandGradient,
                 borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.brandPrimary.withValues(alpha: 0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,21 +212,25 @@ class _HomeState extends State<Home> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 18),
+            Text(
+              'Overview',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             _quickCard(
               context: context,
               icon: Icons.badge,
               title: 'Profile Name',
               subtitle: name.isEmpty ? '-' : name,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             _quickCard(
               context: context,
               icon: Icons.group_work,
               title: 'Working Team',
               subtitle: _loadingTeams ? 'Loading team...' : activeTeam,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             _quickCard(
               context: context,
               icon: Icons.analytics_outlined,
@@ -216,6 +241,7 @@ class _HomeState extends State<Home> {
                   ? 'Project planning and delivery'
                   : 'Assigned task execution',
             ),
+            const SizedBox(height: 6),
           ],
         ),
       ),

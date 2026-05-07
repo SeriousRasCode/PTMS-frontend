@@ -220,7 +220,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   Widget build(BuildContext context) {
     final role = context.select((UserAuthBloc b) => b.state.user?.role);
     final canUpdateProgress = AppRoles.isMember(role);
-    final canAssign = AppRoles.isAdmin(role) || AppRoles.isManager(role);
+    final canAssign = AppRoles.isManager(role);
 
     final status = _progress == 0
         ? 'not_started'

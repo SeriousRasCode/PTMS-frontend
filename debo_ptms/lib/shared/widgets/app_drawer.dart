@@ -66,7 +66,7 @@ class AppDrawer extends StatelessWidget {
     final isAdmin = roleLower.contains('admin');
     final isManager = roleLower.contains('manager');
     final isMember = roleLower.contains('member');
-    final canViewTasks = isManager || isMember;
+    final canViewTasks = isMember;
 
     return Drawer(
       child: ListView(

@@ -20,7 +20,7 @@ class ProjectDetailsScreen extends StatefulWidget {
     super.key,
     required this.projectId,
     required this.projectName,
-    this.initialStatus = 'in_progress',
+    this.initialStatus = 'planned',
   });
 
   final int projectId;
@@ -37,14 +37,14 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   bool _submittingDocumentation = false;
   String? _error;
   List<ProjectTaskEntity> _tasks = const [];
-  String _projectStatus = 'in_progress';
+  String _projectStatus = 'planned';
   final _projectDescription = TextEditingController();
   final _documentationTitle = TextEditingController();
   final _documentationBody = TextEditingController();
 
   static const List<String> _projectStatuses = [
-    'not_started',
-    'in_progress',
+    'planned',
+    'active',
     'completed',
     'on_hold',
   ];
@@ -53,7 +53,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   void initState() {
     super.initState();
     final status = widget.initialStatus.trim().toLowerCase();
-    _projectStatus = _projectStatuses.contains(status) ? status : 'in_progress';
+    _projectStatus = _projectStatuses.contains(status) ? status : 'planned';
     _load();
   }
 
@@ -83,6 +83,17 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       if (mounted) {
         setState(() => _loading = false);
       }
+    }
+  }
+
+  Future<void> _openCreateTask() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => CreateTaskScreen(projectId: widget.projectId),
+      ),
+    );
+    if (created == true) {
+      _load();
     }
   }
 
@@ -184,24 +195,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(gradient: AppColors.brandGradient),
         ),
-        actions: [
-          if (canCreateTask)
-            IconButton(
-              onPressed: () async {
-                final created = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        CreateTaskScreen(projectId: widget.projectId),
-                  ),
-                );
-                if (created == true) {
-                  _load();
-                }
-              },
-              icon: const Icon(Icons.add_task),
-              tooltip: 'Create task',
-            ),
-        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -331,7 +324,38 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         ),
                       ),
                     ),
-                  if (canCreateTask) const SizedBox(height: 12),
+                  if (canCreateTask) ...[
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Create Task',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Add a new task for this project.',
+                              style: TextStyle(color: AppColors.textMuted),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _openCreateTask,
+                                icon: const Icon(Icons.add_task),
+                                label: const Text('Create Task'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   const Text(
                     'Tasks',
                     style: TextStyle(fontWeight: FontWeight.bold),

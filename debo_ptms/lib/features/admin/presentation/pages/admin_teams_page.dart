@@ -137,13 +137,18 @@ class _AdminTeamsScreenState extends State<AdminTeamsScreen> {
                 children: [
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
                             'Create Team',
                             style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Create a new team for project assignments.',
+                            style: TextStyle(color: AppColors.textMuted),
                           ),
                           const SizedBox(height: 10),
                           TextField(
@@ -155,9 +160,10 @@ class _AdminTeamsScreenState extends State<AdminTeamsScreen> {
                           const SizedBox(height: 10),
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
+                            child: ElevatedButton.icon(
                               onPressed: _createTeam,
-                              child: const Text('Create Team'),
+                              icon: const Icon(Icons.group_add),
+                              label: const Text('Create Team'),
                             ),
                           ),
                         ],
