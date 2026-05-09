@@ -98,9 +98,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
     final teamId = _selectedTeamId;
     if (teamId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a team.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a team.')));
       return;
     }
 
@@ -165,13 +165,17 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   const LinearProgressIndicator(minHeight: 2)
                 else
                   DropdownButtonFormField<int>(
-                    value: _selectedTeamId,
+                    initialValue: _selectedTeamId,
                     decoration: const InputDecoration(labelText: 'Team'),
                     items: _teams
                         .map(
                           (team) => DropdownMenuItem<int>(
                             value: team.id,
-                            child: Text(team.name.isEmpty ? 'Team #${team.id}' : team.name),
+                            child: Text(
+                              team.name.isEmpty
+                                  ? 'Team #${team.id}'
+                                  : team.name,
+                            ),
                           ),
                         )
                         .toList(growable: false),

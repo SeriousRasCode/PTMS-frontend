@@ -8,12 +8,13 @@ import 'package:debo_ptms/features/projects/domain/usecases/get_projects_usecase
 import 'package:debo_ptms/features/user/presentation/bloc/user_auth_bloc.dart';
 import 'package:debo_ptms/features/projects/presentation/pages/project_details_page.dart';
 import 'package:debo_ptms/features/projects/presentation/pages/create_project_page.dart';
-import 'package:debo_ptms/shared/widgets/app_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProjectsListScreen extends StatefulWidget {
-  const ProjectsListScreen({super.key});
+  const ProjectsListScreen({super.key, this.onOpenDrawer});
+
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<ProjectsListScreen> createState() => _ProjectsListScreenState();
@@ -81,8 +82,20 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
     final canCreate = AppRoles.isManager(role);
 
     return Scaffold(
-      drawer: const AppDrawer(),
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            tooltip: 'Menu',
+            onPressed: () {
+              if (widget.onOpenDrawer != null) {
+                widget.onOpenDrawer!();
+              } else {
+                Scaffold.maybeOf(context)?.openDrawer();
+              }
+            },
+          ),
+        ),
         title: const Text('Projects'),
         flexibleSpace: Container(
           decoration: const BoxDecoration(gradient: AppColors.brandGradient),

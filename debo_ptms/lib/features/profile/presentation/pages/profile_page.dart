@@ -6,12 +6,12 @@ import 'package:debo_ptms/core/constants/role_constants.dart';
 import 'package:debo_ptms/features/user/presentation/bloc/user_auth_bloc.dart';
 import 'package:debo_ptms/features/user/presentation/bloc/user_auth_event.dart';
 import 'package:debo_ptms/features/user/presentation/bloc/user_auth_state.dart';
-import 'package:debo_ptms/shared/widgets/app_drawer.dart';
 
 class Profile extends StatefulWidget {
-  const Profile({super.key, required this.title});
+  const Profile({super.key, required this.title, this.onOpenDrawer});
 
   final String title;
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -118,9 +118,21 @@ class _ProfileState extends State<Profile> {
         final user = state.user;
 
         return Scaffold(
-          drawer: const AppDrawer(),
           appBar: AppBar(
             systemOverlayStyle: SystemUiOverlayStyle.light,
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu_rounded),
+                tooltip: 'Menu',
+                onPressed: () {
+                  if (widget.onOpenDrawer != null) {
+                    widget.onOpenDrawer!();
+                  } else {
+                    Scaffold.maybeOf(context)?.openDrawer();
+                  }
+                },
+              ),
+            ),
             title: Text(
               widget.title,
               textAlign: TextAlign.center,

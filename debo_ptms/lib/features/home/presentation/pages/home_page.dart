@@ -9,12 +9,12 @@ import 'package:debo_ptms/features/home/data/repositories/home_repository_impl.d
 import 'package:debo_ptms/features/home/domain/entities/home_team_entity.dart';
 import 'package:debo_ptms/features/home/domain/usecases/get_my_teams_usecase.dart';
 import 'package:debo_ptms/features/user/presentation/bloc/user_auth_bloc.dart';
-import 'package:debo_ptms/shared/widgets/app_drawer.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key, required this.title});
+  const Home({super.key, required this.title, this.onOpenDrawer});
 
   final String title;
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<Home> createState() => _HomeState();
@@ -130,9 +130,21 @@ class _HomeState extends State<Home> {
               : 'No team assigned yet');
 
     return Scaffold(
-      drawer: const AppDrawer(),
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle.light,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            tooltip: 'Menu',
+            onPressed: () {
+              if (widget.onOpenDrawer != null) {
+                widget.onOpenDrawer!();
+              } else {
+                Scaffold.maybeOf(context)?.openDrawer();
+              }
+            },
+          ),
+        ),
         title: Text(
           widget.title,
           textAlign: TextAlign.center,

@@ -6,12 +6,13 @@ import 'package:debo_ptms/features/dashboard/data/repositories/dashboard_reposit
 import 'package:debo_ptms/features/dashboard/domain/entities/dashboard_summary_entity.dart';
 import 'package:debo_ptms/features/dashboard/domain/usecases/get_dashboard_summary_usecase.dart';
 import 'package:debo_ptms/features/user/presentation/bloc/user_auth_bloc.dart';
-import 'package:debo_ptms/shared/widgets/app_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  const DashboardScreen({super.key, this.onOpenDrawer});
+
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -184,15 +185,117 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _adminActions(BuildContext context) {
+    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        );
+
+    Widget actionButton({
+      required IconData icon,
+      required String label,
+      required VoidCallback onTap,
+      required List<Color> colors,
+    }) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: colors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Admin Tools', style: titleStyle),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: actionButton(
+                icon: Icons.manage_accounts,
+                label: 'Users',
+                onTap: () => Navigator.pushNamed(context, '/admin/users'),
+                colors: const [Color(0xFF4A00E0), Color(0xFF8E2DE2)],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: actionButton(
+                icon: Icons.groups,
+                label: 'Teams',
+                onTap: () => Navigator.pushNamed(context, '/admin/teams'),
+                colors: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final role = context.select((UserAuthBloc b) => b.state.user?.role);
     final isAdmin = AppRoles.isAdmin(role);
 
     return Scaffold(
-      drawer: const AppDrawer(),
       appBar: AppBar(
         title: Text(isAdmin ? 'Admin Dashboard' : 'Manager Dashboard'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            tooltip: 'Menu',
+            onPressed: () {
+              if (widget.onOpenDrawer != null) {
+                widget.onOpenDrawer!();
+              } else {
+                Scaffold.maybeOf(context)?.openDrawer();
+              }
+            },
+          ),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(gradient: AppColors.brandGradient),
         ),
@@ -235,6 +338,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       summary: _summary!,
                     ),
                     const SizedBox(height: 14),
+                    if (isAdmin) ...[
+                      _adminActions(context),
+                      const SizedBox(height: 14),
+                    ],
                     if (isAdmin) ...[
                       _metricGrid([
                         _metricTile(

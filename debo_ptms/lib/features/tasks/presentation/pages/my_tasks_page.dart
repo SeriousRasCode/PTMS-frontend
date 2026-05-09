@@ -5,12 +5,13 @@ import 'package:debo_ptms/features/tasks/data/repositories/tasks_repository_impl
 import 'package:debo_ptms/features/tasks/domain/entities/task_entity.dart';
 import 'package:debo_ptms/features/tasks/domain/usecases/get_my_tasks_usecase.dart';
 import 'package:debo_ptms/features/tasks/presentation/pages/task_details_page.dart';
-import 'package:debo_ptms/shared/widgets/app_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MyTasksScreen extends StatefulWidget {
-  const MyTasksScreen({super.key});
+  const MyTasksScreen({super.key, this.onOpenDrawer});
+
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<MyTasksScreen> createState() => _MyTasksScreenState();
@@ -58,8 +59,20 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const AppDrawer(),
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            tooltip: 'Menu',
+            onPressed: () {
+              if (widget.onOpenDrawer != null) {
+                widget.onOpenDrawer!();
+              } else {
+                Scaffold.maybeOf(context)?.openDrawer();
+              }
+            },
+          ),
+        ),
         title: const Text('My Tasks'),
         flexibleSpace: Container(
           decoration: const BoxDecoration(gradient: AppColors.brandGradient),

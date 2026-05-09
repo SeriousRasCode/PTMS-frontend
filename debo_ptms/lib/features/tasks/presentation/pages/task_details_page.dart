@@ -111,7 +111,9 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
         final teamId = int.tryParse((team['id'] ?? '').toString());
         if (teamId == null) continue;
 
-        final membersResponse = await apiClient.get('/api/teams/$teamId/members');
+        final membersResponse = await apiClient.get(
+          '/api/teams/$teamId/members',
+        );
         final membersPayload = membersResponse['data'];
         if (membersPayload is! List) continue;
 
@@ -389,9 +391,10 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                       const SizedBox(height: 10),
                       if (_loadingAssignableUsers)
                         const LinearProgressIndicator(minHeight: 2),
-                      if (!_loadingAssignableUsers && _assignableUsers.isNotEmpty)
+                      if (!_loadingAssignableUsers &&
+                          _assignableUsers.isNotEmpty)
                         DropdownButtonFormField<int>(
-                          value: _selectedAssigneeId,
+                          initialValue: _selectedAssigneeId,
                           decoration: const InputDecoration(
                             labelText: 'Assign to team member',
                           ),
@@ -414,7 +417,8 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                                   });
                                 },
                         ),
-                      if (!_loadingAssignableUsers && _assignableUsers.isNotEmpty)
+                      if (!_loadingAssignableUsers &&
+                          _assignableUsers.isNotEmpty)
                         const SizedBox(height: 10),
                       TextField(
                         controller: _assignUserId,

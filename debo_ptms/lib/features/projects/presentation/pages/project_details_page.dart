@@ -164,9 +164,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       _documentationTitle.clear();
       _documentationBody.clear();
       FocusScope.of(context).unfocus();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Documentation submitted.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Documentation submitted.')));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -233,7 +233,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                             ),
                             const SizedBox(height: 10),
                             DropdownButtonFormField<String>(
-                              value: _projectStatus,
+                              initialValue: _projectStatus,
                               decoration: const InputDecoration(
                                 labelText: 'Project status',
                               ),
@@ -265,7 +265,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _savingProject ? null : _updateProject,
+                                onPressed: _savingProject
+                                    ? null
+                                    : _updateProject,
                                 child: _savingProject
                                     ? const SizedBox(
                                         height: 18,
@@ -370,7 +372,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           children: [
                             Text(
                               'Project Progress: $averageProgress%',
-                              style: const TextStyle(fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             ClipRRect(
@@ -385,7 +389,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                             const SizedBox(height: 8),
                             Text(
                               'Completed Tasks: $completedCount/${_tasks.length}',
-                              style: const TextStyle(color: AppColors.textMuted),
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                              ),
                             ),
                           ],
                         ),
@@ -416,7 +422,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                               children: [
                                 ListTile(
                                   contentPadding: EdgeInsets.zero,
-                                  title: Text(title.isEmpty ? 'Task #$id' : title),
+                                  title: Text(
+                                    title.isEmpty ? 'Task #$id' : title,
+                                  ),
                                   subtitle: Text(
                                     'Status: $status • Progress: $progress%',
                                   ),

@@ -25,6 +25,7 @@ import 'package:debo_ptms/features/projects/presentation/pages/projects_list_pag
 import 'package:debo_ptms/features/auth/presentation/pages/login_page.dart';
 import 'package:debo_ptms/features/auth/presentation/pages/registered_page.dart';
 import 'package:debo_ptms/features/auth/presentation/pages/signup_page.dart';
+import 'package:debo_ptms/shared/widgets/app_drawer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,10 +78,8 @@ class MyApp extends StatelessWidget {
               const RoleBasedHome(target: HomeTarget.myTasks),
           '/profile': (context) =>
               const RoleBasedHome(target: HomeTarget.profile),
-          '/admin/users': (context) =>
-              const RoleBasedHome(target: HomeTarget.adminUsers),
-          '/admin/teams': (context) =>
-              const RoleBasedHome(target: HomeTarget.adminTeams),
+            '/admin/users': (context) => const AdminUsersScreen(),
+            '/admin/teams': (context) => const AdminTeamsScreen(),
           // Route still exists, but always delegates to AuthGate so we don't
           // get stuck on a static Login screen when auth state changes.
           '/login': (context) => const AuthGate(),
@@ -98,8 +97,6 @@ enum HomeTarget {
   projects,
   myTasks,
   profile,
-  adminUsers,
-  adminTeams,
 }
 
 class RoleBasedHome extends StatelessWidget {
@@ -116,14 +113,12 @@ class RoleBasedHome extends StatelessWidget {
 
     int index;
     if (isAdmin) {
-      // [0]=Home, [1]=Dashboard, [2]=Projects, [3]=Users, [4]=Teams, [5]=Profile
+      // [0]=Home, [1]=Dashboard, [2]=Projects, [3]=Profile
       index = switch (target) {
         HomeTarget.home => 0,
         HomeTarget.dashboard => 1,
         HomeTarget.projects => 2,
-        HomeTarget.adminUsers => 3,
-        HomeTarget.adminTeams => 4,
-        HomeTarget.profile => 5,
+        HomeTarget.profile => 3,
         HomeTarget.myTasks => 2,
       };
     } else if (isManager) {
@@ -134,8 +129,6 @@ class RoleBasedHome extends StatelessWidget {
         HomeTarget.projects => 2,
         HomeTarget.myTasks => 2,
         HomeTarget.profile => 3,
-        HomeTarget.adminUsers => 0,
-        HomeTarget.adminTeams => 0,
       };
     } else if (isMember) {
       // [0]=Home, [1]=Projects, [2]=My Tasks, [3]=Profile
@@ -145,8 +138,6 @@ class RoleBasedHome extends StatelessWidget {
         HomeTarget.projects => 1,
         HomeTarget.myTasks => 2,
         HomeTarget.profile => 3,
-        HomeTarget.adminUsers => 0,
-        HomeTarget.adminTeams => 0,
       };
     } else {
       index = 0;
@@ -192,6 +183,7 @@ class HomeWrapper extends StatefulWidget {
 
 class _HomeWrapperState extends State<HomeWrapper> {
   late int _currentIndex;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -215,11 +207,12 @@ class _HomeWrapperState extends State<HomeWrapper> {
     final isAdmin = AppRoles.isAdmin(role);
     final isManager = AppRoles.isManager(role);
     final isMember = AppRoles.isMember(role);
+    final openDrawer = () => _scaffoldKey.currentState?.openDrawer();
 
     final tabs = <({Widget screen, BottomNavigationBarItem item})>[];
 
     tabs.add((
-      screen: const Home(title: 'Home'),
+      screen: Home(title: 'Home', onOpenDrawer: openDrawer),
       item: const BottomNavigationBarItem(
         icon: Icon(Icons.home_rounded),
         label: 'Home',
@@ -228,7 +221,7 @@ class _HomeWrapperState extends State<HomeWrapper> {
 
     if (isAdmin || isManager) {
       tabs.add((
-        screen: const DashboardScreen(),
+        screen: DashboardScreen(onOpenDrawer: openDrawer),
         item: const BottomNavigationBarItem(
           icon: Icon(Icons.dashboard),
           label: 'Dashboard',
@@ -237,7 +230,7 @@ class _HomeWrapperState extends State<HomeWrapper> {
     }
 
     tabs.add((
-      screen: const ProjectsListScreen(),
+      screen: ProjectsListScreen(onOpenDrawer: openDrawer),
       item: const BottomNavigationBarItem(
         icon: Icon(Icons.work),
         label: 'Projects',
@@ -246,7 +239,7 @@ class _HomeWrapperState extends State<HomeWrapper> {
 
     if (isMember) {
       tabs.add((
-        screen: const MyTasksScreen(),
+        screen: MyTasksScreen(onOpenDrawer: openDrawer),
         item: const BottomNavigationBarItem(
           icon: Icon(Icons.task_alt),
           label: 'My Tasks',
@@ -254,25 +247,8 @@ class _HomeWrapperState extends State<HomeWrapper> {
       ));
     }
 
-    if (isAdmin) {
-      tabs.add((
-        screen: const AdminUsersScreen(),
-        item: const BottomNavigationBarItem(
-          icon: Icon(Icons.manage_accounts),
-          label: 'Users',
-        ),
-      ));
-      tabs.add((
-        screen: const AdminTeamsScreen(),
-        item: const BottomNavigationBarItem(
-          icon: Icon(Icons.groups),
-          label: 'Teams',
-        ),
-      ));
-    }
-
     tabs.add((
-      screen: const Profile(title: 'Profile'),
+      screen: Profile(title: 'Profile', onOpenDrawer: openDrawer),
       item: const BottomNavigationBarItem(
         icon: Icon(Icons.person),
         label: 'Profile',
@@ -287,6 +263,8 @@ class _HomeWrapperState extends State<HomeWrapper> {
     }
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: const AppDrawer(),
       body: IndexedStack(index: _currentIndex, children: screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -308,21 +286,25 @@ class _HomeWrapperState extends State<HomeWrapper> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(items.length, (index) {
                 final item = items[index];
                 final isActive = index == _currentIndex;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: _BlueNavItem(
-                    isActive: isActive,
-                    label: item.label ?? '',
-                    icon: item.icon,
-                    onTap: () {
-                      setState(() {
-                        _currentIndex = index;
-                      });
-                    },
+                return Expanded(
+                  flex: isActive ? 2 : 1,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isActive ? 6 : 2,
+                    ),
+                    child: _BlueNavItem(
+                      isActive: isActive,
+                      label: item.label ?? '',
+                      icon: item.icon,
+                      onTap: () {
+                        setState(() {
+                          _currentIndex = index;
+                        });
+                      },
+                    ),
                   ),
                 );
               }),
@@ -362,25 +344,50 @@ class _BlueNavItem extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isActive ? 12 : 6,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isActive
                       ? Colors.white.withValues(alpha: 0.18)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: IconTheme(
-                  data: const IconThemeData(size: 22, color: Colors.white),
-                  child: icon,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconTheme(
+                      data: const IconThemeData(size: 22, color: Colors.white),
+                      child: icon,
+                    ),
+                    if (isActive) ...[
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                  color: isActive ? Colors.white : Colors.white70,
+              const SizedBox(height: 6),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                height: 3,
+                width: isActive ? 24 : 0,
+                decoration: BoxDecoration(
+                  color: isActive ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ],

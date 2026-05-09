@@ -103,6 +103,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back',
+          onPressed: () => Navigator.maybePop(context),
+        ),
         title: const Text('User Management'),
         flexibleSpace: Container(
           decoration: const BoxDecoration(gradient: AppColors.brandGradient),

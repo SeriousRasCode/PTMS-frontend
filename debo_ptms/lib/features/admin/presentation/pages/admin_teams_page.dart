@@ -99,6 +99,11 @@ class _AdminTeamsScreenState extends State<AdminTeamsScreen> {
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back',
+          onPressed: () => Navigator.maybePop(context),
+        ),
         title: const Text('Team Management'),
         flexibleSpace: Container(
           decoration: const BoxDecoration(gradient: AppColors.brandGradient),
