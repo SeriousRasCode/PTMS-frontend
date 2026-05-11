@@ -138,7 +138,6 @@ export const ProjectDetails = () => {
 
   const fetchProjectDetails = async () => {
     try {
-      console.log("Fetching project details for project:", projectId);
       
       // Since backend doesn't have GET /projects/:id, fetch all projects and filter
       let response;
@@ -148,7 +147,6 @@ export const ProjectDetails = () => {
         response = await projectAPI.getMyProjects();
       }
       
-      console.log("Projects response:", response);
       
       // Extract projects array from response
       let projectsList = [];
@@ -165,7 +163,6 @@ export const ProjectDetails = () => {
       
       if (foundProject) {
         setProject(foundProject);
-        console.log("Found project:", foundProject);
       } else {
         console.warn("Project not found with ID:", projectId);
         toast.error("Project not found");
@@ -186,7 +183,6 @@ export const ProjectDetails = () => {
     try {
       setLoading(true);
       const response = await taskAPI.getTasksByProject(Number(projectId));
-      console.log("Tasks response:", response);
       
       // Backend returns array directly
       if (Array.isArray(response)) {
@@ -219,13 +215,10 @@ export const ProjectDetails = () => {
   
   const fetchManagerTeamMembers = async () => {
     try {
-      console.log("=== FETCHING MANAGER TEAM MEMBERS ===");
       setLoadingMembers(true);
       
       // Step 1: Get manager's teams
-      console.log("Step 1: Fetching manager's teams via /teams/my-teams");
       const teamsResponse = await teamAPI.getMyTeams();
-      console.log("My teams response:", teamsResponse);
       
       let teams = [];
       if (teamsResponse && teamsResponse.data && Array.isArray(teamsResponse.data)) {
@@ -236,7 +229,6 @@ export const ProjectDetails = () => {
         teams = teamsResponse.teams;
       }
       
-      console.log("Found teams:", teams);
       
       if (teams.length === 0) {
         console.warn("Manager has no teams");
@@ -245,7 +237,6 @@ export const ProjectDetails = () => {
       }
       
       // Step 2: Get members from all teams
-      console.log("Step 2: Fetching members from all teams");
       const allMembersPromises = teams.map((team: any) => 
         teamAPI.getTeamMembers(team.id).catch(err => {
           // Silently handle permission errors
@@ -259,7 +250,6 @@ export const ProjectDetails = () => {
       );
       
       const membersResults = await Promise.all(allMembersPromises);
-      console.log("Members results:", membersResults);
       
       // Step 3: Combine and deduplicate members
       const allMembers: User[] = [];
@@ -283,9 +273,6 @@ export const ProjectDetails = () => {
         });
       });
       
-      console.log("=== FINAL TEAM MEMBERS ===");
-      console.log("Total unique members:", allMembers.length);
-      console.log("Members:", allMembers);
       
       setAllUsers(allMembers);
       
@@ -316,12 +303,8 @@ export const ProjectDetails = () => {
         phase_id: newTask.phase_id || null,
       };
 
-      console.log("Creating task with data:", taskData);
-      console.log("Project ID:", projectId);
-      console.log("Task data stringified:", JSON.stringify(taskData, null, 2));
 
       const response = await taskAPI.createTask(Number(projectId), taskData);
-      console.log("Task creation response:", response);
       toast.success("Task created successfully!");
 
       setNewTask({
@@ -404,7 +387,6 @@ export const ProjectDetails = () => {
     try {
       setSelectedTask(task);
       const history = await taskAPI.getTaskHistory(task.id);
-      console.log("Task history:", history);
       
       if (Array.isArray(history)) {
         setTaskHistory(history);
@@ -431,7 +413,6 @@ export const ProjectDetails = () => {
     try {
       setSelectedTask(task);
       const assignments = await taskAPI.getAssignments(task.id);
-      console.log("Task assignments:", assignments);
       
       if (Array.isArray(assignments)) {
         setTaskAssignments(assignments);
@@ -483,10 +464,6 @@ export const ProjectDetails = () => {
   const usersForAssignment = (user?.role === "Admin" || user?.role === "Manager") ? allUsers : projectMembers;
   
   // Debug logging
-  console.log("Current user role:", user?.role);
-  console.log("Users for assignment:", usersForAssignment);
-  console.log("All users (admin/manager):", allUsers);
-  console.log("Project members (fallback):", projectMembers);
   
   if (loading) {
     return (
