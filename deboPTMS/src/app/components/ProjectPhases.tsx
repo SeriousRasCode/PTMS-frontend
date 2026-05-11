@@ -24,8 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Plus, Edit2, Trash2, Calendar, Paperclip } from "lucide-react";
-import { AttachmentManager } from "./AttachmentManager";
+import { Plus, Edit2, Trash2, Calendar } from "lucide-react";
 
 interface Phase {
   id: number;
@@ -51,7 +50,6 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
   const [createPhaseDialogOpen, setCreatePhaseDialogOpen] = useState(false);
   const [editPhaseDialogOpen, setEditPhaseDialogOpen] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
-  const [viewAttachmentsPhaseId, setViewAttachmentsPhaseId] = useState<number | null>(null);
 
   const [newPhase, setNewPhase] = useState({
     name: "",
@@ -70,13 +68,6 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
     try {
       setLoading(true);
       const data = await phaseAPI.getProjectPhases(projectId);
-      console.log("Fetched phases from backend:", data);
-      // Log all status values to understand what the backend uses
-      if (data && Array.isArray(data)) {
-        data.forEach((phase: Phase) => {
-          console.log(`Phase "${phase.name}" has status:`, phase.status);
-        });
-      }
       setPhases(data);
     } catch (error: any) {
       // Only show error if it's not a server error (backend issue)
@@ -121,9 +112,6 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
         end_date: selectedPhase.end_date.split('T')[0], // Extract date only
         status: selectedPhase.status || "planned",
       };
-      
-      console.log("Updating phase with data:", updateData);
-      
       await phaseAPI.updatePhase(selectedPhase.id, updateData);
       toast.success("Phase updated successfully");
       setEditPhaseDialogOpen(false);
@@ -289,16 +277,6 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
                   </div>
                   {isManager && (
                     <div className="flex gap-2">
-                      {/* Attachment button hidden - use project-level attachments instead
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setViewAttachmentsPhaseId(phase.id)}
-                        title="View attachments"
-                      >
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                      */}
                       <Button
                         size="sm"
                         variant="ghost"
@@ -447,27 +425,6 @@ export const ProjectPhases = ({ projectId }: ProjectPhasesProps) => {
           </DialogContent>
         </Dialog>
       )}
-
-      {/* Phase Attachments Dialog - Hidden, use project-level attachments instead
-      {viewAttachmentsPhaseId && (
-        <Dialog open={viewAttachmentsPhaseId !== null} onOpenChange={(open) => !open && setViewAttachmentsPhaseId(null)}>
-          <DialogContent className={`max-w-4xl ${theme === 'dark' ? 'bg-slate-800 text-white' : ''}`}>
-            <DialogHeader>
-              <DialogTitle>Phase Attachments</DialogTitle>
-              <DialogDescription>
-                Manage files and documents for this phase
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-4">
-              <AttachmentManager
-                entityId={viewAttachmentsPhaseId}
-                entityType="phase"
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-      */}
     </div>
   );
 };
