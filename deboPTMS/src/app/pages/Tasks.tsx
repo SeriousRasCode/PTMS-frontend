@@ -59,11 +59,9 @@ export const Tasks = () => {
     try {
       setLoading(true);
       
-      console.log("=== FETCHING MY TASKS (via Projects like ProjectDetails) ===");
       
       // Get all projects first
       const projectsResponse = await projectAPI.getMyProjects();
-      console.log("Projects response:", projectsResponse);
       
       // Extract projects array (same logic as ProjectDetails)
       let projectsList = [];
@@ -75,7 +73,6 @@ export const Tasks = () => {
         projectsList = projectsResponse;
       }
       
-      console.log(`Found ${projectsList.length} projects`);
       
       if (projectsList.length === 0) {
         console.warn("No projects found");
@@ -87,7 +84,6 @@ export const Tasks = () => {
       const allTasksPromises = projectsList.map(async (project: any) => {
         try {
           const response = await taskAPI.getTasksByProject(project.id);
-          console.log(`Tasks response for project ${project.id}:`, response);
           
           // EXACT same handling as ProjectDetails line 179-185
           let projectTasks = [];
@@ -114,10 +110,7 @@ export const Tasks = () => {
       const allTasksArrays = await Promise.all(allTasksPromises);
       const allTasks = allTasksArrays.flat();
       
-      console.log("=== TASKS LOADED ===");
-      console.log("Total tasks:", allTasks.length);
       if (allTasks.length > 0) {
-        console.log("Sample task:", allTasks[0]);
       }
       
       setTasks(allTasks);
@@ -208,7 +201,6 @@ export const Tasks = () => {
     try {
       setSelectedTask(task);
       const history = await taskAPI.getTaskHistory(task.id);
-      console.log("Task history:", history);
       
       if (Array.isArray(history)) {
         setTaskHistory(history);
