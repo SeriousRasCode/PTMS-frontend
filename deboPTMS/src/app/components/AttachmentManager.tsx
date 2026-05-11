@@ -44,22 +44,16 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
   const fetchAttachments = async () => {
     try {
       setLoading(true);
-      console.log("Fetching attachments for entityId:", entityId, "entityType:", entityType);
       const data = await attachmentAPI.getAttachments(entityId);
-      console.log("Attachments API response:", data);
-      
+
       // Handle different response formats
       if (Array.isArray(data)) {
-        console.log("Response is array, setting attachments:", data);
         setAttachments(data);
       } else if (data && data.data && Array.isArray(data.data)) {
-        console.log("Response has data property (array), setting attachments:", data.data);
         setAttachments(data.data);
       } else if (data && data.success && Array.isArray(data.attachments)) {
-        console.log("Response has success and attachments, setting attachments:", data.attachments);
         setAttachments(data.attachments);
       } else {
-        console.log("Unknown response format, setting empty array. Response:", data);
         setAttachments([]);
       }
     } catch (error: any) {
@@ -109,38 +103,15 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
       formData.append("phase_id", String(entityId));
     }
 
-    // Debug: Log what's being sent
-    console.log("=== UPLOAD DEBUG INFO ===");
-    console.log("Entity Type:", entityType);
-    console.log("Entity ID:", entityId);
-    console.log("User ID:", user.id);
-    console.log("File name:", file.name);
-    console.log("File size:", file.size);
-    console.log("FormData contents:");
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
-    }
-    console.log("========================");
-
     try {
       setUploading(true);
-      console.log("Uploading attachment with formData:", {
-        file: file.name,
-        uploaded_by: user.id,
-        entityType,
-        entityId
-      });
       const response = await attachmentAPI.uploadAttachment(formData);
-      console.log("Upload response:", response);
       toast.success("File uploaded successfully");
       fetchAttachments();
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     } catch (error: any) {
-      console.error("Upload error details:", error);
-      console.error("Full error object:", JSON.stringify(error, null, 2));
-      
       // Better error message handling
       let errorMessage = "Failed to upload file";
       
@@ -170,15 +141,6 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
       }
       
       toast.error(errorMessage, { duration: 10000 });
-      
-      // Also show in console
-      console.error("=== TROUBLESHOOTING INFO ===");
-      console.error("If you see this error, check your backend logs for:");
-      console.error("1. B2/Backblaze connection errors (ENETUNREACH, ECONNREFUSED)");
-      console.error("2. Database errors (phase_id column missing)");
-      console.error("3. Environment variable issues (.env file)");
-      console.error("4. Authentication/permission errors");
-      console.error("============================");
     } finally {
       setUploading(false);
     }
