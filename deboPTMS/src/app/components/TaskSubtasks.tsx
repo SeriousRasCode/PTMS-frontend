@@ -253,7 +253,6 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
   const fetchSubtaskAssignments = async (subtaskId: number) => {
     try {
       const assignments = await subtaskAssignmentAPI.getSubtaskAssignments(subtaskId);
-      console.log("Fetched subtask assignments:", assignments);
 
       // Handle different response formats
       let assignmentsList = [];
@@ -265,31 +264,18 @@ export const TaskSubtasks = ({ taskId }: TaskSubtasksProps) => {
         assignmentsList = assignments.assignments;
       }
 
-      console.log("Setting assignments:", assignmentsList);
       setSubtaskAssignments(assignmentsList);
     } catch (error: any) {
-      console.error("Error fetching subtask assignments:", error);
       toast.error("Failed to fetch assignments");
     }
   };
 
   const handleRemoveSubtaskAssignment = async (subtaskId: number, userId: number) => {
     try {
-      console.log("=== REMOVE SUBTASK ASSIGNMENT ===");
-      console.log("Subtask ID:", subtaskId);
-      console.log("User ID to remove:", userId);
-      console.log("Current user role:", user?.role);
-      console.log("Current assignments before removal:", subtaskAssignments);
-
-      const result = await subtaskAssignmentAPI.removeSubtaskAssignment(subtaskId, userId);
-      console.log("API Remove result:", result);
-
-      // Always refresh and show success - the API would throw an error if it failed
+      await subtaskAssignmentAPI.removeSubtaskAssignment(subtaskId, userId);
       toast.success("User removed from subtask successfully");
       await fetchSubtaskAssignments(subtaskId);
-
     } catch (error: any) {
-      console.error("Error removing subtask assignment:", error);
       toast.error(error.message || "Failed to remove user");
     }
   };
