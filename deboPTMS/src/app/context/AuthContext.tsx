@@ -124,10 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       const response = await authAPI.login({ email, password });
-      
-      // Debug: Log the actual response structure
-      console.log("Login response:", response);
-      
+
       if (response.token || response.data?.token || response.accessToken) {
         const authToken = response.token || response.data?.token || response.accessToken;
         setToken(authToken);
