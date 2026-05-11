@@ -62,7 +62,7 @@ const apiRequest = async (
 
     // Only log errors, not successful requests
     if (!response.ok) {
-      // Don't log 403 (permission) errors
+      // Don't log 403 (permission) errors - these are expected for users without access
       if (response.status !== 403) {
         console.error(`API ${options.method || "GET"} ${endpoint}:`, {
           status: response.status,
@@ -498,7 +498,7 @@ export const attachmentAPI = {
     }).then(async (res) => {
       const contentType = res.headers.get("content-type");
       const text = await res.text();
-      
+
       // Check if it's an HTML error page
       if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
         // Extract error message from HTML if possible
@@ -519,35 +519,69 @@ export const attachmentAPI = {
       }
       
       // If response is empty or not JSON, handle it
-      if (!text) {
+      if (!text || text.trim() === '') {
         if (res.ok) {
           return { success: true };
         } else {
-          throw new Error(`Upload failed: ${res.statusText}`);
+          throw new Error(`Upload failed with status ${res.status}: ${res.statusText || 'Unknown error'}`);
         }
       }
       
       // Try to parse as JSON
+      let data;
       try {
-        const data = JSON.parse(text);
-        if (!res.ok) {
-          // Handle empty error strings from backend
-          const errorMsg = (data.error && data.error.trim()) ||
-                          (data.message && data.message.trim()) ||
-                          res.statusText ||
-                          'Upload failed - check backend logs for details';
-          throw new Error(errorMsg);
-        }
-        return data;
-      } catch (e) {
+        data = JSON.parse(text);
+      } catch (parseError) {
         // If it's not JSON but response was ok, return success
         if (res.ok) {
           return { success: true, message: text };
         } else {
-          const errorText = text && text.trim() ? text : res.statusText || 'Upload failed';
-          throw new Error(errorText);
+          throw new Error(`Upload failed with status ${res.status}: ${text.substring(0, 200)}`);
         }
       }
+      
+      // Check if request was successful
+      if (!res.ok) {
+        console.error('Upload failed with data:', data);
+        
+        // Extract error message from various possible fields
+        let errorMsg = '';
+        
+        if (data.error && typeof data.error === 'string' && data.error.trim()) {
+          errorMsg = data.error.trim();
+        } else if (data.message && typeof data.message === 'string' && data.message.trim()) {
+          errorMsg = data.message.trim();
+        } else if (data.details && typeof data.details === 'string' && data.details.trim()) {
+          errorMsg = data.details.trim();
+        } else if (typeof data === 'string' && data.trim()) {
+          errorMsg = data.trim();
+        }
+        
+        // If still no error message, create a helpful one
+        if (!errorMsg) {
+          errorMsg = `Upload failed with status ${res.status}. `;
+          if (res.status === 400) {
+            errorMsg += 'Please check that the file and all required fields are provided correctly.';
+          } else if (res.status === 401) {
+            errorMsg += 'Authentication failed. Please log in again.';
+          } else if (res.status === 403) {
+            errorMsg += 'You do not have permission to upload files.';
+          } else if (res.status === 413) {
+            errorMsg += 'File is too large.';
+          } else if (res.status >= 500) {
+            errorMsg += 'Server error. Please check backend logs.';
+          } else {
+            errorMsg += res.statusText || 'Unknown error.';
+          }
+        }
+        
+        throw new Error(errorMsg);
+      }
+      
+      return data;
+    }).catch(error => {
+      console.error('Upload request error:', error);
+      throw error;
     });
   },
 
