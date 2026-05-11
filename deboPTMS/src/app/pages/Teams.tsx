@@ -58,21 +58,15 @@ export const Teams = () => {
   const fetchTeams = async () => {
     try {
       setLoading(true);
-      console.log("Fetching teams...");
-      console.log("Current user role:", user?.role);
       
       let response;
       
       // Admin users can fetch all teams
       if (user?.role === "Admin") {
-        console.log("User is Admin, fetching all teams...");
         response = await teamAPI.getAllTeams();
-        console.log("All teams raw response:", JSON.stringify(response, null, 2));
       } else {
         // Non-admin users get their teams
-        console.log("User is not Admin, fetching my teams...");
         response = await teamAPI.getMyTeams();
-        console.log("My teams raw response:", JSON.stringify(response, null, 2));
       }
       
       // Handle response - check multiple possible formats
@@ -82,21 +76,17 @@ export const Teams = () => {
         // Check if response has data property
         if (response.data) {
           teamsData = Array.isArray(response.data) ? response.data : [];
-          console.log("Teams extracted from response.data:", teamsData);
         } 
         // Check if response itself is an array
         else if (Array.isArray(response)) {
           teamsData = response;
-          console.log("Teams extracted from response array:", teamsData);
         }
         // Check if response has teams property
         else if (response.teams && Array.isArray(response.teams)) {
           teamsData = response.teams;
-          console.log("Teams extracted from response.teams:", teamsData);
         }
       }
       
-      console.log("Final teams to set:", teamsData);
       setTeams(teamsData);
       
     } catch (error: any) {
@@ -110,7 +100,6 @@ export const Teams = () => {
 
   const fetchStats = async () => {
     try {
-      console.log("=== FETCHING TEAM STATS ===");
       
       // Fetch projects to count active ones
       let projectsResponse;
@@ -120,7 +109,6 @@ export const Teams = () => {
         projectsResponse = await projectAPI.getMyProjects();
       }
       
-      console.log("Projects response for stats:", projectsResponse);
       
       let projectsList = [];
       if (projectsResponse && projectsResponse.success && projectsResponse.data) {
@@ -137,7 +125,6 @@ export const Teams = () => {
         return status === "active" || status === "in progress" || status === "in_progress";
       }).length;
       
-      console.log("Active projects count:", activeCount);
       setActiveProjects(activeCount);
       
       // Fetch team members count
@@ -148,7 +135,6 @@ export const Teams = () => {
           teams.map(async (team) => {
             try {
               const membersResponse = await teamAPI.getTeamMembers(team.id);
-              console.log(`Team ${team.id} members:`, membersResponse);
               
               let membersList = [];
               if (membersResponse && membersResponse.data) {
@@ -171,7 +157,6 @@ export const Teams = () => {
         );
         
         totalMembers = memberCounts.reduce((sum, count) => sum + count, 0);
-        console.log("Total team members:", totalMembers);
       }
       
       setTeamMembers(totalMembers);
@@ -185,13 +170,11 @@ export const Teams = () => {
   const fetchUsers = async () => {
     // Only Admins can fetch all users
     if (user?.role !== "Admin") {
-      console.log("User is not Admin, skipping fetchUsers");
       return;
     }
     
     try {
       const response = await adminAPI.getAllUsers();
-      console.log("All users response:", response);
       
       if (response && response.data) {
         setAllUsers(Array.isArray(response.data) ? response.data : []);
@@ -453,12 +436,7 @@ export const Teams = () => {
 
                 try {
                   setAddingMember(true);
-                  
-                  console.log("Adding user to team:", {
-                    teamId: selectedTeam.id,
-                    userId: selectedUserId,
-                  });
-                  
+
                   await adminAPI.addUserToTeam(selectedTeam.id, selectedUserId);
                   toast.success("User added to team successfully!");
                   
