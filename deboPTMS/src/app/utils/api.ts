@@ -62,7 +62,7 @@ const apiRequest = async (
 
     // Only log errors, not successful requests
     if (!response.ok) {
-      // Don't log 403 (permission) errors - these are expected for users without access
+      // Don't log 403 (permission) errors
       if (response.status !== 403) {
         console.error(`API ${options.method || "GET"} ${endpoint}:`, {
           status: response.status,
@@ -613,49 +613,6 @@ export const attachmentAPI = {
         if (res.ok) return { success: true, message: text };
         else throw new Error(text || res.statusText || 'Upload failed');
       }
-      
-      // Check if request was successful
-      if (!res.ok) {
-        console.error('Upload failed with data:', data);
-        
-        // Extract error message from various possible fields
-        let errorMsg = '';
-        
-        if (data.error && typeof data.error === 'string' && data.error.trim()) {
-          errorMsg = data.error.trim();
-        } else if (data.message && typeof data.message === 'string' && data.message.trim()) {
-          errorMsg = data.message.trim();
-        } else if (data.details && typeof data.details === 'string' && data.details.trim()) {
-          errorMsg = data.details.trim();
-        } else if (typeof data === 'string' && data.trim()) {
-          errorMsg = data.trim();
-        }
-        
-        // If still no error message, create a helpful one
-        if (!errorMsg) {
-          errorMsg = `Upload failed with status ${res.status}. `;
-          if (res.status === 400) {
-            errorMsg += 'Please check that the file and all required fields are provided correctly.';
-          } else if (res.status === 401) {
-            errorMsg += 'Authentication failed. Please log in again.';
-          } else if (res.status === 403) {
-            errorMsg += 'You do not have permission to upload files.';
-          } else if (res.status === 413) {
-            errorMsg += 'File is too large.';
-          } else if (res.status >= 500) {
-            errorMsg += 'Server error. Please check backend logs.';
-          } else {
-            errorMsg += res.statusText || 'Unknown error.';
-          }
-        }
-        
-        throw new Error(errorMsg);
-      }
-      
-      return data;
-    }).catch(error => {
-      console.error('Upload request error:', error);
-      throw error;
     });
   },
 
