@@ -18,8 +18,7 @@ interface Attachment {
   file_size: number;
   file_type: string;
   uploaded_by: number;
-  uploaded_at: string;
-  created_at?: string; // Fallback for backwards compatibility
+  created_at: string;
 }
 
 interface AttachmentManagerProps {
@@ -27,7 +26,10 @@ interface AttachmentManagerProps {
   entityType: "project" | "task" | "subtask" | "phase";
 }
 
-export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerProps) => {
+export const AttachmentManager = ({
+  entityId,
+  entityType,
+}: AttachmentManagerProps) => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -44,22 +46,45 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
   const fetchAttachments = async () => {
     try {
       setLoading(true);
+      console.log(
+        "Fetching attachments for entityId:",
+        entityId,
+        "entityType:",
+        entityType,
+      );
       const data = await attachmentAPI.getAttachments(entityId);
+      console.log("Attachments API response:", data);
 
       // Handle different response formats
       if (Array.isArray(data)) {
+        console.log("Response is array, setting attachments:", data);
         setAttachments(data);
       } else if (data && data.data && Array.isArray(data.data)) {
+        console.log(
+          "Response has data property (array), setting attachments:",
+          data.data,
+        );
         setAttachments(data.data);
       } else if (data && data.success && Array.isArray(data.attachments)) {
+        console.log(
+          "Response has success and attachments, setting attachments:",
+          data.attachments,
+        );
         setAttachments(data.attachments);
       } else {
+        console.log(
+          "Unknown response format, setting empty array. Response:",
+          data,
+        );
         setAttachments([]);
       }
     } catch (error: any) {
       console.error("Error fetching attachments:", error);
       // Silently handle ENOENT errors (missing files on server)
-      if (!error.message?.includes('ENOENT') && !error.message?.includes('no such file')) {
+      if (
+        !error.message?.includes("ENOENT") &&
+        !error.message?.includes("no such file")
+      ) {
         toast.error(error.message || "Failed to fetch attachments");
       }
       // Set empty array on error so UI doesn't break
@@ -73,15 +98,6 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check if user is authenticated
-    if (!user || !user.id) {
-      toast.error("You must be logged in to upload files");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      return;
-    }
-
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast.error("File size must be less than 10MB");
@@ -90,7 +106,7 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("uploaded_by", String(user.id));
+    formData.append("uploaded_by", String(user?.id));
 
     // Set the appropriate entity ID
     if (entityType === "project") {
@@ -105,49 +121,31 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
 
     try {
       setUploading(true);
-      const response = await attachmentAPI.uploadAttachment(formData);
+      await attachmentAPI.uploadAttachment(formData);
       toast.success("File uploaded successfully");
       fetchAttachments();
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     } catch (error: any) {
-      // Better error message handling
-      let errorMessage = "Failed to upload file";
-      
-      if (error.message) {
-        errorMessage = error.message;
-        
-        // Check for specific error types
-        if (error.message.includes('ENETUNREACH')) {
-          errorMessage = "Cannot reach file storage service (Backblaze B2). This is a backend network issue. Please:\n1. Check your internet connection\n2. Verify B2 credentials in .env file\n3. Try starting the backend with: node --dns-result-order=ipv4first server.js\n4. Check backend console logs for detailed error";
-        } else if (error.message.includes('ECONNREFUSED')) {
-          errorMessage = "Backend cannot connect to file storage service. Please check backend logs and B2 configuration.";
-        } else if (error.message.includes('Server error')) {
-          errorMessage = "Backend server error occurred during upload. Common causes:\n• Backblaze B2 connection failed (check network/credentials)\n• Database error (verify phase_id column exists)\n• Missing environment variables\n\nPlease check the backend console logs for the actual error message.";
-        }
-      } else if (error.error) {
-        errorMessage = error.error;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (typeof error === 'object') {
-        errorMessage = JSON.stringify(error);
-      }
-      
-      // Clean up the error message
-      errorMessage = errorMessage.trim();
-      if (!errorMessage || errorMessage === '{}' || errorMessage === '[]' || errorMessage === '') {
-        errorMessage = "Upload failed with no error details from backend.\n\nTroubleshooting steps:\n1. Check backend console for error logs\n2. Verify Backblaze B2 credentials in .env\n3. Ensure 'phase_id' column exists in attachments table\n4. Check network connectivity to B2\n5. Try: node --dns-result-order=ipv4first server.js";
-      }
-      
-      toast.error(errorMessage, { duration: 10000 });
+      console.error("Upload error details:", error);
+      const errorMessage =
+        error.message ||
+        error.error ||
+        error.toString() ||
+        "Failed to upload file";
+      toast.error(
+        errorMessage.trim() ||
+        "Failed to upload file - please check backend logs",
+      );
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeleteAttachment = async (attachmentId: number) => {
-    if (!window.confirm("Are you sure you want to delete this attachment?")) return;
+    if (!window.confirm("Are you sure you want to delete this attachment?"))
+      return;
 
     try {
       await attachmentAPI.deleteAttachment(attachmentId);
@@ -158,16 +156,42 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
     }
   };
 
-  const handleDownloadAttachment = (fileUrl: string, fileName: string) => {
-    // Open the file URL in a new tab to download
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // const handleDownloadAttachment = (fileUrl: string, fileName: string) => {
+  //   // Open the file URL in a new tab to download
+  //   const link = document.createElement('a');
+  //   link.href = fileUrl;
+  //   link.download = fileName;
+  //   link.target = '_blank';
+  //   link.rel = 'noopener noreferrer';
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
+
+  const handleDownloadAttachment = async (
+    attachmentId: number,
+    fileName: string,
+  ) => {
+    try {
+      const response = await attachmentAPI.downloadAttachment(attachmentId);
+      console.log("DOWNLOAD RESPONSE:", response);
+
+      const signedUrl = response.signed_url;
+
+      // Open the signed URL
+      const link = document.createElement("a");
+      link.href = signedUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.download = fileName;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error: any) {
+      console.error("Download error:", error);
+      toast.error("Failed to download file");
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -180,7 +204,8 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
     if (fileType.startsWith("image/")) return "🖼️";
     if (fileType.includes("pdf")) return "📄";
     if (fileType.includes("word") || fileType.includes("document")) return "📝";
-    if (fileType.includes("excel") || fileType.includes("spreadsheet")) return "📊";
+    if (fileType.includes("excel") || fileType.includes("spreadsheet"))
+      return "📊";
     if (fileType.includes("zip") || fileType.includes("rar")) return "📦";
     return "📁";
   };
@@ -192,7 +217,9 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className={`text-lg font-semibold flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <h3
+          className={`text-lg font-semibold flex items-center gap-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+        >
           <Paperclip className="h-5 w-5" />
           Attachments
         </h3>
@@ -219,9 +246,11 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
       </div>
 
       {attachments.length === 0 ? (
-        <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+        <Card
+          className={theme === "dark" ? "bg-slate-800 border-slate-700" : ""}
+        >
           <CardContent className="text-center py-8">
-            <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+            <p className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
               No attachments yet. {isManager && "Upload a file to get started!"}
             </p>
           </CardContent>
@@ -229,7 +258,12 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
       ) : (
         <div className="grid gap-3">
           {attachments.map((attachment) => (
-            <Card key={attachment.id} className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+            <Card
+              key={attachment.id}
+              className={
+                theme === "dark" ? "bg-slate-800 border-slate-700" : ""
+              }
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -237,18 +271,19 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
                       {getFileIcon(attachment.file_type)}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                      <p
+                        className={`font-medium truncate ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+                      >
                         {attachment.file_name}
                       </p>
-                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <p
+                        className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
+                      >
                         {formatFileSize(attachment.file_size)} •{" "}
-                        {(() => {
-                          const dateStr = attachment.uploaded_at || attachment.created_at;
-                          if (dateStr && !isNaN(new Date(dateStr).getTime())) {
-                            return new Date(dateStr).toLocaleDateString();
-                          }
-                          return "Unknown date";
-                        })()}
+                        {attachment.created_at &&
+                          !isNaN(new Date(attachment.created_at).getTime())
+                          ? new Date(attachment.created_at).toLocaleDateString()
+                          : "Unknown date"}
                       </p>
                     </div>
                   </div>
@@ -265,7 +300,13 @@ export const AttachmentManager = ({ entityId, entityType }: AttachmentManagerPro
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleDownloadAttachment(attachment.file_path, attachment.file_name)}
+                    // onClick={() => handleDownloadAttachment(attachment.file_path, attachment.file_name)}
+                    onClick={() =>
+                      handleDownloadAttachment(
+                        attachment.id,
+                        attachment.file_name,
+                      )
+                    }
                     className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex-shrink-0"
                   >
                     <Download className="h-4 w-4" />

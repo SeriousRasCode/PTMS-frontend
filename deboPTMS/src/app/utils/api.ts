@@ -485,6 +485,84 @@ export const subtaskCommentAPI = {
 };
 
 // Attachment APIs
+// export const attachmentAPI = {
+//   uploadAttachment: (formData: FormData) => {
+//     const token = localStorage.getItem("authToken");
+//     return fetch(`${API_BASE_URL}/attachments/upload`, {
+//       method: "POST",
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: formData,
+//       credentials: 'include',
+//     }).then(async (res) => {
+//       const contentType = res.headers.get("content-type");
+//       const text = await res.text();
+      
+//       // Check if it's an HTML error page
+//       if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
+//         // Extract error message from HTML if possible
+//         const errorMatch = text.match(/<pre>(.*?)<\/pre>/s);
+//         let errorMessage = errorMatch ? errorMatch[1].replace(/&[#\w]+;/g, (match) => {
+//           const entities: { [key: string]: string } = {
+//             '&#39;': "'",
+//             '&quot;': '"',
+//             '&lt;': '<',
+//             '&gt;': '>',
+//             '&amp;': '&'
+//           };
+//           return entities[match] || match;
+//         }) : 'Server error occurred';
+        
+//         console.error('Upload HTML error response:', errorMessage);
+//         throw new Error(errorMessage);
+//       }
+      
+//       // If response is empty or not JSON, handle it
+//       if (!text) {
+//         if (res.ok) {
+//           return { success: true };
+//         } else {
+//           throw new Error(`Upload failed: ${res.statusText}`);
+//         }
+//       }
+      
+//       // Try to parse as JSON
+//       try {
+//         const data = JSON.parse(text);
+//         if (!res.ok) {
+//           // Handle empty error strings from backend
+//           const errorMsg = (data.error && data.error.trim()) ||
+//                           (data.message && data.message.trim()) ||
+//                           res.statusText ||
+//                           'Upload failed - check backend logs for details';
+//           throw new Error(errorMsg);
+//         }
+//         return data;
+//       } catch (e) {
+//         // If it's not JSON but response was ok, return success
+//         if (res.ok) {
+//           return { success: true, message: text };
+//         } else {
+//           const errorText = text && text.trim() ? text : res.statusText || 'Upload failed';
+//           throw new Error(errorText);
+//         }
+//       }
+//     });
+//   },
+
+//   getAttachments: (id: number) => {
+//     // The backend returns attachments filtered by entity ID
+//     // It returns phase_id, project_id, task_id, or subtask_id
+//     return apiRequest(`/attachments/${id}`);
+//   },
+
+//   deleteAttachment: (attachmentId: number) =>
+//     apiRequest(`/attachments/${attachmentId}`, {
+//       method: "DELETE",
+//     }),
+// };
+
 export const attachmentAPI = {
   uploadAttachment: (formData: FormData) => {
     const token = localStorage.getItem("authToken");
@@ -498,10 +576,8 @@ export const attachmentAPI = {
     }).then(async (res) => {
       const contentType = res.headers.get("content-type");
       const text = await res.text();
-
-      // Check if it's an HTML error page
+      
       if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
-        // Extract error message from HTML if possible
         const errorMatch = text.match(/<pre>(.*?)<\/pre>/s);
         let errorMessage = errorMatch ? errorMatch[1].replace(/&[#\w]+;/g, (match) => {
           const entities: { [key: string]: string } = {
@@ -518,26 +594,24 @@ export const attachmentAPI = {
         throw new Error(errorMessage);
       }
       
-      // If response is empty or not JSON, handle it
-      if (!text || text.trim() === '') {
-        if (res.ok) {
-          return { success: true };
-        } else {
-          throw new Error(`Upload failed with status ${res.status}: ${res.statusText || 'Unknown error'}`);
-        }
+      if (!text) {
+        if (res.ok) return { success: true };
+        else throw new Error(`Upload failed: ${res.statusText}`);
       }
       
-      // Try to parse as JSON
-      let data;
       try {
-        data = JSON.parse(text);
-      } catch (parseError) {
-        // If it's not JSON but response was ok, return success
-        if (res.ok) {
-          return { success: true, message: text };
-        } else {
-          throw new Error(`Upload failed with status ${res.status}: ${text.substring(0, 200)}`);
+        const data = JSON.parse(text);
+        if (!res.ok) {
+          const errorMsg = (data.error && data.error.trim()) ||
+                          (data.message && data.message.trim()) ||
+                          res.statusText ||
+                          'Upload failed - check backend logs';
+          throw new Error(errorMsg);
         }
+        return data;
+      } catch (e) {
+        if (res.ok) return { success: true, message: text };
+        else throw new Error(text || res.statusText || 'Upload failed');
       }
       
       // Check if request was successful
@@ -586,8 +660,6 @@ export const attachmentAPI = {
   },
 
   getAttachments: (id: number) => {
-    // The backend returns attachments filtered by entity ID
-    // It returns phase_id, project_id, task_id, or subtask_id
     return apiRequest(`/attachments/${id}`);
   },
 
@@ -595,6 +667,10 @@ export const attachmentAPI = {
     apiRequest(`/attachments/${attachmentId}`, {
       method: "DELETE",
     }),
+
+  // ADD THIS
+  downloadAttachment: (attachmentId: number) =>
+    apiRequest(`/attachments/download/${attachmentId}`),
 };
 
 // Export all APIs
