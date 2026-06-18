@@ -3,6 +3,14 @@
 
 const API_BASE_URL = "http://localhost:3333/api"; // Direct connection to backend
 
+// Normalize the various response envelopes the backend returns into a plain array.
+// Handles: { success, data: [...] }, { data: [...] }, [...], or anything else -> []
+export const unwrapList = <T = any>(response: any): T[] => {
+  if (Array.isArray(response)) return response;
+  if (response && Array.isArray(response.data)) return response.data;
+  return [];
+};
+
 // Helper function for API requests
 const apiRequest = async (
   endpoint: string,
