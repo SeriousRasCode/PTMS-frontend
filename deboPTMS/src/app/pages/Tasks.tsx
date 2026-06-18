@@ -543,7 +543,7 @@ export const Tasks = () => {
       </div>
 
       {/* Tasks Tabs */}
-      <Tabs defaultValue="all" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(value) => updateParams({ tab: value })} className="space-y-4">
         <TabsList className={theme === 'dark' ? 'bg-slate-800' : ''}>
           <TabsTrigger value="all" className={theme === 'dark' ? 'data-[state=active]:bg-slate-700' : ''}>All Tasks ({allTasks.length})</TabsTrigger>
           <TabsTrigger value="in-progress" className={theme === 'dark' ? 'data-[state=active]:bg-slate-700' : ''}>In Progress ({inProgressTasks.length})</TabsTrigger>
