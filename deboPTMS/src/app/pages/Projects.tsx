@@ -37,14 +37,15 @@ export const Projects = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
+
+  // Date-range filter (filters by project start_date)
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const [newProject, setNewProject] = useState({
     name: "",
@@ -54,25 +55,17 @@ export const Projects = () => {
     team_id: "",
   });
 
-  useEffect(() => {
-    fetchProjects();
-    fetchTeams();
-  }, []);
+  const { data: projects = [], isLoading: loading } = useQuery({
+    queryKey: ["projects", user?.role, user?.id],
+    enabled: !!user,
+    queryFn: async (): Promise<Project[]> => {
+      const response =
+        user?.role === "Admin"
+          ? await projectAPI.getAllProjects()
+          : await projectAPI.getMyProjects();
 
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      
-      let response;
-      
-      if (user?.role === "Admin") {
-        response = await projectAPI.getAllProjects();
-      } else {
-        response = await projectAPI.getMyProjects();
-      }
-      
       let projectsList = [];
-      
+
       if (response && response.success && response.data) {
         projectsList = response.data;
       } else if (response && Array.isArray(response.data)) {
@@ -82,11 +75,11 @@ export const Projects = () => {
       } else {
         projectsList = [];
       }
-      
+
       if (projectsList.length > 0) {
         const hasManagerName = projectsList.some((p: any) => p.manager_name);
         const hasManagerId = projectsList.some((p: any) => p.manager_id);
-        
+
         if (!hasManagerName && hasManagerId && user?.role === "Manager") {
           projectsList = projectsList.map((project: any) => ({
             ...project,
@@ -99,26 +92,17 @@ export const Projects = () => {
           }));
         }
       }
-      
-      setProjects(projectsList);
-      
-    } catch (error: any) {
-      // Don't show permission errors if user doesn't have access
-      if (!error.message?.includes('Forbidden') && 
-          !error.message?.includes('permission') && 
-          !error.message?.includes('not allowed')) {
-        toast.error(error.message || "Failed to load projects");
-      }
-      setProjects([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const fetchTeams = async () => {
-    try {
+      return projectsList;
+    },
+  });
+
+  const { data: teams = [] } = useQuery({
+    queryKey: ["teams", user?.role],
+    enabled: !!user,
+    queryFn: async (): Promise<Team[]> => {
       let response;
-      
+
       if (user?.role === "Admin") {
         try {
           response = await teamAPI.getAllTeams();
@@ -128,21 +112,44 @@ export const Projects = () => {
       } else {
         response = await teamAPI.getMyTeams();
       }
-      
-      if (response && response.success && response.data) {
-        setTeams(response.data);
-      } else if (response && response.data) {
-        setTeams(response.data);
-      } else {
-        setTeams([]);
-      }
-    } catch (error: any) {
-      toast.error("Failed to load teams. " + error.message);
-      setTeams([]);
-    }
-  };
 
-  const handleCreateProject = async () => {
+      if (response && response.success && response.data) {
+        return response.data;
+      } else if (response && response.data) {
+        return response.data;
+      }
+      return [];
+    },
+  });
+
+  const createProjectMutation = useMutation({
+    mutationFn: () =>
+      projectAPI.createProject({
+        name: newProject.name,
+        description: newProject.description,
+        team_id: parseInt(newProject.team_id),
+        start_date: newProject.start_date,
+        end_date: newProject.end_date,
+      }),
+    onSuccess: () => {
+      toast.success("Project created successfully!");
+      setNewProject({
+        name: "",
+        description: "",
+        start_date: "",
+        end_date: "",
+        team_id: "",
+      });
+      setDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create project");
+    },
+  });
+  const creating = createProjectMutation.isPending;
+
+  const handleCreateProject = () => {
     if (!newProject.name || !newProject.description || !newProject.team_id) {
       toast.error("Please fill in all required fields");
       return;
@@ -153,40 +160,13 @@ export const Projects = () => {
       return;
     }
 
-    try {
-      setCreating(true);
-      
-      await projectAPI.createProject({
-        name: newProject.name,
-        description: newProject.description,
-        team_id: parseInt(newProject.team_id),
-        start_date: newProject.start_date,
-        end_date: newProject.end_date,
-      });
-      
-      toast.success("Project created successfully!");
-      
-      setNewProject({
-        name: "",
-        description: "",
-        start_date: "",
-        end_date: "",
-        team_id: "",
-      });
-      setDialogOpen(false);
-      fetchProjects();
-      
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create project");
-    } finally {
-      setCreating(false);
-    }
+    createProjectMutation.mutate();
   };
 
   const handleStatusChange = async (projectId: number, projectData: Project, newStatus: string) => {
     try {
       setUpdatingStatus(projectId);
-      
+
       const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         const year = date.getFullYear();
