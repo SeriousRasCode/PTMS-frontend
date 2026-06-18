@@ -149,26 +149,30 @@ export const Tasks = () => {
     }
   };
   
-  const handleUpdateProgress = async () => {
+  const updateProgressMutation = useMutation({
+    mutationFn: (taskId: number) => taskAPI.updateProgress(taskId, progressUpdate),
+    onSuccess: () => {
+      toast.success("Progress updated successfully!");
+      setUpdateProgressDialogOpen(false);
+      setProgressUpdate({ progress_percentage: 0, update_note: "" });
+      setSelectedTask(null);
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (error: any) => {
+      console.error("Failed to update progress:", error);
+      toast.error(error.message || "Failed to update progress");
+    },
+  });
+
+  const handleUpdateProgress = () => {
     if (!selectedTask) return;
-    
+
     if (progressUpdate.progress_percentage < 0 || progressUpdate.progress_percentage > 100) {
       toast.error("Progress must be between 0 and 100");
       return;
     }
-    
-    try {
-      await taskAPI.updateProgress(selectedTask.id, progressUpdate);
-      toast.success("Progress updated successfully!");
-      
-      setUpdateProgressDialogOpen(false);
-      setProgressUpdate({ progress_percentage: 0, update_note: "" });
-      setSelectedTask(null);
-      fetchMyTasks();
-    } catch (error: any) {
-      console.error("Failed to update progress:", error);
-      toast.error(error.message || "Failed to update progress");
-    }
+
+    updateProgressMutation.mutate(selectedTask.id);
   };
   
   const viewTaskHistory = async (task: Task) => {
