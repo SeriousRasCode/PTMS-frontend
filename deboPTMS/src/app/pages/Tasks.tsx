@@ -52,44 +52,31 @@ export const Tasks = () => {
     update_note: "",
   });
 
-  const { data: tasks = [], isLoading: loading } = useQuery({
+  const {
+    data: tasks = [],
+    isLoading: loading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["tasks", "my", user?.id],
     enabled: !!user,
     queryFn: async (): Promise<Task[]> => {
-      // Get all projects first
+      // Get all projects first, then fan out to their tasks
       const projectsResponse = await projectAPI.getMyProjects();
-
-      // Extract projects array (same logic as ProjectDetails)
-      let projectsList = [];
-      if (projectsResponse && projectsResponse.success && projectsResponse.data) {
-        projectsList = projectsResponse.data;
-      } else if (projectsResponse && Array.isArray(projectsResponse.data)) {
-        projectsList = projectsResponse.data;
-      } else if (Array.isArray(projectsResponse)) {
-        projectsList = projectsResponse;
-      }
+      const projectsList = unwrapList<any>(projectsResponse);
 
       if (projectsList.length === 0) {
         return [];
       }
 
-      // Fetch tasks for each project (EXACT same logic as ProjectDetails)
+      // Fetch tasks for each project (same handling as ProjectDetails)
       const allTasksPromises = projectsList.map(async (project: any) => {
         try {
           const response = await taskAPI.getTasksByProject(project.id);
-
-          // EXACT same handling as ProjectDetails line 179-185
-          let projectTasks = [];
-          if (Array.isArray(response)) {
-            projectTasks = response;
-          } else if (response.data && Array.isArray(response.data)) {
-            projectTasks = response.data;
-          } else {
-            projectTasks = [];
-          }
-
           // Add project info to each task
-          return projectTasks.map((task: any) => ({
+          return unwrapList<any>(response).map((task: any) => ({
             ...task,
             project_name: project.name,
             project_id: project.id
