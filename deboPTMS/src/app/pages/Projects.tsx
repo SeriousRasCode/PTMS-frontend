@@ -522,24 +522,42 @@ export const Projects = () => {
       </div>
 
       {/* Projects List */}
-      {projects.length === 0 ? (
+      {filteredProjects.length === 0 ? (
         <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <FolderKanban className={`h-16 w-16 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`} />
-            <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No projects yet</h3>
-            <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center mb-4`}>
-              {canCreateProject 
-                ? "Create your first project to get started" 
-                : "No projects available"}
-            </p>
-            {canCreateProject && (
-              <Button
-                onClick={() => setDialogOpen(true)}
-                className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Your First Project
-              </Button>
+            {projects.length > 0 ? (
+              <>
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No projects match the selected dates</h3>
+                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center mb-4`}>
+                  Try adjusting or clearing the date filter
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={clearDateFilter}
+                  className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
+                >
+                  Clear filter
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No projects yet</h3>
+                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center mb-4`}>
+                  {canCreateProject
+                    ? "Create your first project to get started"
+                    : "No projects available"}
+                </p>
+                {canCreateProject && (
+                  <Button
+                    onClick={() => setDialogOpen(true)}
+                    className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Your First Project
+                  </Button>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
