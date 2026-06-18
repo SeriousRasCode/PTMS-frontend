@@ -312,15 +312,7 @@ export const ProjectDetails = () => {
     try {
       setSelectedTask(task);
       const assignments = await taskAPI.getAssignments(task.id);
-      
-      if (Array.isArray(assignments)) {
-        setTaskAssignments(assignments);
-      } else if (assignments.data && Array.isArray(assignments.data)) {
-        setTaskAssignments(assignments.data);
-      } else {
-        setTaskAssignments([]);
-      }
-      
+      setTaskAssignments(unwrapList<TaskAssignment>(assignments));
       setAssignmentsDialogOpen(true);
     } catch (error: any) {
       console.error("Failed to fetch task assignments:", error);
