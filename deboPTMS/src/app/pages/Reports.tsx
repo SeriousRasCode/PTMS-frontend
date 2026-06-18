@@ -86,9 +86,9 @@ export const Reports = () => {
     },
   });
 
-  const overdueTasks = data?.overdueTasks ?? [];
-  const workload = data?.workload ?? [];
-  const allTasks = data?.allTasks ?? [];
+  const overdueTasks: OverdueTask[] = data?.overdueTasks ?? [];
+  const workload: Workload[] = data?.workload ?? [];
+  const allTasks: any[] = data?.allTasks ?? [];
 
   const getDaysOverdue = (dueDate: string) => {
     const due = new Date(dueDate);
