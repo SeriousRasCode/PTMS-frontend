@@ -38,6 +38,8 @@ import {
   ListTree,
   RefreshCw,
   Search,
+  CheckSquare,
+  Play,
 } from "lucide-react";
 
 interface Task {
