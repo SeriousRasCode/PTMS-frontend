@@ -294,15 +294,7 @@ export const ProjectDetails = () => {
     try {
       setSelectedTask(task);
       const history = await taskAPI.getTaskHistory(task.id);
-      
-      if (Array.isArray(history)) {
-        setTaskHistory(history);
-      } else if (history.data && Array.isArray(history.data)) {
-        setTaskHistory(history.data);
-      } else {
-        setTaskHistory([]);
-      }
-      
+      setTaskHistory(unwrapList<TaskUpdate>(history));
       setTaskHistoryDialogOpen(true);
     } catch (error: any) {
       // Handle permission errors gracefully for Members
