@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -9,8 +10,9 @@ import { Progress } from "../components/ui/progress";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Skeleton } from "../components/ui/skeleton";
-import { CheckSquare, AlertCircle, Calendar, CheckCircle2, Play, TrendingUp, History, RefreshCw } from "lucide-react";
+import { CheckSquare, AlertCircle, Calendar, CheckCircle2, Play, TrendingUp, History, RefreshCw, Search } from "lucide-react";
 import { taskAPI, projectAPI, unwrapList } from "../utils/api";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
@@ -51,6 +53,37 @@ export const Tasks = () => {
     progress_percentage: 0,
     update_note: "",
   });
+
+  // Filters live in the URL so they survive refresh and can be shared/bookmarked.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("q") || "";
+  const projectFilter = searchParams.get("project") || "all";
+  const dueFrom = searchParams.get("from") || "";
+  const dueTo = searchParams.get("to") || "";
+
+  // Local mirror of the search box so typing is instant; debounced into the URL.
+  const [searchInput, setSearchInput] = useState(search);
+
+  const updateParams = (updates: Record<string, string>) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        Object.entries(updates).forEach(([key, value]) => {
+          if (value && value !== "all") next.set(key, value);
+          else next.delete(key);
+        });
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  useEffect(() => {
+    if (searchInput === search) return;
+    const id = setTimeout(() => updateParams({ q: searchInput }), 300);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   const {
     data: tasks = [],
@@ -124,16 +157,50 @@ export const Tasks = () => {
     return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
   };
 
+  // Distinct projects present in the task list, for the project dropdown.
+  const projectOptions = Array.from(
+    new Map(
+      tasks
+        .filter((t: Task) => t.project_id != null)
+        .map((t: Task): [string, string] => [String(t.project_id), t.project_name || `Project ${t.project_id}`]),
+    ).entries(),
+  );
+
+  // Base filter (search + project + due-date range) applied before the status tabs.
+  const searchLower = search.toLowerCase();
+  const baseTasks = tasks.filter((t: Task) => {
+    if (projectFilter !== "all" && String(t.project_id) !== projectFilter) return false;
+    const due = t.due_date?.slice(0, 10);
+    if (dueFrom && (!due || due < dueFrom)) return false;
+    if (dueTo && (!due || due > dueTo)) return false;
+    if (
+      searchLower &&
+      !t.title?.toLowerCase().includes(searchLower) &&
+      !t.description?.toLowerCase().includes(searchLower) &&
+      !t.project_name?.toLowerCase().includes(searchLower)
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  const hasActiveFilters = !!(search || dueFrom || dueTo || projectFilter !== "all");
+
+  const clearFilters = () => {
+    setSearchInput("");
+    updateParams({ q: "", project: "all", from: "", to: "" });
+  };
+
   const filterTasks = (filterType: string) => {
     switch (filterType) {
       case "in-progress":
-        return tasks.filter((t: Task) => t.status === "in_progress" || t.status === "started");
+        return baseTasks.filter((t: Task) => t.status === "in_progress" || t.status === "started");
       case "completed":
-        return tasks.filter((t: Task) => t.status === "completed");
+        return baseTasks.filter((t: Task) => t.status === "completed");
       case "not-started":
-        return tasks.filter((t: Task) => t.status === "not_started");
+        return baseTasks.filter((t: Task) => t.status === "not_started");
       default:
-        return tasks;
+        return baseTasks;
     }
   };
   
@@ -303,7 +370,7 @@ export const Tasks = () => {
     );
   }
 
-  const allTasks = tasks;
+  const allTasks = baseTasks;
   const inProgressTasks = filterTasks("in-progress");
   const completedTasks = filterTasks("completed");
   const notStartedTasks = filterTasks("not-started");
@@ -319,6 +386,78 @@ export const Tasks = () => {
           <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mt-1`}>View and manage your assigned tasks</p>
         </div>
       </div>
+
+      {/* Search + Filters */}
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
+        <CardContent className="flex flex-wrap items-end gap-4 py-4">
+          <div className="flex-1 min-w-[200px]">
+            <Label htmlFor="task-search" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Search</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="task-search"
+                placeholder="Search by title, description or project"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className={`pl-8 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}`}
+              />
+            </div>
+          </div>
+          <div className="min-w-[180px]">
+            <Label className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Project</Label>
+            <Select value={projectFilter} onValueChange={(value) => updateParams({ project: value })}>
+              <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}>
+                <SelectValue placeholder="All projects" />
+              </SelectTrigger>
+              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+                <SelectItem value="all" className={theme === 'dark' ? 'text-white' : ''}>All projects</SelectItem>
+                {projectOptions.map(([id, name]) => (
+                  <SelectItem key={id} value={id} className={theme === 'dark' ? 'text-white' : ''}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="due-from" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Due from</Label>
+            <Input
+              id="due-from"
+              type="date"
+              value={dueFrom}
+              max={dueTo || undefined}
+              onChange={(e) => updateParams({ from: e.target.value })}
+              className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
+            />
+          </div>
+          <div>
+            <Label htmlFor="due-to" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>To</Label>
+            <Input
+              id="due-to"
+              type="date"
+              value={dueTo}
+              min={dueFrom || undefined}
+              onChange={(e) => updateParams({ to: e.target.value })}
+              className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
+            />
+          </div>
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
+            >
+              Clear
+            </Button>
+          )}
+          {hasActiveFilters && (
+            <span className={`text-sm ml-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              Showing {baseTasks.length} of {tasks.length} tasks
+            </span>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -379,10 +518,28 @@ export const Tasks = () => {
             <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <CheckSquare className={`h-16 w-16 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`} />
-                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No tasks assigned</h3>
-                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center`}>
-                  You don't have any tasks assigned yet
-                </p>
+                {hasActiveFilters ? (
+                  <>
+                    <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No tasks match your filters</h3>
+                    <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center mb-4`}>
+                      Try adjusting the search, project or due-date filters
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={clearFilters}
+                      className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
+                    >
+                      Clear filters
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No tasks assigned</h3>
+                    <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center`}>
+                      You don't have any tasks assigned yet
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           ) : (
