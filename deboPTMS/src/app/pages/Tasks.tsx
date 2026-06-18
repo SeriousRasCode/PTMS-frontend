@@ -162,11 +162,11 @@ export const Tasks = () => {
   };
 
   // Distinct projects present in the task list, for the project dropdown.
-  const projectOptions = Array.from(
+  const projectOptions: [string, string][] = Array.from(
     new Map(
-      tasks
-        .filter((t: Task) => t.project_id != null)
-        .map((t: Task): [string, string] => [String(t.project_id), t.project_name || `Project ${t.project_id}`]),
+      (tasks as Task[])
+        .filter((t) => t.project_id != null)
+        .map((t): [string, string] => [String(t.project_id), t.project_name || `Project ${t.project_id}`]),
     ).entries(),
   );
 
