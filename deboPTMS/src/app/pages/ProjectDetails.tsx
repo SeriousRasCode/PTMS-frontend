@@ -425,6 +425,48 @@ export const ProjectDetails = () => {
     );
   }
 
+  // Search filter feeds the stat cards; status + sort additionally shape the list.
+  const searchLower = search.toLowerCase();
+  const searchFiltered = tasks.filter((t: Task) => {
+    if (!searchLower) return true;
+    return (
+      t.title?.toLowerCase().includes(searchLower) ||
+      t.description?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const statusMatched =
+    statusFilter === "all"
+      ? searchFiltered
+      : searchFiltered.filter((t: Task) =>
+          statusFilter === "in_progress"
+            ? t.status === "started" || t.status === "in_progress"
+            : t.status === statusFilter,
+        );
+
+  const visibleTasks = [...statusMatched].sort((a: Task, b: Task) => {
+    switch (sort) {
+      case "due-asc":
+        return (a.due_date || "").localeCompare(b.due_date || "");
+      case "due-desc":
+        return (b.due_date || "").localeCompare(a.due_date || "");
+      case "progress-desc":
+        return (b.progress_percentage || 0) - (a.progress_percentage || 0);
+      case "progress-asc":
+        return (a.progress_percentage || 0) - (b.progress_percentage || 0);
+      case "title-asc":
+        return (a.title || "").localeCompare(b.title || "");
+      default:
+        return 0;
+    }
+  });
+
+  const hasActiveFilters = !!(search || statusFilter !== "all" || sort !== "default");
+  const clearFilters = () => {
+    setSearchInput("");
+    updateParams({ q: "", status: "all", sort: "default" });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -513,7 +555,71 @@ export const ProjectDetails = () => {
           </Dialog>
         )}
       </div>
-      
+
+      {/* Search + Filters */}
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+        <CardContent className="flex flex-wrap items-end gap-4 py-4">
+          <div className="flex-1 min-w-[200px]">
+            <Label htmlFor="task-search" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Search</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="task-search"
+                placeholder="Search by title or description"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className={`pl-8 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}`}
+              />
+            </div>
+          </div>
+          <div className="min-w-[160px]">
+            <Label className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Status</Label>
+            <Select value={statusFilter} onValueChange={(value) => updateParams({ status: value })}>
+              <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}>
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+                <SelectItem value="all" className={theme === 'dark' ? 'text-white' : ''}>All statuses</SelectItem>
+                <SelectItem value="not_started" className={theme === 'dark' ? 'text-white' : ''}>Not Started</SelectItem>
+                <SelectItem value="in_progress" className={theme === 'dark' ? 'text-white' : ''}>In Progress</SelectItem>
+                <SelectItem value="completed" className={theme === 'dark' ? 'text-white' : ''}>Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="min-w-[170px]">
+            <Label className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Sort by</Label>
+            <Select value={sort} onValueChange={(value) => updateParams({ sort: value })}>
+              <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}>
+                <SelectValue placeholder="Default" />
+              </SelectTrigger>
+              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+                <SelectItem value="default" className={theme === 'dark' ? 'text-white' : ''}>Default</SelectItem>
+                <SelectItem value="due-asc" className={theme === 'dark' ? 'text-white' : ''}>Due date (earliest)</SelectItem>
+                <SelectItem value="due-desc" className={theme === 'dark' ? 'text-white' : ''}>Due date (latest)</SelectItem>
+                <SelectItem value="progress-desc" className={theme === 'dark' ? 'text-white' : ''}>Progress (high → low)</SelectItem>
+                <SelectItem value="progress-asc" className={theme === 'dark' ? 'text-white' : ''}>Progress (low → high)</SelectItem>
+                <SelectItem value="title-asc" className={theme === 'dark' ? 'text-white' : ''}>Title (A → Z)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
+            >
+              Clear
+            </Button>
+          )}
+          {hasActiveFilters && (
+            <span className={`text-sm ml-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              Showing {visibleTasks.length} of {tasks.length} tasks
+            </span>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
@@ -521,7 +627,7 @@ export const ProjectDetails = () => {
             <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Total Tasks</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{tasks.length}</div>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{searchFiltered.length}</div>
           </CardContent>
         </Card>
         <Card className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
@@ -530,7 +636,7 @@ export const ProjectDetails = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {tasks.filter((t: Task) => t.status === "started").length}
+              {searchFiltered.filter((t: Task) => t.status === "started" || t.status === "in_progress").length}
             </div>
           </CardContent>
         </Card>
@@ -540,7 +646,7 @@ export const ProjectDetails = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {tasks.filter((t: Task) => t.status === "completed").length}
+              {searchFiltered.filter((t: Task) => t.status === "completed").length}
             </div>
           </CardContent>
         </Card>
