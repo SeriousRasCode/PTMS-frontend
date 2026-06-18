@@ -317,19 +317,59 @@ export const Projects = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading projects...</div>
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 w-full" />
+          ))}
+        </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+          <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>Couldn't load projects</h3>
+          <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center mb-4`}>
+            {(error as Error)?.message || "Something went wrong while fetching projects."}
+          </p>
+          <Button
+            onClick={() => refetch()}
+            className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   const canCreateProject = user?.role === "Manager" || user?.role === "Admin";
 
-  // Filter by start_date range (string compare works for YYYY-MM-DD)
-  const filteredProjects = projects.filter((project) => {
+  // Filter by name/description search and start_date range
+  // (string compare works for YYYY-MM-DD).
+  const searchLower = search.toLowerCase();
+  const filteredProjects = projects.filter((project: Project) => {
     const startDate = project.start_date?.slice(0, 10);
     if (dateFrom && (!startDate || startDate < dateFrom)) return false;
     if (dateTo && (!startDate || startDate > dateTo)) return false;
+    if (
+      searchLower &&
+      !project.name?.toLowerCase().includes(searchLower) &&
+      !project.description?.toLowerCase().includes(searchLower)
+    ) {
+      return false;
+    }
     return true;
   });
 
@@ -337,19 +377,14 @@ export const Projects = () => {
   const indexOfFirstProject = indexOfLastProject - itemsPerPage;
   const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+  const hasActiveFilters = !!(dateFrom || dateTo || search);
 
-  const handleDateFromChange = (value: string) => {
-    setDateFrom(value);
-    setCurrentPage(1);
-  };
-  const handleDateToChange = (value: string) => {
-    setDateTo(value);
-    setCurrentPage(1);
-  };
-  const clearDateFilter = () => {
-    setDateFrom("");
-    setDateTo("");
-    setCurrentPage(1);
+  const handleDateFromChange = (value: string) => updateParams({ from: value, page: "" });
+  const handleDateToChange = (value: string) => updateParams({ to: value, page: "" });
+  const goToPage = (page: number) => updateParams({ page: page > 1 ? String(page) : "" });
+  const clearFilters = () => {
+    setSearchInput("");
+    updateParams({ from: "", to: "", q: "", page: "" });
   };
 
   return (
