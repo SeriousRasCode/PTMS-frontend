@@ -375,18 +375,38 @@ export const Projects = () => {
     return true;
   });
 
+  // Sort the filtered list before paginating.
+  const sortedProjects = [...filteredProjects].sort((a: Project, b: Project) => {
+    switch (sort) {
+      case "name-asc":
+        return (a.name || "").localeCompare(b.name || "");
+      case "name-desc":
+        return (b.name || "").localeCompare(a.name || "");
+      case "start-asc":
+        return (a.start_date || "").localeCompare(b.start_date || "");
+      case "start-desc":
+        return (b.start_date || "").localeCompare(a.start_date || "");
+      case "end-asc":
+        return (a.end_date || "").localeCompare(b.end_date || "");
+      case "end-desc":
+        return (b.end_date || "").localeCompare(a.end_date || "");
+      default:
+        return 0;
+    }
+  });
+
   const indexOfLastProject = currentPage * itemsPerPage;
   const indexOfFirstProject = indexOfLastProject - itemsPerPage;
-  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
-  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
-  const hasActiveFilters = !!(dateFrom || dateTo || search);
+  const currentProjects = sortedProjects.slice(indexOfFirstProject, indexOfLastProject);
+  const totalPages = Math.ceil(sortedProjects.length / itemsPerPage);
+  const hasActiveFilters = !!(dateFrom || dateTo || search || sort !== "default");
 
   const handleDateFromChange = (value: string) => updateParams({ from: value, page: "" });
   const handleDateToChange = (value: string) => updateParams({ to: value, page: "" });
   const goToPage = (page: number) => updateParams({ page: page > 1 ? String(page) : "" });
   const clearFilters = () => {
     setSearchInput("");
-    updateParams({ from: "", to: "", q: "", page: "" });
+    updateParams({ from: "", to: "", q: "", sort: "default", page: "" });
   };
 
   return (
@@ -526,6 +546,23 @@ export const Projects = () => {
               onChange={(e) => handleDateToChange(e.target.value)}
               className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
             />
+          </div>
+          <div className="min-w-[180px]">
+            <Label className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Sort by</Label>
+            <Select value={sort} onValueChange={(value) => updateParams({ sort: value, page: "" })}>
+              <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}>
+                <SelectValue placeholder="Default" />
+              </SelectTrigger>
+              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+                <SelectItem value="default" className={theme === 'dark' ? 'text-white' : ''}>Default</SelectItem>
+                <SelectItem value="name-asc" className={theme === 'dark' ? 'text-white' : ''}>Name (A → Z)</SelectItem>
+                <SelectItem value="name-desc" className={theme === 'dark' ? 'text-white' : ''}>Name (Z → A)</SelectItem>
+                <SelectItem value="start-asc" className={theme === 'dark' ? 'text-white' : ''}>Start date (earliest)</SelectItem>
+                <SelectItem value="start-desc" className={theme === 'dark' ? 'text-white' : ''}>Start date (latest)</SelectItem>
+                <SelectItem value="end-asc" className={theme === 'dark' ? 'text-white' : ''}>End date (earliest)</SelectItem>
+                <SelectItem value="end-desc" className={theme === 'dark' ? 'text-white' : ''}>End date (latest)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {hasActiveFilters && (
             <Button
