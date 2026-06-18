@@ -200,13 +200,13 @@ export const Projects = () => {
       
       let statusToSend = newStatus;
       
-      const backendStatuses = projects.map(p => p.status).filter(Boolean);
-      
+      const backendStatuses = projects.map((p: Project) => p.status).filter(Boolean);
+
       if (backendStatuses.length > 0) {
-        const hasUnderscores = backendStatuses.some(s => s && s.includes('_'));
-        const hasSpaces = backendStatuses.some(s => s && s.includes(' '));
-        const isLowercase = backendStatuses.every(s => s && s === s.toLowerCase());
-        const isTitleCase = backendStatuses.some(s => s && s[0] === s[0].toUpperCase());
+        const hasUnderscores = backendStatuses.some((s: string) => s && s.includes('_'));
+        const hasSpaces = backendStatuses.some((s: string) => s && s.includes(' '));
+        const isLowercase = backendStatuses.every((s: string) => s && s === s.toLowerCase());
+        const isTitleCase = backendStatuses.some((s: string) => s && s[0] === s[0].toUpperCase());
         
         if (hasUnderscores && isLowercase) {
           const map: { [key: string]: string } = {
@@ -441,7 +441,7 @@ export const Projects = () => {
                       <SelectValue placeholder="Select a team" />
                     </SelectTrigger>
                     <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
-                      {teams.map((team) => (
+                      {teams.map((team: Team) => (
                         <SelectItem key={team.id} value={team.id.toString()} className={theme === 'dark' ? 'text-white' : ''}>
                           {team.name}
                         </SelectItem>
