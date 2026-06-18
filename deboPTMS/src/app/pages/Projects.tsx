@@ -595,16 +595,16 @@ export const Projects = () => {
             <FolderKanban className={`h-16 w-16 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`} />
             {projects.length > 0 ? (
               <>
-                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No projects match the selected dates</h3>
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>No projects match your filters</h3>
                 <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center mb-4`}>
-                  Try adjusting or clearing the date filter
+                  Try adjusting or clearing the search and date filters
                 </p>
                 <Button
                   variant="outline"
-                  onClick={clearDateFilter}
+                  onClick={clearFilters}
                   className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
                 >
-                  Clear filter
+                  Clear filters
                 </Button>
               </>
             ) : (
