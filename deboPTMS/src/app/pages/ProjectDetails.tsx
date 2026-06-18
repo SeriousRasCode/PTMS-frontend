@@ -516,7 +516,7 @@ export const ProjectDetails = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {tasks.filter(t => t.status === "not_started").length}
+              {tasks.filter((t: Task) => t.status === "not_started").length}
             </div>
           </CardContent>
         </Card>
@@ -546,7 +546,7 @@ export const ProjectDetails = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {tasks.map((task) => (
+          {tasks.map((task: Task) => (
             <Card key={task.id} className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
