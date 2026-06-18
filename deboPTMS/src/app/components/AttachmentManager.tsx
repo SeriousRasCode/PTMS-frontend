@@ -18,7 +18,7 @@ interface Attachment {
   file_size: number;
   file_type: string;
   uploaded_by: number;
-  created_at: string;
+  uploaded_at: string;
 }
 
 interface AttachmentManagerProps {
@@ -280,9 +280,9 @@ export const AttachmentManager = ({
                         className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}
                       >
                         {formatFileSize(attachment.file_size)} •{" "}
-                        {attachment.created_at &&
-                          !isNaN(new Date(attachment.created_at).getTime())
-                          ? new Date(attachment.created_at).toLocaleDateString()
+                        {attachment.uploaded_at &&
+                          !isNaN(new Date(attachment.uploaded_at).getTime())
+                          ? new Date(attachment.uploaded_at).toLocaleDateString()
                           : "Unknown date"}
                       </p>
                     </div>
