@@ -512,7 +512,7 @@ export const Projects = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {projects.filter(p => {
+              {filteredProjects.filter(p => {
                 const status = p.status?.toLowerCase().replace('_', ' ');
                 return status === "on hold";
               }).length}
