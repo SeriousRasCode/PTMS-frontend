@@ -89,6 +89,37 @@ export const ProjectDetails = () => {
   
   const queryClient = useQueryClient();
 
+  // Filters live in the URL so they survive refresh and can be shared/bookmarked.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("q") || "";
+  const statusFilter = searchParams.get("status") || "all";
+  const sort = searchParams.get("sort") || "default";
+
+  const [searchInput, setSearchInput] = useState(search);
+
+  // Values at their default are dropped from the URL to keep it clean.
+  const DEFAULTS: Record<string, string> = { status: "all", sort: "default" };
+  const updateParams = (updates: Record<string, string>) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        Object.entries(updates).forEach(([key, value]) => {
+          if (value && value !== DEFAULTS[key]) next.set(key, value);
+          else next.delete(key);
+        });
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  useEffect(() => {
+    if (searchInput === search) return;
+    const id = setTimeout(() => updateParams({ q: searchInput }), 300);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
   // Dialogs state
   const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
   const [assignTaskDialogOpen, setAssignTaskDialogOpen] = useState(false);
