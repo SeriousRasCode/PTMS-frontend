@@ -39,14 +39,44 @@ export const Projects = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const itemsPerPage = 6;
 
-  // Date-range filter (filters by project start_date)
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  // Filters live in the URL so they survive refresh and can be shared/bookmarked.
+  const dateFrom = searchParams.get("from") || "";
+  const dateTo = searchParams.get("to") || "";
+  const search = searchParams.get("q") || "";
+  const currentPage = Number(searchParams.get("page")) || 1;
+
+  // Local mirror of the search box so typing is instant; debounced into the URL.
+  const [searchInput, setSearchInput] = useState(search);
+
+  // Update one or more URL params at once (empty value removes the param).
+  const updateParams = (updates: Record<string, string>) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        Object.entries(updates).forEach(([key, value]) => {
+          if (value) next.set(key, value);
+          else next.delete(key);
+        });
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  // Debounce the search box -> URL (and reset to page 1 on change).
+  useEffect(() => {
+    if (searchInput === search) return;
+    const id = setTimeout(() => {
+      updateParams({ q: searchInput, page: "" });
+    }, 300);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   const [newProject, setNewProject] = useState({
     name: "",
@@ -56,7 +86,14 @@ export const Projects = () => {
     team_id: "",
   });
 
-  const { data: projects = [], isLoading: loading } = useQuery({
+  const {
+    data: projects = [],
+    isLoading: loading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["projects", user?.role, user?.id],
     enabled: !!user,
     queryFn: async (): Promise<Project[]> => {
@@ -65,17 +102,7 @@ export const Projects = () => {
           ? await projectAPI.getAllProjects()
           : await projectAPI.getMyProjects();
 
-      let projectsList = [];
-
-      if (response && response.success && response.data) {
-        projectsList = response.data;
-      } else if (response && Array.isArray(response.data)) {
-        projectsList = response.data;
-      } else if (Array.isArray(response)) {
-        projectsList = response;
-      } else {
-        projectsList = [];
-      }
+      let projectsList = unwrapList<any>(response);
 
       if (projectsList.length > 0) {
         const hasManagerName = projectsList.some((p: any) => p.manager_name);
@@ -114,12 +141,7 @@ export const Projects = () => {
         response = await teamAPI.getMyTeams();
       }
 
-      if (response && response.success && response.data) {
-        return response.data;
-      } else if (response && response.data) {
-        return response.data;
-      }
-      return [];
+      return unwrapList<Team>(response);
     },
   });
 
