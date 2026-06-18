@@ -750,9 +750,9 @@ export const ProjectDetails = () => {
             <Button
               onClick={handleAssignTask}
               className="w-full bg-gradient-to-r from-[#0f5841] to-[#194f87]"
-              disabled={!selectedUserId || loadingMembers}
+              disabled={!selectedUserId || loadingMembers || assignTaskMutation.isPending}
             >
-              Assign Task
+              {assignTaskMutation.isPending ? "Assigning..." : "Assign Task"}
             </Button>
           </div>
         </DialogContent>
@@ -877,9 +877,10 @@ export const ProjectDetails = () => {
             </div>
             <Button
               onClick={handleUpdateProgress}
+              disabled={updateProgressMutation.isPending}
               className="w-full bg-gradient-to-r from-[#0f5841] to-[#194f87]"
             >
-              Update Progress
+              {updateProgressMutation.isPending ? "Updating..." : "Update Progress"}
             </Button>
           </div>
         </DialogContent>
