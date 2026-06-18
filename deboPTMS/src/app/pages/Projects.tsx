@@ -724,7 +724,7 @@ export const Projects = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
+                onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
               >
