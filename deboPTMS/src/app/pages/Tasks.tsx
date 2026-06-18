@@ -266,9 +266,40 @@ export const Tasks = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading tasks...</div>
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full" />
+          ))}
+        </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+          <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>Couldn't load tasks</h3>
+          <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-center mb-4`}>
+            {(error as Error)?.message || "Something went wrong while fetching tasks."}
+          </p>
+          <Button
+            onClick={() => refetch()}
+            className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -281,7 +312,10 @@ export const Tasks = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Tasks</h1>
+          <h1 className={`text-3xl font-bold flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            Tasks
+            {isFetching && <RefreshCw className={`h-4 w-4 animate-spin ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`} />}
+          </h1>
           <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mt-1`}>View and manage your assigned tasks</p>
         </div>
       </div>
@@ -325,7 +359,7 @@ export const Tasks = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {allTasks.filter(t => isOverdue(t.due_date) && t.status !== "completed").length}
+              {allTasks.filter((t: Task) => isOverdue(t.due_date) && t.status !== "completed").length}
             </div>
           </CardContent>
         </Card>
