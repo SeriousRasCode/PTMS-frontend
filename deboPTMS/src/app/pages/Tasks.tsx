@@ -60,16 +60,20 @@ export const Tasks = () => {
   const projectFilter = searchParams.get("project") || "all";
   const dueFrom = searchParams.get("from") || "";
   const dueTo = searchParams.get("to") || "";
+  const sort = searchParams.get("sort") || "default";
+  const activeTab = searchParams.get("tab") || "all";
 
   // Local mirror of the search box so typing is instant; debounced into the URL.
   const [searchInput, setSearchInput] = useState(search);
 
+  // Values equal to a param's default are dropped from the URL to keep it clean.
+  const DEFAULTS: Record<string, string> = { project: "all", sort: "default", tab: "all" };
   const updateParams = (updates: Record<string, string>) => {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
         Object.entries(updates).forEach(([key, value]) => {
-          if (value && value !== "all") next.set(key, value);
+          if (value && value !== DEFAULTS[key]) next.set(key, value);
           else next.delete(key);
         });
         return next;
