@@ -403,7 +403,7 @@ export const ProjectDetails = () => {
 
   if (isError) {
     return (
-      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
         <CardContent className="flex flex-col items-center justify-center py-16">
           <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
           <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Couldn't load tasks</h3>
@@ -492,7 +492,7 @@ export const ProjectDetails = () => {
                 Create Task
               </Button>
             </DialogTrigger>
-            <DialogContent className={`max-w-2xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
+            <DialogContent className={`max-w-2xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
               <DialogHeader>
                 <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Create New Task</DialogTitle>
                 <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
@@ -557,7 +557,7 @@ export const ProjectDetails = () => {
       </div>
 
       {/* Search + Filters */}
-      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
         <CardContent className="flex flex-wrap items-end gap-4 py-4">
           <div className="flex-1 min-w-[200px]">
             <Label htmlFor="task-search" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Search</Label>
@@ -578,7 +578,7 @@ export const ProjectDetails = () => {
               <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}>
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
-              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-white'}>
                 <SelectItem value="all" className={theme === 'dark' ? 'text-white' : ''}>All statuses</SelectItem>
                 <SelectItem value="not_started" className={theme === 'dark' ? 'text-white' : ''}>Not Started</SelectItem>
                 <SelectItem value="in_progress" className={theme === 'dark' ? 'text-white' : ''}>In Progress</SelectItem>
@@ -592,7 +592,7 @@ export const ProjectDetails = () => {
               <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}>
                 <SelectValue placeholder="Default" />
               </SelectTrigger>
-              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-white'}>
                 <SelectItem value="default" className={theme === 'dark' ? 'text-white' : ''}>Default</SelectItem>
                 <SelectItem value="due-asc" className={theme === 'dark' ? 'text-white' : ''}>Due date (earliest)</SelectItem>
                 <SelectItem value="due-desc" className={theme === 'dark' ? 'text-white' : ''}>Due date (latest)</SelectItem>
@@ -622,7 +622,7 @@ export const ProjectDetails = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
+        <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="pb-2">
             <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Total Tasks</CardTitle>
           </CardHeader>
@@ -630,7 +630,7 @@ export const ProjectDetails = () => {
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{searchFiltered.length}</div>
           </CardContent>
         </Card>
-        <Card className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
+        <Card className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="pb-2">
             <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>In Progress</CardTitle>
           </CardHeader>
@@ -640,7 +640,7 @@ export const ProjectDetails = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className={`border-l-4 border-l-green-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
+        <Card className={`border-l-4 border-l-green-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="pb-2">
             <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Completed</CardTitle>
           </CardHeader>
@@ -650,7 +650,7 @@ export const ProjectDetails = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className={`border-l-4 border-l-gray-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
+        <Card className={`border-l-4 border-l-gray-500 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <CardHeader className="pb-2">
             <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Not Started</CardTitle>
           </CardHeader>
@@ -664,7 +664,7 @@ export const ProjectDetails = () => {
 
       {/* Tasks List */}
       {visibleTasks.length === 0 ? (
-        <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+        <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <CheckCircle2 className={`h-16 w-16 mb-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
             {tasks.length > 0 ? (
@@ -705,7 +705,7 @@ export const ProjectDetails = () => {
       ) : (
         <div className="space-y-4">
           {visibleTasks.map((task: Task) => (
-            <Card key={task.id} className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
+            <Card key={task.id} className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -851,7 +851,7 @@ export const ProjectDetails = () => {
           setSelectedUserId(null);
         }
       }}>
-        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
           <DialogHeader>
             <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Assign Task to User</DialogTitle>
             <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
@@ -923,7 +923,7 @@ export const ProjectDetails = () => {
           setProgressUpdate({ progress_percentage: 0, update_note: "" });
         }
       }}>
-        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
           <DialogHeader>
             <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Update Task Progress</DialogTitle>
             <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
@@ -1051,7 +1051,7 @@ export const ProjectDetails = () => {
           setTaskHistory([]);
         }
       }}>
-        <DialogContent className={`max-w-3xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
+        <DialogContent className={`max-w-3xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <DialogHeader>
             <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Task History</DialogTitle>
             <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
@@ -1063,7 +1063,7 @@ export const ProjectDetails = () => {
               <p className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No history available</p>
             ) : (
               taskHistory.map((update: TaskUpdate, index: number) => (
-                <Card key={index} className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}`}>
+                <Card key={index} className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-white'}`}>
                   <CardContent className="pt-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
@@ -1102,7 +1102,7 @@ export const ProjectDetails = () => {
           setTaskAssignments([]);
         }
       }}>
-        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+        <DialogContent className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
           <DialogHeader>
             <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Task Assignments</DialogTitle>
             <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
@@ -1114,7 +1114,7 @@ export const ProjectDetails = () => {
               <p className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No users assigned</p>
             ) : (
               taskAssignments.map((assignment: TaskAssignment) => (
-                <Card key={assignment.id} className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+                <Card key={assignment.id} className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-white'}>
                   <CardContent className="pt-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#0f5841] to-[#194f87] flex items-center justify-center text-white font-medium">
@@ -1140,7 +1140,7 @@ export const ProjectDetails = () => {
           setSelectedTask(null);
         }
       }}>
-        <DialogContent className={`max-w-3xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
+        <DialogContent className={`max-w-3xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
           <DialogHeader>
             <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>Task Subtasks</DialogTitle>
             <DialogDescription className={theme === 'dark' ? 'text-gray-300' : ''}>
