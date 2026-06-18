@@ -48,18 +48,20 @@ export const Projects = () => {
   const dateFrom = searchParams.get("from") || "";
   const dateTo = searchParams.get("to") || "";
   const search = searchParams.get("q") || "";
+  const sort = searchParams.get("sort") || "default";
   const currentPage = Number(searchParams.get("page")) || 1;
 
   // Local mirror of the search box so typing is instant; debounced into the URL.
   const [searchInput, setSearchInput] = useState(search);
 
-  // Update one or more URL params at once (empty value removes the param).
+  // Update one or more URL params at once; values at their default are removed.
+  const DEFAULTS: Record<string, string> = { sort: "default" };
   const updateParams = (updates: Record<string, string>) => {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
         Object.entries(updates).forEach(([key, value]) => {
-          if (value) next.set(key, value);
+          if (value && value !== DEFAULTS[key]) next.set(key, value);
           else next.delete(key);
         });
         return next;
