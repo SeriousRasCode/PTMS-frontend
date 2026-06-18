@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -8,10 +8,11 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 import { Textarea } from "../components/ui/textarea";
+import { Skeleton } from "../components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { FolderKanban, Plus, Users, Calendar, Edit2, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { FolderKanban, Plus, Users, Calendar, ExternalLink, ChevronLeft, ChevronRight, Search, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { projectAPI, teamAPI } from "../utils/api";
+import { projectAPI, teamAPI, unwrapList } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
