@@ -391,7 +391,10 @@ export const Projects = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Projects</h1>
+          <h1 className={`text-3xl font-bold flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            Projects
+            {isFetching && <RefreshCw className={`h-4 w-4 animate-spin ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`} />}
+          </h1>
           <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mt-1`}>Manage and track all your projects</p>
         </div>
         {canCreateProject && (
