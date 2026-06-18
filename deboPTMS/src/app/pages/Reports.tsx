@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
-import { BarChart3, TrendingUp, AlertCircle, Users, Clock, CheckCircle2, CheckSquare, PieChart as PieChartIcon } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Skeleton } from "../components/ui/skeleton";
+import { BarChart3, TrendingUp, AlertCircle, Users, Clock, CheckCircle2, CheckSquare, PieChart as PieChartIcon, RefreshCw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { reportAPI, taskAPI, projectAPI } from "../utils/api";
-import { toast } from "sonner";
+import { reportAPI, taskAPI, projectAPI, unwrapList } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
