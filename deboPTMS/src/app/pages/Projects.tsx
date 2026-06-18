@@ -480,7 +480,7 @@ export const Projects = () => {
             <CardTitle className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Total Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{projects.length}</div>
+            <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{filteredProjects.length}</div>
           </CardContent>
         </Card>
         <Card className={`border-l-4 ${theme === 'dark' ? 'border-l-blue-400 bg-slate-800 border-slate-700' : 'border-l-blue-500 bg-white'}`}>
@@ -489,7 +489,7 @@ export const Projects = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {projects.filter(p => {
+              {filteredProjects.filter(p => {
                 const status = p.status?.toLowerCase().replace('_', ' ');
                 return status === "active" || status === "in progress";
               }).length}
