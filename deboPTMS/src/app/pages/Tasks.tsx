@@ -38,32 +38,26 @@ interface TaskUpdate {
 export const Tasks = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  
+  const queryClient = useQueryClient();
+
   // Dialog states
   const [updateProgressDialogOpen, setUpdateProgressDialogOpen] = useState(false);
   const [taskHistoryDialogOpen, setTaskHistoryDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [taskHistory, setTaskHistory] = useState<TaskUpdate[]>([]);
-  
+
   const [progressUpdate, setProgressUpdate] = useState({
     progress_percentage: 0,
     update_note: "",
   });
 
-  useEffect(() => {
-    fetchMyTasks();
-  }, []);
-
-  const fetchMyTasks = async () => {
-    try {
-      setLoading(true);
-      
-      
+  const { data: tasks = [], isLoading: loading } = useQuery({
+    queryKey: ["tasks", "my", user?.id],
+    enabled: !!user,
+    queryFn: async (): Promise<Task[]> => {
       // Get all projects first
       const projectsResponse = await projectAPI.getMyProjects();
-      
+
       // Extract projects array (same logic as ProjectDetails)
       let projectsList = [];
       if (projectsResponse && projectsResponse.success && projectsResponse.data) {
@@ -73,19 +67,16 @@ export const Tasks = () => {
       } else if (Array.isArray(projectsResponse)) {
         projectsList = projectsResponse;
       }
-      
-      
+
       if (projectsList.length === 0) {
-        console.warn("No projects found");
-        setTasks([]);
-        return;
+        return [];
       }
-      
+
       // Fetch tasks for each project (EXACT same logic as ProjectDetails)
       const allTasksPromises = projectsList.map(async (project: any) => {
         try {
           const response = await taskAPI.getTasksByProject(project.id);
-          
+
           // EXACT same handling as ProjectDetails line 179-185
           let projectTasks = [];
           if (Array.isArray(response)) {
@@ -95,7 +86,7 @@ export const Tasks = () => {
           } else {
             projectTasks = [];
           }
-          
+
           // Add project info to each task
           return projectTasks.map((task: any) => ({
             ...task,
@@ -107,29 +98,11 @@ export const Tasks = () => {
           return [];
         }
       });
-      
+
       const allTasksArrays = await Promise.all(allTasksPromises);
-      const allTasks = allTasksArrays.flat();
-      
-      if (allTasks.length > 0) {
-      }
-      
-      setTasks(allTasks);
-      
-    } catch (error: any) {
-      // Silently handle permission errors
-      if (!error.message?.includes("Forbidden") && 
-          !error.message?.includes("permission") &&
-          !error.message?.includes("not allowed")) {
-        console.error("=== FETCH TASKS ERROR ===");
-        console.error("Error:", error);
-        toast.error(error.message || "Failed to load tasks");
-      }
-      setTasks([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return allTasksArrays.flat();
+    },
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
