@@ -426,6 +426,53 @@ export const Projects = () => {
         )}
       </div>
 
+      {/* Date Range Filter */}
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
+        <CardContent className="flex flex-wrap items-end gap-4 py-4">
+          <div className="flex items-center gap-2 mr-2">
+            <Calendar className={`h-4 w-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`} />
+            <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Filter by start date</span>
+          </div>
+          <div>
+            <Label htmlFor="filter-from" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>From</Label>
+            <Input
+              id="filter-from"
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(e) => handleDateFromChange(e.target.value)}
+              className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
+            />
+          </div>
+          <div>
+            <Label htmlFor="filter-to" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>To</Label>
+            <Input
+              id="filter-to"
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(e) => handleDateToChange(e.target.value)}
+              className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
+            />
+          </div>
+          {(dateFrom || dateTo) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearDateFilter}
+              className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
+            >
+              Clear
+            </Button>
+          )}
+          {(dateFrom || dateTo) && (
+            <span className={`text-sm ml-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              Showing {filteredProjects.length} of {projects.length} projects
+            </span>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className={`border-l-4 border-l-[#0f5841] ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
