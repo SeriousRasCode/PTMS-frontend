@@ -656,37 +656,55 @@ export const ProjectDetails = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {tasks.filter((t: Task) => t.status === "not_started").length}
+              {searchFiltered.filter((t: Task) => t.status === "not_started").length}
             </div>
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Tasks List */}
-      {tasks.length === 0 ? (
+      {visibleTasks.length === 0 ? (
         <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <CheckCircle2 className={`h-16 w-16 mb-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>No tasks yet</h3>
-            <p className={`text-center mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-              {canManageTasks
-                ? "Create your first task to get started"
-                : "No tasks have been created for this project"}
-            </p>
-            {canManageTasks && (
-              <Button
-                onClick={() => setCreateTaskDialogOpen(true)}
-                className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create First Task
-              </Button>
+            {tasks.length > 0 ? (
+              <>
+                <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>No tasks match your filters</h3>
+                <p className={`text-center mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Try adjusting the search, status or sort options
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                  className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
+                >
+                  Clear filters
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>No tasks yet</h3>
+                <p className={`text-center mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {canManageTasks
+                    ? "Create your first task to get started"
+                    : "No tasks have been created for this project"}
+                </p>
+                {canManageTasks && (
+                  <Button
+                    onClick={() => setCreateTaskDialogOpen(true)}
+                    className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create First Task
+                  </Button>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {tasks.map((task: Task) => (
+          {visibleTasks.map((task: Task) => (
             <Card key={task.id} className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
