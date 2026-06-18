@@ -751,7 +751,7 @@ export const ProjectDetails = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
+                <div className={`flex flex-wrap gap-2 pt-2 border-t ${theme === 'dark' ? 'border-slate-600' : ''}`}>
                   {canUpdateProgress && (
                     <Button
                       size="sm"
