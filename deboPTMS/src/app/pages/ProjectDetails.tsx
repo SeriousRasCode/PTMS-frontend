@@ -738,7 +738,7 @@ export const ProjectDetails = () => {
                   }`}
                 >
                   <option value="">Select a user</option>
-                  {usersForAssignment.map((u) => (
+                  {usersForAssignment.map((u: User) => (
                     <option key={u.id} value={u.id}>
                       {u.full_name} ({u.email})
                     </option>
@@ -903,7 +903,7 @@ export const ProjectDetails = () => {
             {taskHistory.length === 0 ? (
               <p className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No history available</p>
             ) : (
-              taskHistory.map((update, index) => (
+              taskHistory.map((update: TaskUpdate, index: number) => (
                 <Card key={index} className={`border-l-4 border-l-blue-500 ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}`}>
                   <CardContent className="pt-4">
                     <div className="flex items-start justify-between mb-2">
