@@ -28,126 +28,67 @@ interface Workload {
 export const Reports = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
-  const [loading, setLoading] = useState(true);
-  const [overdueTasks, setOverdueTasks] = useState<OverdueTask[]>([]);
-  const [workload, setWorkload] = useState<Workload[]>([]);
-  const [allTasks, setAllTasks] = useState<any[]>([]);
-  const [permissionError, setPermissionError] = useState(false);
 
   // Pie chart colors matching the design system
   const COLORS = ['#0f5841', '#194f87', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6'];
 
-  useEffect(() => {
-    fetchReportData();
-  }, []);
+  // Members (and anyone without report permissions) get a view built from their own tasks.
+  const loadMemberReports = async () => {
+    const projectsList = unwrapList<any>(await projectAPI.getMyProjects());
 
-  const fetchReportData = async () => {
-    try {
-      setLoading(true);
-      setPermissionError(false);
-      
-      if (user?.role === "Member") {
-        await fetchMemberReports();
-        return;
-      }
-      
-      try {
-        const overdueResponse = await reportAPI.getOverdueTasks();
-        
-        if (overdueResponse.success && overdueResponse.data) {
-          setOverdueTasks(overdueResponse.data);
-        } else if (Array.isArray(overdueResponse)) {
-          setOverdueTasks(overdueResponse);
-        }
-
-        const workloadResponse = await reportAPI.getWorkload();
-        
-        if (workloadResponse.success && workloadResponse.data) {
-          setWorkload(workloadResponse.data);
-        } else if (Array.isArray(workloadResponse)) {
-          setWorkload(workloadResponse);
-        }
-      } catch (error: any) {
-        if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
-          await fetchMemberReports();
-        } else {
-          throw error;
-        }
-      }
-      
-    } catch (error: any) {
-      if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
-        setPermissionError(true);
-      } else {
-        toast.error(error.message || "Failed to load report data");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const fetchMemberReports = async () => {
-    try {
-      const projectsResponse = await projectAPI.getMyProjects();
-      
-      let projectsList = [];
-      if (projectsResponse && projectsResponse.success && projectsResponse.data) {
-        projectsList = projectsResponse.data;
-      } else if (Array.isArray(projectsResponse)) {
-        projectsList = projectsResponse;
-      }
-      
-      const allTasksPromises = projectsList.map(async (project: any) => {
+    const allTasksArrays = await Promise.all(
+      projectsList.map(async (project: any) => {
         try {
-          const response = await taskAPI.getTasksByProject(project.id);
-          
-          let projectTasks = [];
-          if (Array.isArray(response)) {
-            projectTasks = response;
-          } else if (response.data && Array.isArray(response.data)) {
-            projectTasks = response.data;
-          }
-          
-          return projectTasks.map((task: any) => ({
+          return unwrapList<any>(await taskAPI.getTasksByProject(project.id)).map((task: any) => ({
             ...task,
             project_name: project.name,
-            project_id: project.id
+            project_id: project.id,
           }));
-        } catch (error) {
+        } catch {
           return [];
         }
-      });
-      
-      const allTasksArrays = await Promise.all(allTasksPromises);
-      const allTasks = allTasksArrays.flat();
-      
-      setAllTasks(allTasks);
-      
-      const today = new Date();
-      const overdue = allTasks.filter((task: any) => {
-        const dueDate = new Date(task.due_date);
-        return dueDate < today && task.status !== "completed";
-      });
-      
-      setOverdueTasks(overdue);
-      
-      if (allTasks.length > 0) {
-        setWorkload([{
-          user_id: user?.id || 0,
-          full_name: user?.full_name || "Me",
-          task_count: allTasks.length
-        }]);
-      }
-      
-    } catch (error: any) {
-      // Silently handle permission errors
-      if (!error.message?.includes("Forbidden") && 
-          !error.message?.includes("permission") &&
-          !error.message?.includes("not allowed")) {
-        toast.error("Failed to load your reports");
-      }
-    }
+      }),
+    );
+    const allTasks = allTasksArrays.flat();
+
+    const today = new Date();
+    const overdueTasks = allTasks.filter((task: any) => {
+      const dueDate = new Date(task.due_date);
+      return dueDate < today && task.status !== "completed";
+    });
+
+    const workload: Workload[] =
+      allTasks.length > 0
+        ? [{ user_id: user?.id || 0, full_name: user?.full_name || "Me", task_count: allTasks.length }]
+        : [];
+
+    return { overdueTasks, workload, allTasks };
   };
+
+  const { data, isLoading: loading, isError, error, isFetching, refetch } = useQuery({
+    queryKey: ["reports", user?.role, user?.id],
+    enabled: !!user,
+    queryFn: async (): Promise<{ overdueTasks: OverdueTask[]; workload: Workload[]; allTasks: any[] }> => {
+      if (user?.role === "Member") {
+        return loadMemberReports();
+      }
+      // Admin/Manager: use the report endpoints, falling back to a personal view if not permitted.
+      try {
+        const overdueTasks = unwrapList<OverdueTask>(await reportAPI.getOverdueTasks());
+        const workload = unwrapList<Workload>(await reportAPI.getWorkload());
+        return { overdueTasks, workload, allTasks: [] };
+      } catch (err: any) {
+        if (err.message?.includes("Forbidden") || err.message?.includes("permission")) {
+          return loadMemberReports();
+        }
+        throw err;
+      }
+    },
+  });
+
+  const overdueTasks = data?.overdueTasks ?? [];
+  const workload = data?.workload ?? [];
+  const allTasks = data?.allTasks ?? [];
 
   const getDaysOverdue = (dueDate: string) => {
     const due = new Date(dueDate);
