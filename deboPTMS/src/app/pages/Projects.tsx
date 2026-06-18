@@ -502,7 +502,7 @@ export const Projects = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {projects.filter(p => p.status?.toLowerCase() === "completed").length}
+              {filteredProjects.filter(p => p.status?.toLowerCase() === "completed").length}
             </div>
           </CardContent>
         </Card>
