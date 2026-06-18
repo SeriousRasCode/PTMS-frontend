@@ -188,23 +188,41 @@ export const Tasks = () => {
     return true;
   });
 
-  const hasActiveFilters = !!(search || dueFrom || dueTo || projectFilter !== "all");
+  // Sort the filtered list (applied before splitting into status tabs).
+  const sortedTasks = [...baseTasks].sort((a: Task, b: Task) => {
+    switch (sort) {
+      case "due-asc":
+        return (a.due_date || "").localeCompare(b.due_date || "");
+      case "due-desc":
+        return (b.due_date || "").localeCompare(a.due_date || "");
+      case "progress-asc":
+        return (a.progress_percentage || 0) - (b.progress_percentage || 0);
+      case "progress-desc":
+        return (b.progress_percentage || 0) - (a.progress_percentage || 0);
+      case "title-asc":
+        return (a.title || "").localeCompare(b.title || "");
+      default:
+        return 0;
+    }
+  });
+
+  const hasActiveFilters = !!(search || dueFrom || dueTo || projectFilter !== "all" || sort !== "default");
 
   const clearFilters = () => {
     setSearchInput("");
-    updateParams({ q: "", project: "all", from: "", to: "" });
+    updateParams({ q: "", project: "all", from: "", to: "", sort: "default" });
   };
 
   const filterTasks = (filterType: string) => {
     switch (filterType) {
       case "in-progress":
-        return baseTasks.filter((t: Task) => t.status === "in_progress" || t.status === "started");
+        return sortedTasks.filter((t: Task) => t.status === "in_progress" || t.status === "started");
       case "completed":
-        return baseTasks.filter((t: Task) => t.status === "completed");
+        return sortedTasks.filter((t: Task) => t.status === "completed");
       case "not-started":
-        return baseTasks.filter((t: Task) => t.status === "not_started");
+        return sortedTasks.filter((t: Task) => t.status === "not_started");
       default:
-        return baseTasks;
+        return sortedTasks;
     }
   };
   
