@@ -496,7 +496,7 @@ export const ProjectDetails = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {tasks.filter(t => t.status === "started").length}
+              {tasks.filter((t: Task) => t.status === "started").length}
             </div>
           </CardContent>
         </Card>
