@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router";
 import { toast } from "sonner";
-import { projectAPI, taskAPI, adminAPI, teamAPI } from "../utils/api";
+import { projectAPI, taskAPI, adminAPI, teamAPI, unwrapList } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/ui/button";
@@ -11,6 +12,7 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
+import { Skeleton } from "../components/ui/skeleton";
 import { ProjectPhases } from "../components/ProjectPhases";
 import { AttachmentManager } from "../components/AttachmentManager";
 import { TaskSubtasks } from "../components/TaskSubtasks";
@@ -33,6 +35,7 @@ import {
   AlertCircle,
   CheckCircle2,
   ListTree,
+  RefreshCw,
 } from "lucide-react";
 
 interface Task {
@@ -82,13 +85,8 @@ export const ProjectDetails = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [projectMembers, setProjectMembers] = useState<User[]>([]);
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadingMembers, setLoadingMembers] = useState(false);
-  
+  const queryClient = useQueryClient();
+
   // Dialogs state
   const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
   const [assignTaskDialogOpen, setAssignTaskDialogOpen] = useState(false);
@@ -118,195 +116,89 @@ export const ProjectDetails = () => {
   
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   
-  useEffect(() => {
-    if (projectId) {
-      fetchProjectDetails();
-      fetchTasks();
-    }
-  }, [projectId]);
+  // Project: backend has no GET /projects/:id, so fetch the list and find by id.
+  const { data: project = null } = useQuery({
+    queryKey: ["project", projectId, user?.role],
+    enabled: !!projectId && !!user,
+    queryFn: async (): Promise<Project | null> => {
+      const response =
+        user?.role === "Admin"
+          ? await projectAPI.getAllProjects()
+          : await projectAPI.getMyProjects();
+      const projectsList = unwrapList<any>(response);
+      return projectsList.find((p: any) => p.id === Number(projectId)) || null;
+    },
+  });
 
-  useEffect(() => {
-    // Fetch users based on role
-    if (user?.role === "Admin") {
-      // Admins can fetch all users from admin endpoint
-      fetchUsers();
-    } else if (user?.role === "Manager") {
-      // Managers fetch users from their teams
-      fetchManagerTeamMembers();
-    }
-  }, [user?.role]);
-
-  const fetchProjectDetails = async () => {
-    try {
-      
-      // Since backend doesn't have GET /projects/:id, fetch all projects and filter
-      let response;
-      if (user?.role === "Admin") {
-        response = await projectAPI.getAllProjects();
-      } else {
-        response = await projectAPI.getMyProjects();
-      }
-      
-      
-      // Extract projects array from response
-      let projectsList = [];
-      if (response && response.success && response.data) {
-        projectsList = response.data;
-      } else if (response && Array.isArray(response.data)) {
-        projectsList = response.data;
-      } else if (Array.isArray(response)) {
-        projectsList = response;
-      }
-      
-      // Find the project by ID
-      const foundProject = projectsList.find((p: any) => p.id === Number(projectId));
-      
-      if (foundProject) {
-        setProject(foundProject);
-      } else {
-        console.warn("Project not found with ID:", projectId);
-        toast.error("Project not found");
-        navigate("/dashboard/projects");
-      }
-    } catch (error: any) {
-      console.error("Failed to fetch project details:", error);
-      // Silently handle permission errors
-      if (!error.message?.includes("Forbidden") && 
-          !error.message?.includes("permission") &&
-          !error.message?.includes("not allowed")) {
-        toast.error(error.message || "Failed to load project details");
-      }
-    }
-  };
-  
-  const fetchTasks = async () => {
-    try {
-      setLoading(true);
+  const {
+    data: tasks = [],
+    isLoading: loading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["tasks", "project", projectId],
+    enabled: !!projectId,
+    queryFn: async (): Promise<Task[]> => {
       const response = await taskAPI.getTasksByProject(Number(projectId));
-      
-      // Backend returns array directly
-      if (Array.isArray(response)) {
-        setTasks(response);
-      } else if (response.data && Array.isArray(response.data)) {
-        setTasks(response.data);
-      } else {
-        setTasks([]);
+      return unwrapList<Task>(response);
+    },
+  });
+
+  // Users available for assignment (Admins: everyone; Managers: their team members).
+  const { data: usersForAssignment = [], isLoading: loadingMembers } = useQuery({
+    queryKey: ["assignable-users", user?.role, user?.id],
+    enabled: !!user && (user.role === "Admin" || user.role === "Manager"),
+    queryFn: async (): Promise<User[]> => {
+      if (user?.role === "Admin") {
+        return unwrapList<User>(await adminAPI.getAllUsers());
       }
-    } catch (error: any) {
-      console.error("Failed to fetch tasks:", error);
-      toast.error(error.message || "Failed to load tasks");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const fetchUsers = async () => {
-    try {
-      const response = await adminAPI.getAllUsers();
-      if (response.data && Array.isArray(response.data)) {
-        setAllUsers(response.data);
-      } else if (Array.isArray(response)) {
-        setAllUsers(response);
-      }
-    } catch (error: any) {
-      console.error("Failed to fetch users:", error);
-    }
-  };
-  
-  const fetchManagerTeamMembers = async () => {
-    try {
-      setLoadingMembers(true);
-      
-      // Step 1: Get manager's teams
-      const teamsResponse = await teamAPI.getMyTeams();
-      
-      let teams = [];
-      if (teamsResponse && teamsResponse.data && Array.isArray(teamsResponse.data)) {
-        teams = teamsResponse.data;
-      } else if (Array.isArray(teamsResponse)) {
-        teams = teamsResponse;
-      } else if (teamsResponse && teamsResponse.teams && Array.isArray(teamsResponse.teams)) {
-        teams = teamsResponse.teams;
-      }
-      
-      
-      if (teams.length === 0) {
-        console.warn("Manager has no teams");
-        setAllUsers([]);
-        return;
-      }
-      
-      // Step 2: Get members from all teams
-      const allMembersPromises = teams.map((team: any) => 
-        teamAPI.getTeamMembers(team.id).catch(err => {
-          // Silently handle permission errors
-          if (!err.message?.includes('Forbidden') && 
-              !err.message?.includes('permission') && 
-              !err.message?.includes('not allowed')) {
-            console.error(`Failed to fetch members for team ${team.id}:`, err);
-          }
-          return [];
-        })
+
+      // Manager: gather members from all their teams, deduplicated.
+      const teams = unwrapList<any>(await teamAPI.getMyTeams());
+      if (teams.length === 0) return [];
+
+      const membersResults = await Promise.all(
+        teams.map((team: any) =>
+          teamAPI.getTeamMembers(team.id).catch((err: any) => {
+            if (!err.message?.includes("Forbidden") &&
+                !err.message?.includes("permission") &&
+                !err.message?.includes("not allowed")) {
+              console.error(`Failed to fetch members for team ${team.id}:`, err);
+            }
+            return [];
+          }),
+        ),
       );
-      
-      const membersResults = await Promise.all(allMembersPromises);
-      
-      // Step 3: Combine and deduplicate members
-      const allMembers: User[] = [];
+
       const seenUserIds = new Set<number>();
-      
+      const allMembers: User[] = [];
       membersResults.forEach((result) => {
-        let members = [];
-        if (result && result.data && Array.isArray(result.data)) {
-          members = result.data;
-        } else if (Array.isArray(result)) {
-          members = result;
-        } else if (result && result.members && Array.isArray(result.members)) {
-          members = result.members;
-        }
-        
-        members.forEach((member: User) => {
+        unwrapList<User>(result).forEach((member) => {
           if (!seenUserIds.has(member.id)) {
             seenUserIds.add(member.id);
             allMembers.push(member);
           }
         });
       });
-      
-      
-      setAllUsers(allMembers);
-      
-    } catch (error: any) {
-      console.error("=== MANAGER TEAM MEMBERS ERROR ===");
-      console.error("Error type:", error.constructor.name);
-      console.error("Error message:", error.message);
-      console.error("Full error:", error);
-      
-      setAllUsers([]);
-    } finally {
-      setLoadingMembers(false);
-    }
-  };
-  
-  const handleCreateTask = async () => {
-    if (!newTask.title || !newTask.description) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
+      return allMembers;
+    },
+  });
 
-    try {
-      // Convert empty date strings to null for MySQL compatibility
-      const taskData = {
+  const invalidateTasks = () =>
+    queryClient.invalidateQueries({ queryKey: ["tasks", "project", projectId] });
+
+  const createTaskMutation = useMutation({
+    mutationFn: () =>
+      taskAPI.createTask(Number(projectId), {
         ...newTask,
         start_date: newTask.start_date || "",
         due_date: newTask.due_date || "",
         phase_id: newTask.phase_id || null,
-      };
-
-
-      const response = await taskAPI.createTask(Number(projectId), taskData);
+      }),
+    onSuccess: () => {
       toast.success("Task created successfully!");
-
       setNewTask({
         title: "",
         description: "",
@@ -317,70 +209,85 @@ export const ProjectDetails = () => {
         phase_id: null,
       });
       setCreateTaskDialogOpen(false);
-      fetchTasks();
-    } catch (error: any) {
+      invalidateTasks();
+    },
+    onError: (error: any) => {
       console.error("Failed to create task:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        error: error
-      });
       toast.error(error.message || "Failed to create task. Check console and backend logs for details.");
+    },
+  });
+
+  const handleCreateTask = () => {
+    if (!newTask.title || !newTask.description) {
+      toast.error("Please fill in all required fields");
+      return;
     }
+    createTaskMutation.mutate();
   };
-  
-  const handleAssignTask = async () => {
+
+  const assignTaskMutation = useMutation({
+    mutationFn: ({ taskId, userId }: { taskId: number; userId: number }) =>
+      taskAPI.assignTask(taskId, userId),
+    onSuccess: () => {
+      toast.success("Task assigned successfully!");
+      setAssignTaskDialogOpen(false);
+      setSelectedUserId(null);
+      setSelectedTask(null);
+    },
+    onError: (error: any) => {
+      console.error("Failed to assign task:", error);
+      toast.error(error.message || "Failed to assign task");
+    },
+  });
+
+  const handleAssignTask = () => {
     if (!selectedTask || !selectedUserId) {
       toast.error("Please select a user");
       return;
     }
-    
-    try {
-      await taskAPI.assignTask(selectedTask.id, selectedUserId);
-      toast.success("Task assigned successfully!");
-      
-      setAssignTaskDialogOpen(false);
-      setSelectedUserId(null);
-      setSelectedTask(null);
-    } catch (error: any) {
-      console.error("Failed to assign task:", error);
-      toast.error(error.message || "Failed to assign task");
-    }
+    assignTaskMutation.mutate({ taskId: selectedTask.id, userId: selectedUserId });
   };
-  
-  const handleUpdateProgress = async () => {
+
+  const updateProgressMutation = useMutation({
+    mutationFn: (taskId: number) => taskAPI.updateProgress(taskId, progressUpdate),
+    onSuccess: () => {
+      toast.success("Progress updated successfully!");
+      setUpdateProgressDialogOpen(false);
+      setProgressUpdate({ progress_percentage: 0, update_note: "" });
+      setSelectedTask(null);
+      invalidateTasks();
+    },
+    onError: (error: any) => {
+      console.error("Failed to update progress:", error);
+      toast.error(error.message || "Failed to update progress");
+    },
+  });
+
+  const handleUpdateProgress = () => {
     if (!selectedTask) return;
-    
+
     if (progressUpdate.progress_percentage < 0 || progressUpdate.progress_percentage > 100) {
       toast.error("Progress must be between 0 and 100");
       return;
     }
-    
-    try {
-      await taskAPI.updateProgress(selectedTask.id, progressUpdate);
-      toast.success("Progress updated successfully!");
-      
-      setUpdateProgressDialogOpen(false);
-      setProgressUpdate({ progress_percentage: 0, update_note: "" });
-      setSelectedTask(null);
-      fetchTasks();
-    } catch (error: any) {
-      console.error("Failed to update progress:", error);
-      toast.error(error.message || "Failed to update progress");
-    }
+    updateProgressMutation.mutate(selectedTask.id);
   };
-  
-  const handleDeleteTask = async (taskId: number) => {
-    if (!confirm("Are you sure you want to delete this task?")) return;
-    
-    try {
-      await taskAPI.deleteTask(taskId);
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: (taskId: number) => taskAPI.deleteTask(taskId),
+    onSuccess: () => {
       toast.success("Task deleted successfully!");
-      fetchTasks();
-    } catch (error: any) {
+      invalidateTasks();
+    },
+    onError: (error: any) => {
       console.error("Failed to delete task:", error);
       toast.error(error.message || "Failed to delete task");
-    }
+    },
+  });
+
+  const handleDeleteTask = (taskId: number) => {
+    if (!confirm("Are you sure you want to delete this task?")) return;
+    deleteTaskMutation.mutate(taskId);
   };
   
   const viewTaskHistory = async (task: Task) => {
