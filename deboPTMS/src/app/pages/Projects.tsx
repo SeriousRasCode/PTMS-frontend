@@ -631,7 +631,7 @@ export const Projects = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {currentProjects.map((project) => (
+            {currentProjects.map((project: Project) => (
               <Card key={project.id} className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
