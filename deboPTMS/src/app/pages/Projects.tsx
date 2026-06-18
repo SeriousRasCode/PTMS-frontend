@@ -301,11 +301,33 @@ export const Projects = () => {
   }
 
   const canCreateProject = user?.role === "Manager" || user?.role === "Admin";
-  
+
+  // Filter by start_date range (string compare works for YYYY-MM-DD)
+  const filteredProjects = projects.filter((project) => {
+    const startDate = project.start_date?.slice(0, 10);
+    if (dateFrom && (!startDate || startDate < dateFrom)) return false;
+    if (dateTo && (!startDate || startDate > dateTo)) return false;
+    return true;
+  });
+
   const indexOfLastProject = currentPage * itemsPerPage;
   const indexOfFirstProject = indexOfLastProject - itemsPerPage;
-  const currentProjects = projects.slice(indexOfFirstProject, indexOfLastProject);
-  const totalPages = Math.ceil(projects.length / itemsPerPage);
+  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+
+  const handleDateFromChange = (value: string) => {
+    setDateFrom(value);
+    setCurrentPage(1);
+  };
+  const handleDateToChange = (value: string) => {
+    setDateTo(value);
+    setCurrentPage(1);
+  };
+  const clearDateFilter = () => {
+    setDateFrom("");
+    setDateTo("");
+    setCurrentPage(1);
+  };
 
   return (
     <div className="space-y-6">
