@@ -10,7 +10,7 @@ import { Badge } from "../components/ui/badge";
 import { Textarea } from "../components/ui/textarea";
 import { Skeleton } from "../components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { FolderKanban, Plus, Users, Calendar, ExternalLink, ChevronLeft, ChevronRight, Search, AlertCircle, RefreshCw } from "lucide-react";
+import { FolderKanban, Plus, Users, Calendar, ExternalLink, ChevronLeft, ChevronRight, Search, AlertCircle, RefreshCw, Play, CheckCircle2, PauseCircle } from "lucide-react";
 import { toast } from "sonner";
 import { projectAPI, teamAPI, unwrapList } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
