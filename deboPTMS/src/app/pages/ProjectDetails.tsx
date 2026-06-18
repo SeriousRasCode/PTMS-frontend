@@ -954,7 +954,7 @@ export const ProjectDetails = () => {
             {taskAssignments.length === 0 ? (
               <p className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No users assigned</p>
             ) : (
-              taskAssignments.map((assignment) => (
+              taskAssignments.map((assignment: TaskAssignment) => (
                 <Card key={assignment.id} className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
                   <CardContent className="pt-4">
                     <div className="flex items-center gap-3">
