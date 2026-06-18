@@ -552,9 +552,10 @@ export const Tasks = () => {
             </div>
             <Button
               onClick={handleUpdateProgress}
+              disabled={updateProgressMutation.isPending}
               className="w-full bg-gradient-to-r from-[#0f5841] to-[#194f87]"
             >
-              Update Progress
+              {updateProgressMutation.isPending ? "Updating..." : "Update Progress"}
             </Button>
           </div>
         </DialogContent>
