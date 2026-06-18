@@ -156,16 +156,44 @@ export const Reports = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading reports...</div>
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-72" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-10 w-80" />
+        <Skeleton className="h-80 w-full" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+          <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Couldn't load reports</h3>
+          <p className={`text-center mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+            {(error as Error)?.message || "Something went wrong while fetching report data."}
+          </p>
+          <Button onClick={() => refetch()} className="bg-gradient-to-r from-[#0f5841] to-[#194f87]">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Reports & Analytics</h1>
+        <h1 className={`text-3xl font-bold flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          Reports & Analytics
+          {isFetching && <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />}
+        </h1>
         <p className={theme === 'dark' ? 'text-gray-300 mt-1' : 'text-gray-600 mt-1'}>Track performance and productivity metrics</p>
       </div>
 
