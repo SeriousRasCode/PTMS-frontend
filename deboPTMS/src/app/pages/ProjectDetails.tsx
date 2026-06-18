@@ -349,21 +349,49 @@ export const ProjectDetails = () => {
   const canManageTasks = user?.role === "Manager" || user?.role === "Admin";
   const canUpdateProgress = user?.role === "Member" || user?.role === "Manager" || user?.role === "Admin";
   const canAssignTasks = user?.role === "Manager" || user?.role === "Admin"; // Both Admins and Managers can assign tasks
-  
-  // Get the user list based on role
-  // Both Admins and Managers can see all users now
-  const usersForAssignment = (user?.role === "Admin" || user?.role === "Manager") ? allUsers : projectMembers;
-  
-  // Debug logging
-  
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading tasks...</div>
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-44 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
-  
+
+  if (isError) {
+    return (
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+          <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Couldn't load tasks</h3>
+          <p className={`text-center mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+            {(error as Error)?.message || "Something went wrong while fetching this project's tasks."}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/dashboard/projects")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Projects
+            </Button>
+            <Button onClick={() => refetch()} className="bg-gradient-to-r from-[#0f5841] to-[#194f87]">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try again
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -374,7 +402,10 @@ export const ProjectDetails = () => {
             Back to Projects
           </Button>
           <div>
-            <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Project Tasks</h1>
+            <h1 className={`text-3xl font-bold flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              {project?.name || "Project Tasks"}
+              {isFetching && <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />}
+            </h1>
             <p className={`mt-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Manage tasks for this project</p>
           </div>
         </div>
