@@ -470,9 +470,10 @@ export const ProjectDetails = () => {
                 </div>
                 <Button
                   onClick={handleCreateTask}
+                  disabled={createTaskMutation.isPending}
                   className="w-full bg-gradient-to-r from-[#0f5841] to-[#194f87]"
                 >
-                  Create Task
+                  {createTaskMutation.isPending ? "Creating..." : "Create Task"}
                 </Button>
               </div>
             </DialogContent>
