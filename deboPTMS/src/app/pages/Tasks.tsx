@@ -392,7 +392,7 @@ export const Tasks = () => {
     );
   }
 
-  const allTasks = baseTasks;
+  const allTasks = sortedTasks;
   const inProgressTasks = filterTasks("in-progress");
   const completedTasks = filterTasks("completed");
   const notStartedTasks = filterTasks("not-started");
