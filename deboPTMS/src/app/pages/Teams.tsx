@@ -117,7 +117,7 @@ export const Teams = () => {
           }
         }),
       );
-      const teamMembers = counts.reduce((sum, c) => sum + c, 0);
+      const teamMembers = counts.reduce((sum: number, c: number) => sum + c, 0);
       return { activeProjects, teamMembers };
     },
   });
