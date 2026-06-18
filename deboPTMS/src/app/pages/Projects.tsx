@@ -247,8 +247,8 @@ export const Projects = () => {
       await projectAPI.updateProject(projectId, updatePayload);
       
       toast.success("Project status updated successfully!");
-      fetchProjects();
-      
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+
     } catch (error: any) {
       toast.error(error.message || "Failed to update project status");
     } finally {
