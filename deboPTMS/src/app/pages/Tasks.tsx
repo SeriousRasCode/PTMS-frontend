@@ -463,6 +463,22 @@ export const Tasks = () => {
               className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
             />
           </div>
+          <div className="min-w-[170px]">
+            <Label className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Sort by</Label>
+            <Select value={sort} onValueChange={(value) => updateParams({ sort: value })}>
+              <SelectTrigger className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}>
+                <SelectValue placeholder="Default" />
+              </SelectTrigger>
+              <SelectContent className={theme === 'dark' ? 'bg-slate-700 border-slate-600' : ''}>
+                <SelectItem value="default" className={theme === 'dark' ? 'text-white' : ''}>Default</SelectItem>
+                <SelectItem value="due-asc" className={theme === 'dark' ? 'text-white' : ''}>Due date (earliest)</SelectItem>
+                <SelectItem value="due-desc" className={theme === 'dark' ? 'text-white' : ''}>Due date (latest)</SelectItem>
+                <SelectItem value="progress-desc" className={theme === 'dark' ? 'text-white' : ''}>Progress (high → low)</SelectItem>
+                <SelectItem value="progress-asc" className={theme === 'dark' ? 'text-white' : ''}>Progress (low → high)</SelectItem>
+                <SelectItem value="title-asc" className={theme === 'dark' ? 'text-white' : ''}>Title (A → Z)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {hasActiveFilters && (
             <Button
               variant="outline"
