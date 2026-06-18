@@ -127,11 +127,11 @@ export const Tasks = () => {
   const filterTasks = (filterType: string) => {
     switch (filterType) {
       case "in-progress":
-        return tasks.filter(t => t.status === "in_progress" || t.status === "started");
+        return tasks.filter((t: Task) => t.status === "in_progress" || t.status === "started");
       case "completed":
-        return tasks.filter(t => t.status === "completed");
+        return tasks.filter((t: Task) => t.status === "completed");
       case "not-started":
-        return tasks.filter(t => t.status === "not_started");
+        return tasks.filter((t: Task) => t.status === "not_started");
       default:
         return tasks;
     }
@@ -167,15 +167,7 @@ export const Tasks = () => {
     try {
       setSelectedTask(task);
       const history = await taskAPI.getTaskHistory(task.id);
-      
-      if (Array.isArray(history)) {
-        setTaskHistory(history);
-      } else if (history.data && Array.isArray(history.data)) {
-        setTaskHistory(history.data);
-      } else {
-        setTaskHistory([]);
-      }
-      
+      setTaskHistory(unwrapList<TaskUpdate>(history));
       setTaskHistoryDialogOpen(true);
     } catch (error: any) {
       // Handle permission errors gracefully for Members
