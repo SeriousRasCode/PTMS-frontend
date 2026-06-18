@@ -276,6 +276,7 @@ export const taskAPI = {
       due_date: string;
       status: string;
       progress_percentage: number;
+      phase_id?: number | null;
     },
   ) =>
     apiRequest(`/tasks/projects/${projectId}`, {
