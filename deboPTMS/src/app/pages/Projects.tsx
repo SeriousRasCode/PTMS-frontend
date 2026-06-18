@@ -484,15 +484,24 @@ export const Projects = () => {
         )}
       </div>
 
-      {/* Date Range Filter */}
+      {/* Search + Date Range Filter */}
       <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
         <CardContent className="flex flex-wrap items-end gap-4 py-4">
-          <div className="flex items-center gap-2 mr-2">
-            <Calendar className={`h-4 w-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`} />
-            <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Filter by start date</span>
+          <div className="flex-1 min-w-[200px]">
+            <Label htmlFor="filter-search" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Search</Label>
+            <div className="relative">
+              <Search className={`absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`} />
+              <Input
+                id="filter-search"
+                placeholder="Search by name or description"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className={`pl-8 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}`}
+              />
+            </div>
           </div>
           <div>
-            <Label htmlFor="filter-from" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>From</Label>
+            <Label htmlFor="filter-from" className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Start date from</Label>
             <Input
               id="filter-from"
               type="date"
@@ -513,17 +522,17 @@ export const Projects = () => {
               className={theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}
             />
           </div>
-          {(dateFrom || dateTo) && (
+          {hasActiveFilters && (
             <Button
               variant="outline"
               size="sm"
-              onClick={clearDateFilter}
+              onClick={clearFilters}
               className={theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}
             >
               Clear
             </Button>
           )}
-          {(dateFrom || dateTo) && (
+          {hasActiveFilters && (
             <span className={`text-sm ml-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               Showing {filteredProjects.length} of {projects.length} projects
             </span>
