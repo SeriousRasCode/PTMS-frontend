@@ -225,7 +225,7 @@ export const Profile = () => {
               <Button
                 variant="outline"
                 onClick={() => setIsEditing(true)}
-                className={`w-full sm:w-auto ${theme === 'dark' ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+                className={`w-full sm:w-auto ${theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}`}
               >
                 Edit Profile
               </Button>
@@ -268,7 +268,7 @@ export const Profile = () => {
               <Input 
                 value={user?.role || ""} 
                 disabled 
-                className={theme === 'dark' ? 'bg-gray-800 border-gray-600 text-gray-400' : ''}
+                className={theme === 'dark' ? 'bg-slate-800 border-slate-600 text-gray-400' : ''}
               />
             </div>
 
@@ -277,7 +277,7 @@ export const Profile = () => {
               <Input 
                 value={user?.is_active ? "Active" : "Inactive"} 
                 disabled 
-                className={theme === 'dark' ? 'bg-gray-800 border-gray-600 text-gray-400' : ''}
+                className={theme === 'dark' ? 'bg-slate-800 border-slate-600 text-gray-400' : ''}
               />
             </div>
 
@@ -301,7 +301,7 @@ export const Profile = () => {
                       email: user?.email || "",
                     });
                   }}
-                  className={`w-full sm:w-auto ${theme === 'dark' ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+                  className={`w-full sm:w-auto ${theme === 'dark' ? 'border-slate-600 text-gray-200 hover:bg-slate-700' : ''}`}
                 >
                   Cancel
                 </Button>
