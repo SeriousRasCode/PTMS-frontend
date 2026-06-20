@@ -1,22 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { 
-  Users, 
-  FolderKanban, 
-  CheckSquare, 
+import { Skeleton } from "../components/ui/skeleton";
+import {
+  Users,
+  FolderKanban,
+  CheckSquare,
   TrendingUp,
-  UserPlus,
-  Shield,
   Search,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { toast } from "sonner";
-import { adminAPI, dashboardAPI } from "../utils/api";
+import { adminAPI, dashboardAPI, unwrapList } from "../utils/api";
 import { useTheme } from "../context/ThemeContext";
 import { Label } from "../components/ui/label";
 
@@ -28,87 +29,103 @@ interface User {
   is_active: boolean;
 }
 
+const EMPTY_STATS = {
+  total_users: 0,
+  total_projects: 0,
+  active_projects: 0,
+  completed_projects: 0,
+  on_hold_projects: 0,
+};
+
 export const AdminDashboard = () => {
   const { theme } = useTheme();
-  const [users, setUsers] = useState<User[]>([]);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [stats, setStats] = useState({
-    total_users: 0,
-    total_projects: 0,
-    active_projects: 0,
-    completed_projects: 0,
-    on_hold_projects: 0,
+  const itemsPerPage = 10;
+
+  const { data: stats = EMPTY_STATS } = useQuery({
+    queryKey: ["admin-summary"],
+    queryFn: async () => {
+      const response = await dashboardAPI.getAdminSummary();
+      return response?.data || EMPTY_STATS;
+    },
   });
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const {
+    data: users = [],
+    isLoading: loading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: async (): Promise<User[]> => unwrapList<User>(await adminAPI.getAllUsers()),
+  });
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch admin summary stats
-      const summaryResponse = await dashboardAPI.getAdminSummary();
-      
-      if (summaryResponse.success && summaryResponse.data) {
-        setStats(summaryResponse.data);
-      }
-
-      // Fetch all users
-      const usersResponse = await adminAPI.getAllUsers();
-      
-      if (usersResponse && usersResponse.success && usersResponse.data) {
-        setUsers(usersResponse.data);
-      } else if (Array.isArray(usersResponse)) {
-        setUsers(usersResponse);
-      }
-      
-    } catch (error: any) {
-      console.error("Fetch error:", error);
-      toast.error(error.message || "Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRoleChange = async (userId: number, newRole: string) => {
-    try {
-      await adminAPI.assignRole(userId, newRole);
+  const roleMutation = useMutation({
+    mutationFn: ({ userId, newRole }: { userId: number; newRole: string }) =>
+      adminAPI.assignRole(userId, newRole),
+    onSuccess: () => {
       toast.success("Role updated successfully");
-      fetchDashboardData();
-      setUsers(users.map(u => u.id === userId ? { ...u, roles: newRole } : u));
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update role");
-    }
-  };
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to update role"),
+  });
 
-  const handleStatusChange = async (userId: number, newStatus: boolean) => {
-    try {
-      await adminAPI.updateUserStatus(userId, newStatus);
+  const statusMutation = useMutation({
+    mutationFn: ({ userId, newStatus }: { userId: number; newStatus: boolean }) =>
+      adminAPI.updateUserStatus(userId, newStatus),
+    onSuccess: (_data, { newStatus }) => {
       toast.success(`User ${newStatus ? "activated" : "deactivated"} successfully`);
-      fetchDashboardData();
-      setUsers(users.map(u => u.id === userId ? { ...u, is_active: newStatus } : u));
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update user status");
-    }
-  };
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-summary"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to update user status"),
+  });
 
-  const filteredUsers = users.filter(user =>
+  const handleRoleChange = (userId: number, newRole: string) =>
+    roleMutation.mutate({ userId, newRole });
+  const handleStatusChange = (userId: number, newStatus: boolean) =>
+    statusMutation.mutate({ userId, newStatus });
+
+  const filteredUsers = users.filter((user: User) =>
     user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeUsers = users.filter(u => u.is_active).length;
+  const activeUsers = users.filter((u: User) => u.is_active).length;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading dashboard...</div>
+      <div className="space-y-6 w-full">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-96 w-full" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+          <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Couldn't load dashboard</h3>
+          <p className={`text-center mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+            {(error as Error)?.message || "Something went wrong while fetching dashboard data."}
+          </p>
+          <Button onClick={() => refetch()} className="bg-gradient-to-r from-[#0f5841] to-[#194f87]">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
