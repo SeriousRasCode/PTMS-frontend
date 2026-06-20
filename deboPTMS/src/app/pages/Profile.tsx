@@ -243,7 +243,7 @@ export const Profile = () => {
                   value={profileData.full_name}
                   onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
                   disabled={!isEditing}
-                  className={`pl-10 ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white disabled:bg-gray-800 disabled:text-gray-400' : ''}`}
+                  className={`pl-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white disabled:bg-slate-800 disabled:text-gray-400' : ''}`}
                 />
               </div>
             </div>
@@ -258,7 +258,7 @@ export const Profile = () => {
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                   disabled={!isEditing}
-                  className={`pl-10 ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white disabled:bg-gray-800 disabled:text-gray-400' : ''}`}
+                  className={`pl-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white disabled:bg-slate-800 disabled:text-gray-400' : ''}`}
                 />
               </div>
             </div>
