@@ -109,14 +109,23 @@ export const DashboardLayout = () => {
         </div>
       </div>
 
+      {/* Mobile backdrop: dims content and closes sidebar on tap (hidden on desktop) */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 top-16 bg-black/50 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <div className="flex pt-16">
         {/* Sidebar */}
         <div
-          className={`fixed left-0 top-16 bottom-0 ${theme === 'dark' ? 'bg-slate-800 border-r border-slate-700' : 'bg-white'} shadow-lg transition-all duration-300 z-40 overflow-hidden ${
-            sidebarOpen ? "w-64" : "w-0"
+          className={`fixed left-0 top-16 bottom-0 w-64 ${theme === 'dark' ? 'bg-slate-800 border-r border-slate-700' : 'bg-white'} shadow-lg transition-transform duration-300 z-40 overflow-y-auto ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <nav className={`p-4 space-y-2 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"} transition-opacity duration-300`}>
+          <nav className="p-4 space-y-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -124,6 +133,10 @@ export const DashboardLayout = () => {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={() => {
+                    // On mobile, close the sidebar after navigating.
+                    if (window.innerWidth < 1024) setSidebarOpen(false);
+                  }}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all whitespace-nowrap ${
                     active
                       ? "bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white shadow-md"
@@ -140,13 +153,13 @@ export const DashboardLayout = () => {
           </nav>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content — pushed by the sidebar only on desktop; overlaid on mobile */}
         <div
-          className={`flex-1 transition-all duration-300 ${
-            sidebarOpen ? "ml-64" : "ml-0"
+          className={`flex-1 min-w-0 transition-all duration-300 ${
+            sidebarOpen ? "lg:ml-64" : "ml-0"
           }`}
         >
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <Outlet />
           </div>
         </div>
