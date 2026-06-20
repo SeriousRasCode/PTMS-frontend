@@ -21,7 +21,10 @@ export const DashboardLayout = () => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Start open on desktop, closed on mobile so content isn't covered on load.
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => typeof window === "undefined" || window.innerWidth >= 1024,
+  );
 
   // Show loading state while auth is initializing
   if (isLoading) {
@@ -67,17 +70,21 @@ export const DashboardLayout = () => {
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-slate-50 to-slate-100'}`}>
       {/* Top Navigation Bar */}
       <div className="fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-[#0f5841] to-[#194f87] shadow-lg z-50">
-        <div className="flex items-center justify-between h-full px-4">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between h-full px-3 sm:px-4 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
+              className="text-white hover:bg-white/10 p-2 rounded-lg transition-colors flex-shrink-0"
+              aria-label="Toggle sidebar"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <h1 className="text-white text-xl font-semibold">PTMS - Project Task Management</h1>
+            <h1 className="text-white text-base sm:text-xl font-semibold truncate">
+              <span className="hidden sm:inline">PTMS - Project Task Management</span>
+              <span className="sm:hidden">PTMS</span>
+            </h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <button
               onClick={toggleTheme}
               className="text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
@@ -86,16 +93,17 @@ export const DashboardLayout = () => {
             >
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
-            <div className="text-white text-sm">
+            <div className="text-white text-sm hidden sm:block">
               <div className="font-medium">{user?.full_name}</div>
               <div className="text-xs text-white/80">{user?.role}</div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors"
+              aria-label="Logout"
             >
               <LogOut size={18} />
-              <span>Logout</span>
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
