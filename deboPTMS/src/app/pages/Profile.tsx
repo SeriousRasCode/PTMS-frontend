@@ -352,73 +352,75 @@ export const Profile = () => {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="newPassword" className={theme === 'dark' ? 'text-gray-200' : ''}>New Password</Label>
-              <div className="relative">
-                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
-                <Input
-                  id="newPassword"
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder="Enter new password (min 6 characters)"
-                  value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  onBlur={() => handlePasswordBlur("newPassword")}
-                  className={`pl-10 pr-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}`}
-                />
-                <button
-                  type="button"
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              {passwordTouched.newPassword && passwordErrors.newPassword && (
-                <p className="text-xs text-red-500 flex items-center gap-1">
-                  <XCircle size={14} className="flex-shrink-0" />
-                  <span>{passwordErrors.newPassword}</span>
-                </p>
-              )}
-              {passwordData.newPassword && (
-                <div className="mt-2">
-                  <div className={`w-full h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'}`}>
-                    <div
-                      className={`h-2 rounded-full transition-all duration-300 ${newPasswordStrength.color}`}
-                      style={{ width: `${newPasswordStrength.strength}%` }}
-                    ></div>
-                  </div>
-                  <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Strength: {newPasswordStrength.label}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword" className={theme === 'dark' ? 'text-gray-200' : ''}>New Password</Label>
+                <div className="relative">
+                  <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Enter new password (min 6 characters)"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    onBlur={() => handlePasswordBlur("newPassword")}
+                    className={`pl-10 pr-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className={theme === 'dark' ? 'text-gray-200' : ''}>Confirm New Password</Label>
-              <div className="relative">
-                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Re-enter new password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  onBlur={() => handlePasswordBlur("confirmPassword")}
-                  className={`pl-10 pr-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}`}
-                />
-                <button
-                  type="button"
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                {passwordTouched.newPassword && passwordErrors.newPassword && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <XCircle size={14} className="flex-shrink-0" />
+                    <span>{passwordErrors.newPassword}</span>
+                  </p>
+                )}
+                {passwordData.newPassword && (
+                  <div className="mt-2">
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'}`}>
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${newPasswordStrength.color}`}
+                        style={{ width: `${newPasswordStrength.strength}%` }}
+                      ></div>
+                    </div>
+                    <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Strength: {newPasswordStrength.label}</p>
+                  </div>
+                )}
               </div>
-              {passwordTouched.confirmPassword && passwordErrors.confirmPassword && (
-                <p className="text-xs text-red-500 flex items-center gap-1">
-                  <XCircle size={14} className="flex-shrink-0" />
-                  <span>{passwordErrors.confirmPassword}</span>
-                </p>
-              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className={theme === 'dark' ? 'text-gray-200' : ''}>Confirm New Password</Label>
+                <div className="relative">
+                  <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Re-enter new password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    onBlur={() => handlePasswordBlur("confirmPassword")}
+                    className={`pl-10 pr-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${theme === 'dark' ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {passwordTouched.confirmPassword && passwordErrors.confirmPassword && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <XCircle size={14} className="flex-shrink-0" />
+                    <span>{passwordErrors.confirmPassword}</span>
+                  </p>
+                )}
+              </div>
             </div>
 
             <Button
