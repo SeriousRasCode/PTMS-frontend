@@ -403,12 +403,7 @@ export const MemberDashboard = () => {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              setTasks(tasks.map(t => 
-                                t.id === task.id ? { ...t, progress_percentage: 75 } : t
-                              ));
-                              handleProgressUpdate(task.id, 75);
-                            }}
+                            onClick={() => handleProgressUpdate(task.id, 75)}
                             disabled={updatingTask === task.id}
                             className={theme === 'dark' 
                               ? 'border-slate-600 text-gray-200 hover:bg-slate-700 hover:text-white' 
