@@ -45,120 +45,71 @@ interface Project {
 export const MemberDashboard = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updatingTask, setUpdatingTask] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+  // Local overrides for the in-card progress slider (before the value is saved).
+  const [draftProgress, setDraftProgress] = useState<Record<number, number>>({});
 
-  useEffect(() => {
-    fetchMyTasks();
-    fetchMyProjects();
-  }, []);
+  const { data: projects = [] } = useQuery({
+    queryKey: ["my-projects"],
+    queryFn: async (): Promise<Project[]> => unwrapList<Project>(await projectAPI.getMyProjects()),
+  });
 
-  const fetchMyProjects = async () => {
-    try {
-      const response = await projectAPI.getMyProjects();
-      
-      if (response && response.success && response.data) {
-        setProjects(response.data);
-      } else {
-        setProjects([]);
-      }
-      
-    } catch (error: any) {
-      if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
-        setProjects([]);
-      } else {
-        toast.error(error.message || "Failed to load projects");
-        setProjects([]);
-      }
-    }
-  };
+  const {
+    data: tasks = [],
+    isLoading: loading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["my-dashboard-tasks"],
+    queryFn: async (): Promise<Task[]> => {
+      const projectsList = unwrapList<any>(await projectAPI.getMyProjects());
+      if (projectsList.length === 0) return [];
 
-  const fetchMyTasks = async () => {
-    try {
-      setLoading(true);
-      
-      const projectsResponse = await projectAPI.getMyProjects();
-      
-      let projectsList = [];
-      if (projectsResponse && projectsResponse.success && projectsResponse.data) {
-        projectsList = projectsResponse.data;
-      } else if (projectsResponse && Array.isArray(projectsResponse.data)) {
-        projectsList = projectsResponse.data;
-      } else if (Array.isArray(projectsResponse)) {
-        projectsList = projectsResponse;
-      }
-      
-      if (projectsList.length === 0) {
-        setTasks([]);
-        return;
-      }
-      
-      const allTasksPromises = projectsList.map(async (project: any) => {
-        try {
-          const response = await taskAPI.getTasksByProject(project.id);
-          
-          let projectTasks = [];
-          if (Array.isArray(response)) {
-            projectTasks = response;
-          } else if (response.data && Array.isArray(response.data)) {
-            projectTasks = response.data;
-          } else {
-            projectTasks = [];
+      const allTasksArrays = await Promise.all(
+        projectsList.map(async (project: any) => {
+          try {
+            return unwrapList<any>(await taskAPI.getTasksByProject(project.id)).map((task: any) => ({
+              ...task,
+              project_name: project.name,
+              project_id: project.id,
+            }));
+          } catch {
+            return [];
           }
-          
-          return projectTasks.map((task: any) => ({
-            ...task,
-            project_name: project.name,
-            project_id: project.id
-          }));
-        } catch (error) {
-          return [];
-        }
-      });
-      
-      const allTasksArrays = await Promise.all(allTasksPromises);
-      const allTasks = allTasksArrays.flat();
-      
-      setTasks(allTasks);
-      
-    } catch (error: any) {
-      if (error.message?.includes("Forbidden") || error.message?.includes("permission")) {
-        setTasks([]);
-      } else {
-        toast.error(error.message || "Failed to load tasks");
-        setTasks([]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+        }),
+      );
+      return allTasksArrays.flat();
+    },
+  });
 
-  const handleProgressUpdate = async (taskId: number, newProgress: number) => {
-    try {
-      setUpdatingTask(taskId);
-      
-      await taskAPI.updateProgress(taskId, {
+  const progressMutation = useMutation({
+    mutationFn: ({ taskId, newProgress }: { taskId: number; newProgress: number }) =>
+      taskAPI.updateProgress(taskId, {
         progress_percentage: newProgress,
-        update_note: `Progress updated to ${newProgress}%`
-      });
-      
+        update_note: `Progress updated to ${newProgress}%`,
+      }),
+    onSuccess: (_data, { taskId }) => {
       toast.success("Task progress updated successfully");
-      
-      // Update local state
-      setTasks(tasks.map(t => 
-        t.id === taskId 
-          ? { ...t, progress_percentage: newProgress, status: newProgress === 100 ? "completed" : "in_progress" } 
-          : t
-      ));
-      
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update progress");
-    } finally {
-      setUpdatingTask(null);
-    }
-  };
+      setDraftProgress((prev) => {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      });
+      queryClient.invalidateQueries({ queryKey: ["my-dashboard-tasks"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to update progress"),
+  });
+
+  const updatingTask = progressMutation.isPending ? progressMutation.variables?.taskId : null;
+
+  // Effective progress for display: local draft if present, else the saved value.
+  const progressOf = (task: Task) => draftProgress[task.id] ?? task.progress_percentage;
+  const setDraft = (taskId: number, value: number) =>
+    setDraftProgress((prev) => ({ ...prev, [taskId]: value }));
+  const handleProgressUpdate = (taskId: number, newProgress: number) =>
+    progressMutation.mutate({ taskId, newProgress });
 
   const getStatusColor = (status: string) => {
     switch (status) {
