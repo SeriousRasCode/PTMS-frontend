@@ -133,7 +133,10 @@ export const AdminDashboard = () => {
     <div className="space-y-6 w-full">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#0f5841] to-[#194f87] rounded-xl p-4 md:p-6 text-white shadow-lg">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">Admin Dashboard</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2">
+          Admin Dashboard
+          {isFetching && <RefreshCw className="h-5 w-5 animate-spin text-white/80" />}
+        </h1>
         <p className="text-sm md:text-base text-white/90">Manage users, roles, and system overview</p>
       </div>
 
