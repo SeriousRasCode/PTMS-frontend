@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -6,19 +6,17 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   FolderKanban,
   CheckSquare,
   Users,
   Clock,
-  Plus,
-  Calendar,
   TrendingUp,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { dashboardAPI } from "../utils/api";
-import { toast } from "sonner";
 import { useTheme } from "../context/ThemeContext";
 
 interface ManagerStats {
