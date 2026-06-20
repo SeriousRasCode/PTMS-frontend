@@ -144,15 +144,39 @@ export const MemberDashboard = () => {
   };
 
   const myTasks = tasks.length;
-  const inProgress = tasks.filter(t => t.status === "in_progress" || t.status === "started").length;
-  const completed = tasks.filter(t => t.status === "completed").length;
-  const overdue = tasks.filter(t => isOverdue(t.due_date) && t.status !== "completed").length;
+  const inProgress = tasks.filter((t: Task) => t.status === "in_progress" || t.status === "started").length;
+  const completed = tasks.filter((t: Task) => t.status === "completed").length;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Loading dashboard...</div>
+      <div className="space-y-6">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-64 w-full" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+          <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Couldn't load dashboard</h3>
+          <p className={`text-center mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+            {(error as Error)?.message || "Something went wrong while fetching your tasks."}
+          </p>
+          <Button onClick={() => refetch()} className="bg-gradient-to-r from-[#0f5841] to-[#194f87]">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -160,7 +184,10 @@ export const MemberDashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#0f5841] to-[#194f87] rounded-xl p-6 text-white shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">My Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+          My Dashboard
+          {isFetching && <RefreshCw className="h-5 w-5 animate-spin text-white/80" />}
+        </h1>
         <p className="text-white/90">Track your tasks and update progress</p>
       </div>
 
