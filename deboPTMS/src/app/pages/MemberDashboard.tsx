@@ -261,7 +261,7 @@ export const MemberDashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {projects.slice(0, 4).map((project) => (
+              {projects.slice(0, 4).map((project: Project) => (
                 <div
                   key={project.id}
                   className={`p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-white'}`}
