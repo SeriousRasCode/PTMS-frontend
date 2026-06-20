@@ -347,27 +347,23 @@ export const MemberDashboard = () => {
                   <div className="space-y-3 mt-4">
                     <div className="flex items-center justify-between text-sm">
                       <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Progress</span>
-                      <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{task.progress_percentage}%</span>
+                      <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{progressOf(task)}%</span>
                     </div>
-                    <Progress value={task.progress_percentage} className="h-2" />
-                    
+                    <Progress value={progressOf(task)} className="h-2" />
+
                     {task.status !== "completed" && (
                       <>
                         <div className="flex items-center gap-4 pt-2">
                           <Slider
-                            value={[task.progress_percentage]}
-                            onValueChange={([value]) => {
-                              setTasks(tasks.map(t => 
-                                t.id === task.id ? { ...t, progress_percentage: value } : t
-                              ));
-                            }}
+                            value={[progressOf(task)]}
+                            onValueChange={([value]) => setDraft(task.id, value)}
                             max={100}
                             step={5}
                             className="flex-1"
                             disabled={updatingTask === task.id}
                           />
                           <Button
-                            onClick={() => handleProgressUpdate(task.id, task.progress_percentage)}
+                            onClick={() => handleProgressUpdate(task.id, progressOf(task))}
                             size="sm"
                             className="bg-gradient-to-r from-[#0f5841] to-[#194f87]"
                             disabled={updatingTask === task.id}
