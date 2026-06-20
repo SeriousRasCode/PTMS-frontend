@@ -332,7 +332,7 @@ export const Profile = () => {
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("currentPassword")}
-                  className={`pl-10 pr-10 ${passwordTouched.currentPassword && passwordErrors.currentPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-400' : ''}`}
+                  className={`pl-10 pr-10 ${passwordTouched.currentPassword && passwordErrors.currentPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}`}
                 />
                 <button
                   type="button"
@@ -361,7 +361,7 @@ export const Profile = () => {
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("newPassword")}
-                  className={`pl-10 pr-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-400' : ''}`}
+                  className={`pl-10 pr-10 ${passwordTouched.newPassword && passwordErrors.newPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}`}
                 />
                 <button
                   type="button"
@@ -401,7 +401,7 @@ export const Profile = () => {
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   onBlur={() => handlePasswordBlur("confirmPassword")}
-                  className={`pl-10 pr-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-400' : ''}`}
+                  className={`pl-10 pr-10 ${passwordTouched.confirmPassword && passwordErrors.confirmPassword ? "border-red-500" : ""} ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : ''}`}
                 />
                 <button
                   type="button"
