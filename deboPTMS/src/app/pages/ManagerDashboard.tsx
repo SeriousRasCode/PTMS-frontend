@@ -29,57 +29,33 @@ interface ManagerStats {
   overdue_tasks: number;
 }
 
+const EMPTY_STATS: ManagerStats = {
+  total_projects: 0,
+  active_projects: 0,
+  completed_projects: 0,
+  total_tasks: 0,
+  in_progress_tasks: 0,
+  overdue_tasks: 0,
+  completed_tasks: 0,
+};
+
 export const ManagerDashboard = () => {
   const { theme } = useTheme();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<ManagerStats>({
-    total_projects: 0,
-    active_projects: 0,
-    completed_projects: 0,
-    total_tasks: 0,
-    in_progress_tasks: 0,
-    overdue_tasks: 0,
-    completed_tasks: 0,
-  });
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-
+  const {
+    data: stats = EMPTY_STATS,
+    isLoading: loading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["manager-dashboard"],
+    queryFn: async (): Promise<ManagerStats> => {
       const response = await dashboardAPI.getManagerDashboard();
-
-      if (response.success && response.data) {
-        const {
-          total_projects,
-          active_projects,
-          completed_projects,
-          total_tasks,
-          in_progress_tasks,
-          completed_tasks,
-          overdue_tasks,
-        } = response.data;
-        setStats({
-          total_projects,
-          active_projects,
-          completed_projects,
-          total_tasks,
-          in_progress_tasks,
-          completed_tasks,
-          overdue_tasks,
-        });
-      }
-    } catch (error: any) {
-      toast.error(
-        error.message || "Failed to load dashboard data",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      return response?.data || EMPTY_STATS;
+    },
+  });
 
   const activeTasks = stats.total_tasks - stats.completed_tasks;
   const completionRate =
@@ -91,15 +67,37 @@ export const ManagerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div
-          className={
-            theme === "dark" ? "text-gray-300" : "text-gray-600"
-          }
-        >
-          Loading dashboard...
+      <div className="space-y-6">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-36 w-full" />
+          ))}
         </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className={theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"}>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
+          <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Couldn't load dashboard</h3>
+          <p className={`text-center mb-4 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+            {(error as Error)?.message || "Something went wrong while fetching dashboard data."}
+          </p>
+          <Button onClick={() => refetch()} className="bg-gradient-to-r from-[#0f5841] to-[#194f87]">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -107,8 +105,9 @@ export const ManagerDashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#194f87] to-[#0f5841] rounded-xl p-6 text-white shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
           Manager Dashboard
+          {isFetching && <RefreshCw className="h-5 w-5 animate-spin text-white/80" />}
         </h1>
         <p className="text-white/90">
           Oversee projects, manage tasks, and track team
