@@ -304,7 +304,7 @@ export const MemberDashboard = () => {
                 <p>No tasks assigned yet</p>
               </div>
             ) : (
-              tasks.map((task) => (
+              tasks.map((task: Task) => (
                 <div
                   key={task.id}
                   className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${
