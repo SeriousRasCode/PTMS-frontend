@@ -379,7 +379,7 @@ export const Profile = () => {
               )}
               {passwordData.newPassword && (
                 <div className="mt-2">
-                  <div className={`w-full h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                  <div className={`w-full h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'}`}>
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${newPasswordStrength.color}`}
                       style={{ width: `${newPasswordStrength.strength}%` }}
