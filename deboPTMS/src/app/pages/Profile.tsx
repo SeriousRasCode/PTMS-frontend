@@ -194,7 +194,7 @@ export const Profile = () => {
       </div>
 
       {/* Profile Overview */}
-      <Card className={theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}>
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
         <CardHeader className="bg-gradient-to-r from-[#0f5841] to-[#194f87] text-white rounded-t-lg">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-4 border-white">
@@ -214,7 +214,7 @@ export const Profile = () => {
       </Card>
 
       {/* Edit Profile */}
-      <Card className={theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}>
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <CardTitle className={`flex items-center gap-2 ${theme === 'dark' ? 'text-white' : ''}`}>
@@ -312,7 +312,7 @@ export const Profile = () => {
       </Card>
 
       {/* Change Password */}
-      <Card className={theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}>
+      <Card className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}>
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 ${theme === 'dark' ? 'text-white' : ''}`}>
             <Lock className="h-5 w-5 text-[#194f87]" />
