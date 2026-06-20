@@ -234,51 +234,53 @@ export const Profile = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="full_name" className={theme === 'dark' ? 'text-gray-200' : ''}>Full Name</Label>
-              <div className="relative">
-                <User className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="full_name" className={theme === 'dark' ? 'text-gray-200' : ''}>Full Name</Label>
+                <div className="relative">
+                  <User className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
+                  <Input
+                    id="full_name"
+                    value={profileData.full_name}
+                    onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                    disabled={!isEditing}
+                    className={`pl-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white disabled:bg-slate-800 disabled:text-gray-400' : ''}`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className={theme === 'dark' ? 'text-gray-200' : ''}>Email Address</Label>
+                <div className="relative">
+                  <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    disabled={!isEditing}
+                    className={`pl-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white disabled:bg-slate-800 disabled:text-gray-400' : ''}`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className={theme === 'dark' ? 'text-gray-200' : ''}>Role</Label>
                 <Input
-                  id="full_name"
-                  value={profileData.full_name}
-                  onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
-                  disabled={!isEditing}
-                  className={`pl-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white disabled:bg-slate-800 disabled:text-gray-400' : ''}`}
+                  value={user?.role || ""}
+                  disabled
+                  className={theme === 'dark' ? 'bg-slate-800 border-slate-600 text-gray-400' : ''}
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className={theme === 'dark' ? 'text-gray-200' : ''}>Email Address</Label>
-              <div className="relative">
-                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
+              <div className="space-y-2">
+                <Label className={theme === 'dark' ? 'text-gray-200' : ''}>Account Status</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  disabled={!isEditing}
-                  className={`pl-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white disabled:bg-slate-800 disabled:text-gray-400' : ''}`}
+                  value={user?.is_active ? "Active" : "Inactive"}
+                  disabled
+                  className={theme === 'dark' ? 'bg-slate-800 border-slate-600 text-gray-400' : ''}
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className={theme === 'dark' ? 'text-gray-200' : ''}>Role</Label>
-              <Input 
-                value={user?.role || ""} 
-                disabled 
-                className={theme === 'dark' ? 'bg-slate-800 border-slate-600 text-gray-400' : ''}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className={theme === 'dark' ? 'text-gray-200' : ''}>Account Status</Label>
-              <Input 
-                value={user?.is_active ? "Active" : "Inactive"} 
-                disabled 
-                className={theme === 'dark' ? 'bg-slate-800 border-slate-600 text-gray-400' : ''}
-              />
             </div>
 
             {isEditing && (
