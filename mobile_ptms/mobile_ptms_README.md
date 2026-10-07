@@ -20,7 +20,7 @@ The app uses Flutter with BLoC for state management, token-based authentication,
 ## 🧩 Project Structure
 
 ```text
-debo_ptms/
+mobile_ptms/
 ├── README.md
 ├── analysis_options.yaml
 ├── pubspec.yaml
@@ -85,7 +85,7 @@ debo_ptms/
 ### Install dependencies
 
 ```bash
-cd debo_ptms
+cd mobile_ptms
 flutter pub get
 ```
 
