@@ -27,7 +27,7 @@ Each role sees a tailored experience across the same product.
 ## 🧩 Project Structure
 
 ```text
-deboPTMS/
+frontend_ptms/
 ├── README.md
 ├── package.json
 ├── package-lock.json
@@ -92,7 +92,7 @@ deboPTMS/
 ### Install dependencies
 
 ```bash
-cd deboPTMS
+cd frontend_ptms
 npm install
 ```
 
