@@ -27,13 +27,13 @@ The platform is designed to support different user roles including Admin, Manage
 deboFrontend1/
 ├── README.md
 ├── netlify.toml
-├── deboPTMS/               # React + Vite + TypeScript web app
+├── frontend_ptms/           # React + Vite + TypeScript web app
 │   ├── src/
 │   ├── public/
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── tsconfig*.json
-├── debo_ptms/              # Flutter mobile/web app
+├── mobile_ptms/             # Flutter mobile/web app
 │   ├── lib/
 │   ├── assets/
 │   ├── android/
@@ -73,7 +73,7 @@ deboFrontend1/
 
 ## 🛠️ Technology Stack
 
-### Web Application (`deboPTMS/`)
+### Web Application (`frontend_ptms/`)
 
 - React 19
 - TypeScript
@@ -85,7 +85,7 @@ deboFrontend1/
 - React Router for navigation
 - Recharts and other UI/charting libraries
 
-### Mobile Application (`debo_ptms/`)
+### Mobile Application (`mobile_ptms/`)
 
 - Flutter
 - Dart
@@ -96,7 +96,7 @@ deboFrontend1/
 
 ## 📁 App Responsibilities
 
-### `deboPTMS/`
+### `frontend_ptms/`
 
 This is the browser-first experience for the product. It includes:
 
@@ -106,7 +106,7 @@ This is the browser-first experience for the product. It includes:
 - reports and profile views
 - role-based navigation shells
 
-### `debo_ptms/`
+### `mobile_ptms/`
 
 This is the Flutter implementation of the same product idea for native-like mobile/web experiences, with:
 
@@ -137,7 +137,7 @@ cd deboFrontend1
 ### 2) Run the React web app
 
 ```bash
-cd deboPTMS
+cd frontend_ptms
 npm install
 npm run dev
 ```
@@ -147,7 +147,7 @@ Then open the local Vite URL in your browser.
 ### 3) Run the Flutter app
 
 ```bash
-cd debo_ptms
+cd mobile_ptms
 flutter pub get
 flutter run
 ```
@@ -160,7 +160,7 @@ flutter run -d chrome
 
 ## ⚙️ Configuration
 
-The Flutter app uses a base URL defined in `debo_ptms/lib/core/constants/api_constants.dart`.
+The Flutter app uses a base URL defined in `mobile_ptms/lib/core/constants/api_constants.dart`.
 
 By default, it points to local development endpoints:
 
@@ -173,20 +173,20 @@ You can override it using a Dart compile-time environment value:
 flutter run --dart-define=BASE_URL=http://your-api-url
 ```
 
-The web app is configured for Netlify deployment via `netlify.toml` and builds from the `deboPTMS` directory.
+The web app is configured for Netlify deployment via `netlify.toml` and builds from the `frontend_ptms` directory.
 
 ## 🏗️ Deployment
 
 This repository includes Netlify configuration for the React web app:
 
-- build directory: `deboPTMS/dist`
-- base directory: `deboPTMS`
+- build directory: `frontend_ptms/dist`
+- base directory: `frontend_ptms`
 - SPA redirect rule handled via `index.html`
 
 Example deployment flow:
 
 ```bash
-cd deboPTMS
+cd frontend_ptms
 npm run build
 ```
 
